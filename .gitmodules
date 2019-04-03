@@ -1,0 +1,3 @@
+[submodule "external/bigger"]
+	path = external/bigger
+	url = https://github.com/yuki-koyama/bigger.git
