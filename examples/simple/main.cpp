@@ -20,31 +20,44 @@ public:
 
     void initializeScene() override
     {
-        m_particles.resize(1);
+        m_particles.resize(2);
 
         m_particles[0].x = Eigen::Vector3d::Zero();
         m_particles[0].v = Eigen::Vector3d(0.0, 10.0, 0.0);
         m_particles[0].m = 1.0;
+        m_particles[0].i = 0;
+
+        m_particles[1].x = Eigen::Vector3d::Zero();
+        m_particles[1].v = Eigen::Vector3d(1.0, 8.0, 0.0);
+        m_particles[1].m = 1.0;
+        m_particles[1].i = 1;
     }
 
     void stepTime() override
     {
-        elasty::Particle& particle = m_particles[0];
-
         constexpr double dt = 1.0 / 60.0;
         const Eigen::Vector3d gravity = Eigen::Vector3d(0.0, - 9.8, 0.0);
 
         // Apply external forces
-        const Eigen::Vector3d external_forces = particle.m * gravity;
-        particle.v = particle.v + dt * (1.0 / particle.m) * external_forces;
+        for (auto& particle : m_particles)
+        {
+            const Eigen::Vector3d external_forces = particle.m * gravity;
+            particle.v = particle.v + dt * (1.0 / particle.m) * external_forces;
+        }
 
         // Calculate predicted positions
-        particle.p = particle.x + dt * particle.v;
+        for (auto& particle : m_particles)
+        {
+            particle.p = particle.x + dt * particle.v;
+        }
 
         // Generate collision constraints
-        if (particle.p.y() < 0.0)
+        for (auto& particle : m_particles)
         {
-            addInstantConstraint(std::make_shared<elasty::EnvironmentalCollisionConstraint>(this, std::vector<unsigned int>{ 0 }, Eigen::Vector3d(0.0, 1.0, 0.0), 0.0));
+            if (particle.p.y() < 0.0)
+            {
+                addInstantConstraint(std::make_shared<elasty::EnvironmentalCollisionConstraint>(this, std::vector<unsigned int>{ particle.i }, Eigen::Vector3d(0.0, 1.0, 0.0), 0.0));
+            }
         }
 
         // Solve constraints
@@ -63,11 +76,17 @@ public:
         }
 
         // Apply the results
-        particle.v = (particle.p - particle.x) * (1.0 / dt);
-        particle.x = particle.p;
+        for (auto& particle : m_particles)
+        {
+            particle.v = (particle.p - particle.x) * (1.0 / dt);
+            particle.x = particle.p;
+        }
 
         // Update velocities
-        particle.v *= 0.999;
+        for (auto& particle : m_particles)
+        {
+            particle.v *= 0.999;
+        }
 
         // Clear instant constraints
         m_instant_constraints.clear();
@@ -114,14 +133,17 @@ public:
 
     void draw(const glm::mat4& parent_transform_matrix = glm::mat4(1.0f))
     {
-        const glm::mat4 translate_matrix = glm::translate(eigen2glm(m_engine->m_particles[0].x));
-        const glm::mat4 scale_matrix = glm::scale(glm::vec3(0.1f));
+        for (auto& particle : m_engine->m_particles)
+        {
+            const glm::mat4 translate_matrix = glm::translate(eigen2glm(particle.x));
+            const glm::mat4 scale_matrix = glm::scale(glm::vec3(0.1f));
 
-        const glm::mat4 transform = parent_transform_matrix * translate_matrix * scale_matrix;
+            const glm::mat4 transform = parent_transform_matrix * translate_matrix * scale_matrix;
 
-        bgfx::setTransform(glm::value_ptr(transform));
+            bgfx::setTransform(glm::value_ptr(transform));
 
-        m_sphere_primitive->submitPrimitive(m_material->m_program);
+            m_sphere_primitive->submitPrimitive(m_material->m_program);
+        }
     }
 
 private:

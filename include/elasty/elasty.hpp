@@ -16,6 +16,7 @@ namespace elasty
         Eigen::Vector3d v;
         Eigen::Vector3d p;
         double m;
+        unsigned int i;
     };
 
     class Engine
