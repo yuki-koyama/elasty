@@ -85,6 +85,6 @@ void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
     // Update predicted positions
     for (unsigned int j = 0; j < n; ++ j)
     {
-        m_particles[constraint->m_indices[j]].p += delta_x;
+        m_particles[constraint->m_indices[j]].p += delta_x.segment<3>(3 * j);
     }
 }
