@@ -1,4 +1,5 @@
-#include <elasty/elasty.hpp>
+#include <elasty/engine.hpp>
+#include <elasty/constraint.hpp>
 
 void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
 {

@@ -4,7 +4,8 @@
 #include <bigger/scene-object.hpp>
 #include <bigger/materials/blinnphong-material.hpp>
 #include <bigger/primitives/sphere-primitive.hpp>
-#include <elasty/elasty.hpp>
+#include <elasty/constraint.hpp>
+#include <elasty/engine.hpp>
 
 namespace
 {
