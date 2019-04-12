@@ -11,6 +11,7 @@ namespace elasty
     {
         Eigen::Vector3d x;
         Eigen::Vector3d v;
+        double m;
     };
 
     struct Constraint
@@ -25,7 +26,10 @@ namespace elasty
 
         virtual void initializeScene() = 0;
         virtual void stepTime() = 0;
-        virtual void addConstraint(std::shared_ptr<Constraint> constraint) = 0;
+        virtual void addConstraint(std::shared_ptr<Constraint> constraint)
+        {
+            m_constraints.push_back(constraint);
+        }
 
     private:
 

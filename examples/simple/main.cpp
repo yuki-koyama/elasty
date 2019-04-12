@@ -1,6 +1,47 @@
 #include <array>
 #include <memory>
 #include <bigger/app.hpp>
+#include <elasty/elasty.hpp>
+
+class SimpleEngine final : public elasty::Engine
+{
+public:
+    void initializeScene() override
+    {
+        vertex.x = Eigen::Vector3d::Zero();
+        vertex.v = Eigen::Vector3d(0.0, 1.0, 0.0);
+        vertex.m = 1.0;
+    }
+
+    void stepTime() override
+    {
+        constexpr double dt = 1.0 / 60.0;
+        const Eigen::Vector3d gravity = Eigen::Vector3d(0.0, - 9.8, 0.0);
+
+        // Apply external forces
+        const Eigen::Vector3d external_forces = vertex.m * gravity;
+        vertex.v = vertex.v + dt * (1.0 / vertex.m) * external_forces;
+
+        // Calculate predicted positions
+        Eigen::Vector3d p = vertex.x + dt * vertex.v;
+
+        // Solve constraints
+        constexpr unsigned int num_iterations = 10;
+        for (unsigned int i = 0; i < num_iterations; ++ i)
+        {
+            // TODO
+        }
+
+        // Apply the results
+        vertex.v = (p - vertex.x) * (1.0 / dt);
+        vertex.x = p;
+
+        // Update velocities
+        vertex.v *= 0.999;
+    }
+
+    elasty::Vertex vertex;
+};
 
 class SimpleApp final : public bigger::App
 {
