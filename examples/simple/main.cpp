@@ -1,6 +1,8 @@
 #include <array>
 #include <memory>
 #include <bigger/app.hpp>
+#include <bigger/materials/blinnphong-material.hpp>
+#include <bigger/primitives/sphere-primitive.hpp>
 #include <elasty/elasty.hpp>
 
 namespace
@@ -62,6 +64,12 @@ public:
 
     void updateApp() override;
     void releaseSharedResources() override;
+
+private:
+
+    // Shared resources
+    std::shared_ptr<bigger::BlinnPhongMaterial> m_default_material;
+    std::shared_ptr<bigger::SpherePrimitive> m_sphere_primitive;
 };
 
 SimpleApp::SimpleApp() {}
@@ -70,6 +78,10 @@ void SimpleApp::initialize(int argc, char** argv)
 {
     // Register and apply BGFX configuration settings
     reset(BGFX_RESET_VSYNC | BGFX_RESET_MSAA_X8);
+
+    m_default_material = std::make_shared<bigger::BlinnPhongMaterial>();
+    m_sphere_primitive = std::make_shared<bigger::SpherePrimitive>();
+    m_sphere_primitive->initializePrimitive();
 }
 
 void SimpleApp::onReset()
@@ -86,11 +98,20 @@ void SimpleApp::updateApp()
     {
         ImGui::Text("time: %.2f", m_time);
         ImGui::Text("fps: %.2f", 1.0f / m_last_dt);
+        ImGui::Separator();
+        ImGui::SliderFloat3("camera.position", glm::value_ptr(getCamera().m_position), - 10.0f, 10.0f);
+        ImGui::SliderFloat("camera.fov", &(getCamera().m_fov), 10.0f, 120.0f);
+        ImGui::Separator();
+        m_default_material->drawImgui();
     }
     ImGui::End();
 }
 
-void SimpleApp::releaseSharedResources() {}
+void SimpleApp::releaseSharedResources()
+{
+    m_sphere_primitive = nullptr;
+    m_default_material = nullptr;
+}
 
 int main(int argc, char** argv)
 {
