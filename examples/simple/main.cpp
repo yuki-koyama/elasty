@@ -32,6 +32,8 @@ public:
         m_particles[1].v = Eigen::Vector3d(1.0, 8.0, 0.0);
         m_particles[1].m = 1.0;
         m_particles[1].i = 1;
+
+        addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ 0, 1 }, 1.0));
     }
 
     void setExternalForces() override

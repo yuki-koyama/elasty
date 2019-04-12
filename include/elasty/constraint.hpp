@@ -25,6 +25,26 @@ namespace elasty
         const std::vector<unsigned int> m_indices;
     };
 
+    class DistanceConstraint final : public Constraint
+    {
+    public:
+
+        DistanceConstraint(const Engine* engine, const std::vector<unsigned int>& indices, const double d) :
+        Constraint(engine, indices),
+        m_d(d)
+        {
+            assert(indices.size() == 2);
+            assert(d >= 0.0);
+        }
+
+        double calculateValue() override;
+        Eigen::VectorXd calculateGrad() override;
+
+    private:
+
+        const double m_d;
+    };
+
     class EnvironmentalCollisionConstraint final : public Constraint
     {
     public:
@@ -38,11 +58,7 @@ namespace elasty
         }
 
         double calculateValue() override;
-
-        Eigen::VectorXd calculateGrad() override
-        {
-            return m_n;
-        }
+        Eigen::VectorXd calculateGrad() override { return m_n; }
 
     private:
 
