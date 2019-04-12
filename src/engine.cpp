@@ -1,6 +1,52 @@
 #include <elasty/engine.hpp>
 #include <elasty/constraint.hpp>
 
+void elasty::Engine::stepTime()
+{
+    // Apply external forces
+    setExternalForces();
+    for (auto& particle : m_particles)
+    {
+        particle.v = particle.v + m_dt * (1.0 / particle.m) * particle.f;
+    }
+
+    // Calculate predicted positions
+    for (auto& particle : m_particles)
+    {
+        particle.p = particle.x + m_dt * particle.v;
+    }
+
+    // Generate collision constraints
+    generateCollisionConstraints();
+
+    // Solve constraints
+    for (unsigned int i = 0; i < m_num_iterations; ++ i)
+    {
+        for (auto constraint : m_constraints)
+        {
+            projectConstraint(constraint);
+        }
+
+        for (auto constraint : m_instant_constraints)
+        {
+            projectConstraint(constraint);
+        }
+    }
+
+    // Apply the results
+    for (auto& particle : m_particles)
+    {
+        particle.v = (particle.p - particle.x) * (1.0 / m_dt);
+        particle.x = particle.p;
+    }
+
+    // Update velocities
+    updateVelocities();
+
+    // Clear instant constraints
+    m_instant_constraints.clear();
+}
+
 void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
 {
     // Calculate $C$

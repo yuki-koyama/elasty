@@ -13,15 +13,20 @@ namespace elasty
     {
     public:
 
-        virtual void initializeScene() = 0;
-        virtual void stepTime() = 0;
+        void stepTime();
 
-        virtual void addConstraint(std::shared_ptr<Constraint> constraint)
+        virtual void initializeScene() = 0;
+
+        virtual void setExternalForces() = 0;
+        virtual void generateCollisionConstraints() = 0;
+        virtual void updateVelocities() = 0;
+
+        void addConstraint(std::shared_ptr<Constraint> constraint)
         {
             m_constraints.push_back(constraint);
         }
 
-        virtual void addInstantConstraint(std::shared_ptr<Constraint> constraint)
+        void addInstantConstraint(std::shared_ptr<Constraint> constraint)
         {
             m_instant_constraints.push_back(constraint);
         }
@@ -34,6 +39,9 @@ namespace elasty
     protected:
 
         void projectConstraint(std::shared_ptr<Constraint> constraint);
+
+        double m_dt = 1.0 / 60.0;
+        unsigned int m_num_iterations = 10;
     };
 }
 

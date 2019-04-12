@@ -34,25 +34,18 @@ public:
         m_particles[1].i = 1;
     }
 
-    void stepTime() override
+    void setExternalForces() override
     {
-        constexpr double dt = 1.0 / 60.0;
         const Eigen::Vector3d gravity = Eigen::Vector3d(0.0, - 9.8, 0.0);
 
-        // Apply external forces
         for (auto& particle : m_particles)
         {
-            const Eigen::Vector3d external_forces = particle.m * gravity;
-            particle.v = particle.v + dt * (1.0 / particle.m) * external_forces;
+            particle.f = particle.m * gravity;
         }
+    }
 
-        // Calculate predicted positions
-        for (auto& particle : m_particles)
-        {
-            particle.p = particle.x + dt * particle.v;
-        }
-
-        // Generate collision constraints
+    void generateCollisionConstraints() override
+    {
         for (auto& particle : m_particles)
         {
             if (particle.p.y() < 0.0)
@@ -60,37 +53,14 @@ public:
                 addInstantConstraint(std::make_shared<elasty::EnvironmentalCollisionConstraint>(this, std::vector<unsigned int>{ particle.i }, Eigen::Vector3d(0.0, 1.0, 0.0), 0.0));
             }
         }
+    }
 
-        // Solve constraints
-        constexpr unsigned int num_iterations = 10;
-        for (unsigned int i = 0; i < num_iterations; ++ i)
-        {
-            for (auto constraint : m_constraints)
-            {
-                projectConstraint(constraint);
-            }
-
-            for (auto constraint : m_instant_constraints)
-            {
-                projectConstraint(constraint);
-            }
-        }
-
-        // Apply the results
-        for (auto& particle : m_particles)
-        {
-            particle.v = (particle.p - particle.x) * (1.0 / dt);
-            particle.x = particle.p;
-        }
-
-        // Update velocities
+    void updateVelocities() override
+    {
         for (auto& particle : m_particles)
         {
             particle.v *= 0.999;
         }
-
-        // Clear instant constraints
-        m_instant_constraints.clear();
     }
 };
 
