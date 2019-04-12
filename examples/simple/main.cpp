@@ -3,6 +3,14 @@
 #include <bigger/app.hpp>
 #include <elasty/elasty.hpp>
 
+namespace
+{
+    inline glm::vec3 eigen2glm(const Eigen::Vector3d& eigen)
+    {
+        return glm::vec3(eigen.x(), eigen.y(), eigen.z());
+    }
+}
+
 class SimpleEngine final : public elasty::Engine
 {
 public:
