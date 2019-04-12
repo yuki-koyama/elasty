@@ -21,16 +21,6 @@ namespace elasty
         virtual void generateCollisionConstraints() = 0;
         virtual void updateVelocities() = 0;
 
-        void addConstraint(std::shared_ptr<Constraint> constraint)
-        {
-            m_constraints.push_back(constraint);
-        }
-
-        void addInstantConstraint(std::shared_ptr<Constraint> constraint)
-        {
-            m_instant_constraints.push_back(constraint);
-        }
-
         std::vector<Particle> m_particles;
 
         std::vector<std::shared_ptr<Constraint>> m_constraints;
@@ -38,6 +28,8 @@ namespace elasty
 
     protected:
 
+        void addConstraint(std::shared_ptr<Constraint> constraint);
+        void addInstantConstraint(std::shared_ptr<Constraint> constraint);
         void projectConstraint(std::shared_ptr<Constraint> constraint);
 
         double m_dt = 1.0 / 60.0;

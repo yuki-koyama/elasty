@@ -47,6 +47,16 @@ void elasty::Engine::stepTime()
     m_instant_constraints.clear();
 }
 
+void elasty::Engine::addConstraint(std::shared_ptr<Constraint> constraint)
+{
+    m_constraints.push_back(constraint);
+}
+
+void elasty::Engine::addInstantConstraint(std::shared_ptr<Constraint> constraint)
+{
+    m_instant_constraints.push_back(constraint);
+}
+
 void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
 {
     // Calculate $C$
@@ -78,4 +88,3 @@ void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
         m_particles[constraint->m_indices[j]].p += delta_x;
     }
 }
-
