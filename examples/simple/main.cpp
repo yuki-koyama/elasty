@@ -136,12 +136,13 @@ public:
         for (auto& particle : m_engine->m_particles)
         {
             const glm::mat4 translate_matrix = glm::translate(eigen2glm(particle.x));
-            const glm::mat4 scale_matrix = glm::scale(glm::vec3(0.1f));
+            const glm::mat4 scale_matrix = glm::scale(glm::vec3(0.2f));
 
             const glm::mat4 transform = parent_transform_matrix * translate_matrix * scale_matrix;
 
             bgfx::setTransform(glm::value_ptr(transform));
 
+            m_material->submitUniforms();
             m_sphere_primitive->submitPrimitive(m_material->m_program);
         }
     }
