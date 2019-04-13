@@ -67,6 +67,23 @@ namespace elasty
         const Eigen::Vector3d m_n;
         const double m_d;
     };
+
+    class FixedPointConstraint final : public Constraint
+    {
+    public:
+
+        FixedPointConstraint(const Engine* engine,
+                             const std::vector<unsigned int>& indices,
+                             const double stiffness,
+                             const Eigen::Vector3d& point);
+
+        double calculateValue() override;
+        Eigen::VectorXd calculateGrad() override;
+
+    private:
+
+        const Eigen::Vector3d m_point;
+    };
 }
 
 #endif /* constraint_hpp */
