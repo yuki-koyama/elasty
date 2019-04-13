@@ -13,9 +13,10 @@ Eigen::VectorXd elasty::DistanceConstraint::calculateGrad()
 {
     const Eigen::Vector3d& x_0 = m_engine->m_particles[m_indices[0]].p;
     const Eigen::Vector3d& x_1 = m_engine->m_particles[m_indices[1]].p;
-    const Eigen::Vector3d n = (x_0 - x_1).normalized();
 
-    assert(!n.hasNaN());
+    Eigen::Vector3d n = (x_0 - x_1).normalized();
+
+    if (n.hasNaN()) { n = Eigen::Vector3d::Random(3).normalized(); }
 
     Eigen::VectorXd grad_C = Eigen::VectorXd(3 * 2);
     grad_C.segment<3>(0) = n;
