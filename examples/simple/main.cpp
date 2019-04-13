@@ -21,20 +21,25 @@ public:
 
     void initializeScene() override
     {
-        constexpr unsigned int num_particles = 10;
+        constexpr unsigned int num_particles = 20;
+        constexpr double total_length = 4.0;
+        constexpr double segment_length = total_length / double(num_particles - 1);
+
         m_particles.resize(num_particles);
 
         for (unsigned int i = 0; i < num_particles; ++ i)
         {
-            m_particles[i].x = Eigen::Vector3d(0.0, 1.0 * double(i), 0.0);
-            m_particles[i].v = Eigen::Vector3d::Random() + Eigen::Vector3d(0.0, 2.0, 0.0);
+            m_particles[i].x = Eigen::Vector3d(0.0, segment_length * double(i), 0.0);
+            m_particles[i].v = 10.0 * Eigen::Vector3d::Random();
             m_particles[i].m = 1.0;
             m_particles[i].i = i;
         }
 
+        addConstraint(std::make_shared<elasty::FixedPointConstraint>(this, std::vector<unsigned int>{ num_particles - 1 }, 1.0, m_particles[num_particles - 1].x));
+
         for (unsigned int i = 0; i < num_particles - 1; ++ i)
         {
-            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ i, i + 1 }, 0.1, 1.0));
+            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ i, i + 1 }, 0.1, segment_length));
         }
     }
 
@@ -91,7 +96,8 @@ private:
 
 SimpleApp::SimpleApp()
 {
-    getCamera().m_position = glm::vec3(1.0f, 1.0f, - 10.0f);
+    getCamera().m_position = glm::vec3(1.0f, 2.0f, - 10.0f);
+    getCamera().m_target = glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
 class ParticleObject final : public bigger::SceneObject
