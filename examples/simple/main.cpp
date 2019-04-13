@@ -21,19 +21,21 @@ public:
 
     void initializeScene() override
     {
-        m_particles.resize(2);
+        constexpr unsigned int num_particles = 10;
+        m_particles.resize(num_particles);
 
-        m_particles[0].x = Eigen::Vector3d::Zero();
-        m_particles[0].v = Eigen::Vector3d(0.0, 10.0, 0.0);
-        m_particles[0].m = 1.0;
-        m_particles[0].i = 0;
+        for (unsigned int i = 0; i < num_particles; ++ i)
+        {
+            m_particles[i].x = Eigen::Vector3d(0.0, 1.0 * double(i), 0.0);
+            m_particles[i].v = Eigen::Vector3d::Random() + Eigen::Vector3d(0.0, 2.0, 0.0);
+            m_particles[i].m = 1.0;
+            m_particles[i].i = i;
+        }
 
-        m_particles[1].x = Eigen::Vector3d::Zero();
-        m_particles[1].v = Eigen::Vector3d(1.0, 8.0, 0.0);
-        m_particles[1].m = 1.0;
-        m_particles[1].i = 1;
-
-        addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ 0, 1 }, 1.0));
+        for (unsigned int i = 0; i < num_particles - 1; ++ i)
+        {
+            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ i, i + 1 }, 0.1, 1.0));
+        }
     }
 
     void setExternalForces() override
@@ -52,7 +54,7 @@ public:
         {
             if (particle.p.y() < 0.0)
             {
-                addInstantConstraint(std::make_shared<elasty::EnvironmentalCollisionConstraint>(this, std::vector<unsigned int>{ particle.i }, Eigen::Vector3d(0.0, 1.0, 0.0), 0.0));
+                addInstantConstraint(std::make_shared<elasty::EnvironmentalCollisionConstraint>(this, std::vector<unsigned int>{ particle.i }, 1.0, Eigen::Vector3d(0.0, 1.0, 0.0), 0.0));
             }
         }
     }

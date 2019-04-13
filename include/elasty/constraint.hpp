@@ -12,9 +12,10 @@ namespace elasty
     {
     public:
 
-        Constraint(const Engine* engine, const std::vector<unsigned int>& indices) :
+        Constraint(const Engine* engine, const std::vector<unsigned int>& indices, const double stiffness) :
         m_engine(engine),
-        m_indices(indices)
+        m_indices(indices),
+        m_stiffness(stiffness)
         {
         }
 
@@ -23,14 +24,15 @@ namespace elasty
 
         const Engine* m_engine;
         const std::vector<unsigned int> m_indices;
+        const double m_stiffness;
     };
 
     class DistanceConstraint final : public Constraint
     {
     public:
 
-        DistanceConstraint(const Engine* engine, const std::vector<unsigned int>& indices, const double d) :
-        Constraint(engine, indices),
+        DistanceConstraint(const Engine* engine, const std::vector<unsigned int>& indices, const double stiffness, const double d) :
+        Constraint(engine, indices, stiffness),
         m_d(d)
         {
             assert(indices.size() == 2);
@@ -49,8 +51,8 @@ namespace elasty
     {
     public:
 
-        EnvironmentalCollisionConstraint(const Engine* engine, const std::vector<unsigned int>& indices, const Eigen::Vector3d& n, const double d) :
-        Constraint(engine, indices),
+        EnvironmentalCollisionConstraint(const Engine* engine, const std::vector<unsigned int>& indices, const double stiffness, const Eigen::Vector3d& n, const double d) :
+        Constraint(engine, indices, stiffness),
         m_n(n),
         m_d(d)
         {
