@@ -51,7 +51,11 @@ namespace elasty
     {
     public:
 
-        EnvironmentalCollisionConstraint(const Engine* engine, const std::vector<unsigned int>& indices, const double stiffness, const Eigen::Vector3d& n, const double d) :
+        EnvironmentalCollisionConstraint(const Engine* engine,
+                                         const std::vector<unsigned int>& indices,
+                                         const double stiffness,
+                                         const Eigen::Vector3d& n,
+                                         const double d) :
         Constraint(engine, indices, stiffness),
         m_n(n),
         m_d(d)
@@ -60,7 +64,7 @@ namespace elasty
         }
 
         double calculateValue() override;
-        Eigen::VectorXd calculateGrad() override { return m_n; }
+        Eigen::VectorXd calculateGrad() override;
 
     private:
 

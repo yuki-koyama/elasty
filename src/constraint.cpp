@@ -31,6 +31,11 @@ double elasty::EnvironmentalCollisionConstraint::calculateValue()
     return m_n.transpose() * x - m_d;
 }
 
+Eigen::VectorXd elasty::EnvironmentalCollisionConstraint::calculateGrad()
+{
+    return m_n;
+}
+
 elasty::FixedPointConstraint::FixedPointConstraint(const Engine* engine,
                                                    const std::vector<unsigned int>& indices,
                                                    const double stiffness,
