@@ -1,12 +1,16 @@
 #include <array>
+#include <iostream>
+#include <map>
 #include <memory>
 #include <bigger/app.hpp>
 #include <bigger/scene-object.hpp>
 #include <bigger/materials/blinnphong-material.hpp>
 #include <bigger/primitives/plane-primitive.hpp>
 #include <bigger/primitives/sphere-primitive.hpp>
+#include <Eigen/Geometry>
 #include <elasty/constraint.hpp>
 #include <elasty/engine.hpp>
+#include <tiny_obj_loader.h>
 
 namespace
 {
@@ -22,15 +26,16 @@ public:
 
     void initializeScene() override
     {
+        // Rod
         constexpr unsigned int num_particles = 20;
-        constexpr double total_length = 3.0;
+        constexpr double total_length = 2.0;
         constexpr double segment_length = total_length / double(num_particles - 1);
 
         m_particles.resize(num_particles);
 
         for (unsigned int i = 0; i < num_particles; ++ i)
         {
-            m_particles[i].x = Eigen::Vector3d(0.0, 1.0 + segment_length * double(i), 0.0);
+            m_particles[i].x = Eigen::Vector3d(- 1.0, 1.0 + segment_length * double(i), 0.0);
             m_particles[i].v = 50.0 * Eigen::Vector3d::Random();
             m_particles[i].m = 1.0;
             m_particles[i].i = i;
@@ -41,6 +46,81 @@ public:
         for (unsigned int i = 0; i < num_particles - 1; ++ i)
         {
             addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ i, i + 1 }, 0.5, segment_length));
+        }
+
+        // Cloth
+        const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * glm::pi<double>(), Eigen::Vector3d::UnitX());
+
+        tinyobj::attrib_t attrib;
+        std::vector<tinyobj::shape_t> shapes;
+        std::vector<tinyobj::material_t> materials;
+
+        std::string warn;
+        std::string err;
+        const bool return_value = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "models/cloths/0.05.obj");
+
+        if (!warn.empty()) { std::cerr << warn << std::endl; }
+        if (!err.empty()) { std::cerr << err << std::endl; }
+        if (!return_value) { throw std::runtime_error(""); }
+
+        if (attrib.vertices.empty() || attrib.normals.empty()) { throw std::runtime_error(""); }
+
+        assert(shapes.size() == 1);
+        assert(attrib.vertices.size() % 3 == 0);
+        assert(shape.mesh.indices.size() % 3 == 0);
+
+        const auto& shape = shapes[0];
+
+        std::map<unsigned int, unsigned int> map_from_obj_vertex_index_to_engine_particle_index;
+        for (unsigned int i = 0; i < attrib.vertices.size() / 3; ++ i)
+        {
+            const Eigen::Vector3d position
+            {
+                attrib.vertices[3 * i + 0],
+                attrib.vertices[3 * i + 1],
+                attrib.vertices[3 * i + 2]
+            };
+
+            elasty::Particle particle;
+            particle.x = cloth_import_transform * position;
+            particle.v = Eigen::Vector3d::Random();
+            particle.m = 1.0;
+            particle.i = m_particles.size();
+
+            map_from_obj_vertex_index_to_engine_particle_index[i] = particle.i;
+
+            m_particles.push_back(particle);
+        }
+
+        constexpr double cloth_distance_stiffness = 0.8;
+
+        for (unsigned int i = 0; i < shape.mesh.indices.size() / 3; ++ i)
+        {
+            const auto& p0 = m_particles[map_from_obj_vertex_index_to_engine_particle_index[shape.mesh.indices[i * 3 + 0].vertex_index]];
+            const auto& p1 = m_particles[map_from_obj_vertex_index_to_engine_particle_index[shape.mesh.indices[i * 3 + 1].vertex_index]];
+            const auto& p2 = m_particles[map_from_obj_vertex_index_to_engine_particle_index[shape.mesh.indices[i * 3 + 2].vertex_index]];
+
+            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ p0.i, p1.i }, cloth_distance_stiffness, (p0.x - p1.x).norm()));
+            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ p0.i, p2.i }, cloth_distance_stiffness, (p0.x - p2.x).norm()));
+            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ p1.i, p2.i }, cloth_distance_stiffness, (p1.x - p2.x).norm()));
+        }
+
+        const auto find_and_constrain_fixed_point = [&](const Eigen::Vector3d& search_position,
+                                                        const Eigen::Vector3d& fixed_position,
+                                                        const elasty::Particle& particle)
+        {
+            if (particle.x.isApprox(search_position))
+            {
+                addConstraint(std::make_shared<elasty::FixedPointConstraint>(this, std::vector<unsigned int>{ particle.i }, 1.0, fixed_position));
+            }
+        };
+
+        for (const auto& key_value : map_from_obj_vertex_index_to_engine_particle_index)
+        {
+            const auto& particle = m_particles[key_value.second];
+
+            find_and_constrain_fixed_point(Eigen::Vector3d(+ 1.0 + 1.0, + 2.0, 0.0), Eigen::Vector3d(+ 1.0 + 1.0, 3.0, 0.0), particle);
+            find_and_constrain_fixed_point(Eigen::Vector3d(- 1.0 + 1.0, + 2.0, 0.0), Eigen::Vector3d(- 1.0 + 1.0, 3.0, 0.0), particle);
         }
     }
 
@@ -100,8 +180,9 @@ private:
 
 SimpleApp::SimpleApp()
 {
-    getCamera().m_position = glm::vec3(1.0f, 2.0f, - 10.0f);
-    getCamera().m_target = glm::vec3(0.0f, 1.0f, 0.0f);
+    getCamera().m_position = glm::vec3(1.0f, 2.0f, - 8.0f);
+    getCamera().m_target = glm::vec3(0.0f, 1.5f, 0.0f);
+    getCamera().m_fov = 45.0f;
 }
 
 class ParticlesObject final : public bigger::SceneObject
@@ -122,7 +203,7 @@ public:
         for (auto& particle : m_engine->m_particles)
         {
             const glm::mat4 translate_matrix = glm::translate(eigen2glm(particle.x));
-            const glm::mat4 scale_matrix = glm::scale(glm::vec3(0.1f));
+            const glm::mat4 scale_matrix = glm::scale(glm::vec3(0.05f));
 
             const glm::mat4 transform = parent_transform_matrix * translate_matrix * scale_matrix;
 
