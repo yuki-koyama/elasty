@@ -30,7 +30,7 @@ public:
 
         for (unsigned int i = 0; i < num_particles; ++ i)
         {
-            m_particles[i].x = Eigen::Vector3d(0.0, 1.5 + segment_length * double(i), 0.0);
+            m_particles[i].x = Eigen::Vector3d(0.0, 1.0 + segment_length * double(i), 0.0);
             m_particles[i].v = 50.0 * Eigen::Vector3d::Random();
             m_particles[i].m = 1.0;
             m_particles[i].i = i;
@@ -40,7 +40,7 @@ public:
 
         for (unsigned int i = 0; i < num_particles - 1; ++ i)
         {
-            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ i, i + 1 }, 0.1, segment_length));
+            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ i, i + 1 }, 0.5, segment_length));
         }
     }
 
@@ -104,13 +104,13 @@ SimpleApp::SimpleApp()
     getCamera().m_target = glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
-class ParticleObject final : public bigger::SceneObject
+class ParticlesObject final : public bigger::SceneObject
 {
 public:
 
-    ParticleObject(std::shared_ptr<SimpleEngine> engine,
-                   std::shared_ptr<bigger::SpherePrimitive> sphere_primitive,
-                   std::shared_ptr<bigger::BlinnPhongMaterial> material) :
+    ParticlesObject(std::shared_ptr<SimpleEngine> engine,
+                    std::shared_ptr<bigger::SpherePrimitive> sphere_primitive,
+                    std::shared_ptr<bigger::BlinnPhongMaterial> material) :
     bigger::SceneObject(material),
     m_engine(engine),
     m_sphere_primitive(sphere_primitive)
@@ -201,7 +201,7 @@ void SimpleApp::initialize(int argc, char** argv)
     m_engine = std::make_unique<SimpleEngine>();
     m_engine->initializeScene();
 
-    addSceneObject(std::make_shared<ParticleObject>(m_engine, m_sphere_primitive, m_default_material));
+    addSceneObject(std::make_shared<ParticlesObject>(m_engine, m_sphere_primitive, m_default_material));
     addSceneObject(std::make_shared<CheckerBoardObject>(m_plane_primitive, m_checker_white_material, m_checker_black_material));
 }
 
