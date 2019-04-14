@@ -68,6 +68,9 @@ void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
     // Calculate $\Nabla C$
     const Eigen::VectorXd grad_C = constraint->calculateGrad();
 
+    // Skip if the gradient is sufficiently small
+    if (grad_C.isApprox(Eigen::VectorXd::Zero(grad_C.size()))) { return; }
+
     // Calculate $\mathbf{M}^{-1}$
     const unsigned int n = constraint->m_indices.size();
     std::vector<double> inverse_mass_raw(3 * n);
