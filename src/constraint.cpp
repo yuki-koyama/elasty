@@ -31,7 +31,14 @@ double elasty::BendingConstraint::calculateValue()
     const Eigen::Vector3d n_0 = p_10.cross(p_20).normalized();
     const Eigen::Vector3d n_1 = p_10.cross(p_30).normalized();
 
-    return std::acos(n_0.dot(n_1)) - m_dihedral_angle;
+    assert(!n_0.hasNaN());
+    assert(!n_1.hasNaN());
+
+    const double current_dihedral_angle = std::acos(std::min(+ 1.0, std::max(- 1.0, n_0.dot(n_1))));
+
+    assert(!std::isnan(current_dihedral_angle));
+
+    return current_dihedral_angle - m_dihedral_angle;
 }
 
 Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
@@ -55,6 +62,8 @@ Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
     const double d = n_0.dot(n_1);
 
     const double common_coeff = - 1.0 / std::sqrt(1.0 - d * d);
+
+    assert(!std::isnan(common_coeff) && "TODO: Handle NaN cases in the bending constraint");
 
     auto calculate_gradient_of_normalized_cross_product_wrt_p_1 = [](const Eigen::Vector3d& p_1,
                                                                      const Eigen::Vector3d& p_2,
@@ -82,6 +91,8 @@ Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
     grad_C.segment<3>(3 * 1) = grad_C_wrt_p_1;
     grad_C.segment<3>(3 * 2) = grad_C_wrt_p_2;
     grad_C.segment<3>(3 * 3) = grad_C_wrt_p_3;
+
+    assert(!grad_C.hasNaN());
 
     return grad_C;
 }

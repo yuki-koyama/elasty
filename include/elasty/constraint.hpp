@@ -14,7 +14,9 @@ namespace elasty
     {
     public:
 
-        Constraint(const Engine* engine, const std::vector<unsigned int>& indices, const double stiffness) :
+        Constraint(const Engine* engine,
+                   const std::vector<unsigned int>& indices,
+                   const double stiffness) :
         m_engine(engine),
         m_indices(indices),
         m_stiffness(stiffness)

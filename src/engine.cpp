@@ -87,6 +87,7 @@ void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
 
     // Calculate $\Delta x$
     const Eigen::VectorXd delta_x = - s * inverse_M_diagnal.asDiagonal() * grad_C;
+    assert(!delta_x.hasNaN());
 
     // Update predicted positions
     for (unsigned int j = 0; j < n; ++ j)
