@@ -3,6 +3,7 @@
 #include <bigger/app.hpp>
 #include <bigger/scene-object.hpp>
 #include <bigger/materials/blinnphong-material.hpp>
+#include <bigger/primitives/plane-primitive.hpp>
 #include <bigger/primitives/sphere-primitive.hpp>
 #include <elasty/constraint.hpp>
 #include <elasty/engine.hpp>
@@ -22,15 +23,15 @@ public:
     void initializeScene() override
     {
         constexpr unsigned int num_particles = 20;
-        constexpr double total_length = 4.0;
+        constexpr double total_length = 3.0;
         constexpr double segment_length = total_length / double(num_particles - 1);
 
         m_particles.resize(num_particles);
 
         for (unsigned int i = 0; i < num_particles; ++ i)
         {
-            m_particles[i].x = Eigen::Vector3d(0.0, segment_length * double(i), 0.0);
-            m_particles[i].v = 10.0 * Eigen::Vector3d::Random();
+            m_particles[i].x = Eigen::Vector3d(0.0, 1.5 + segment_length * double(i), 0.0);
+            m_particles[i].v = 50.0 * Eigen::Vector3d::Random();
             m_particles[i].m = 1.0;
             m_particles[i].i = i;
         }
@@ -91,7 +92,10 @@ private:
 
     // Shared resources
     std::shared_ptr<bigger::BlinnPhongMaterial> m_default_material;
+    std::shared_ptr<bigger::BlinnPhongMaterial> m_checker_white_material;
+    std::shared_ptr<bigger::BlinnPhongMaterial> m_checker_black_material;
     std::shared_ptr<bigger::SpherePrimitive> m_sphere_primitive;
+    std::shared_ptr<bigger::PlanePrimitive> m_plane_primitive;
 };
 
 SimpleApp::SimpleApp()
@@ -103,6 +107,7 @@ SimpleApp::SimpleApp()
 class ParticleObject final : public bigger::SceneObject
 {
 public:
+
     ParticleObject(std::shared_ptr<SimpleEngine> engine,
                    std::shared_ptr<bigger::SpherePrimitive> sphere_primitive,
                    std::shared_ptr<bigger::BlinnPhongMaterial> material) :
@@ -117,7 +122,7 @@ public:
         for (auto& particle : m_engine->m_particles)
         {
             const glm::mat4 translate_matrix = glm::translate(eigen2glm(particle.x));
-            const glm::mat4 scale_matrix = glm::scale(glm::vec3(0.2f));
+            const glm::mat4 scale_matrix = glm::scale(glm::vec3(0.1f));
 
             const glm::mat4 transform = parent_transform_matrix * translate_matrix * scale_matrix;
 
@@ -134,19 +139,70 @@ private:
     std::shared_ptr<bigger::SpherePrimitive> m_sphere_primitive;
 };
 
+class CheckerBoardObject final : public bigger::SceneObject
+{
+public:
+
+    CheckerBoardObject(std::shared_ptr<bigger::PlanePrimitive> plane_primitive,
+                       std::shared_ptr<bigger::BlinnPhongMaterial> checker_white_material,
+                       std::shared_ptr<bigger::BlinnPhongMaterial> checker_black_material) :
+    bigger::SceneObject(nullptr),
+    m_plane_primitive(plane_primitive),
+    m_checker_white_material(checker_white_material),
+    m_checker_black_material(checker_black_material)
+    {
+    }
+
+    void draw(const glm::mat4& parent_transform_matrix = glm::mat4(1.0f))
+    {
+        const glm::mat4 transform = parent_transform_matrix * getTransform();
+
+        for (int i = - m_resolution; i <= m_resolution; ++ i)
+        {
+            for (int j = - m_resolution; j <= m_resolution; ++ j)
+            {
+                const glm::mat4 local_transform = glm::translate(transform, glm::vec3(float(i), 0.0f, float(j)));
+
+                bgfx::setTransform(glm::value_ptr(local_transform));
+
+                auto target_material = ((i + j) % 2 == 0) ? m_checker_white_material : m_checker_black_material;
+                target_material->submitUniforms();
+                m_plane_primitive->submitPrimitive(target_material->m_program);
+            }
+        }
+    }
+
+private:
+
+    const int m_resolution = 4;
+
+    std::shared_ptr<bigger::PlanePrimitive> m_plane_primitive;
+    std::shared_ptr<bigger::BlinnPhongMaterial> m_checker_white_material;
+    std::shared_ptr<bigger::BlinnPhongMaterial> m_checker_black_material;
+};
+
 void SimpleApp::initialize(int argc, char** argv)
 {
     // Register and apply BGFX configuration settings
     reset(BGFX_RESET_VSYNC | BGFX_RESET_MSAA_X8);
 
     m_default_material = std::make_shared<bigger::BlinnPhongMaterial>();
+    m_checker_white_material = std::make_shared<bigger::BlinnPhongMaterial>();
+    m_checker_white_material->u_diffuse = glm::vec3(0.8);
+    m_checker_white_material->u_specular = glm::vec3(0.0);
+    m_checker_black_material = std::make_shared<bigger::BlinnPhongMaterial>();
+    m_checker_black_material->u_diffuse = glm::vec3(0.3);
+    m_checker_black_material->u_specular = glm::vec3(0.0);
     m_sphere_primitive = std::make_shared<bigger::SpherePrimitive>();
     m_sphere_primitive->initializePrimitive();
+    m_plane_primitive = std::make_shared<bigger::PlanePrimitive>();
+    m_plane_primitive->initializePrimitive();
 
     m_engine = std::make_unique<SimpleEngine>();
     m_engine->initializeScene();
 
     addSceneObject(std::make_shared<ParticleObject>(m_engine, m_sphere_primitive, m_default_material));
+    addSceneObject(std::make_shared<CheckerBoardObject>(m_plane_primitive, m_checker_white_material, m_checker_black_material));
 }
 
 void SimpleApp::onReset()
@@ -179,6 +235,8 @@ void SimpleApp::releaseSharedResources()
 {
     m_sphere_primitive = nullptr;
     m_default_material = nullptr;
+    m_checker_white_material = nullptr;
+    m_checker_black_material = nullptr;
 }
 
 int main(int argc, char** argv)
