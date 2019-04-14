@@ -62,6 +62,9 @@ void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
     // Calculate $C$
     const double C = constraint->calculateValue();
 
+    // Skip if the constraint is unilateral and is satisfied
+    if (constraint->getType() == ConstraintType::Unilateral && C >= 0.0) { return; }
+
     // Calculate $\Nabla C$
     const Eigen::VectorXd grad_C = constraint->calculateGrad();
 

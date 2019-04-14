@@ -8,6 +8,8 @@ namespace elasty
 {
     class Engine;
 
+    enum class ConstraintType { Bilateral, Unilateral };
+
     class Constraint
     {
     public:
@@ -21,6 +23,7 @@ namespace elasty
 
         virtual double calculateValue() = 0;
         virtual Eigen::VectorXd calculateGrad() = 0;
+        virtual ConstraintType getType() = 0;
 
         const Engine* m_engine;
         const std::vector<unsigned int> m_indices;
@@ -41,6 +44,7 @@ namespace elasty
 
         double calculateValue() override;
         Eigen::VectorXd calculateGrad() override;
+        ConstraintType getType() override { return ConstraintType::Bilateral; }
 
     private:
 
@@ -65,6 +69,7 @@ namespace elasty
 
         double calculateValue() override;
         Eigen::VectorXd calculateGrad() override;
+        ConstraintType getType() override { return ConstraintType::Unilateral; }
 
     private:
 
@@ -83,6 +88,7 @@ namespace elasty
 
         double calculateValue() override;
         Eigen::VectorXd calculateGrad() override;
+        ConstraintType getType() override { return ConstraintType::Bilateral; }
 
     private:
 
