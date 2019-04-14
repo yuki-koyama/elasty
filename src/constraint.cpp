@@ -59,6 +59,7 @@ Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
     auto calculate_gradient_of_normalized_cross_product_wrt_p_1 = [](const Eigen::Vector3d& p_1,
                                                                      const Eigen::Vector3d& p_2,
                                                                      const Eigen::Vector3d& n)
+    -> Eigen::Matrix3d
     {
         return + (1.0 / p_1.cross(p_2).norm()) * (- convert_vector_to_cross_operator(p_2) + n * (n.cross(p_2)).transpose());
     };
@@ -66,6 +67,7 @@ Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
     auto calculate_gradient_of_normalized_cross_product_wrt_p_2 = [](const Eigen::Vector3d& p_1,
                                                                      const Eigen::Vector3d& p_2,
                                                                      const Eigen::Vector3d& n)
+    -> Eigen::Matrix3d
     {
         return - (1.0 / p_1.cross(p_2).norm()) * (- convert_vector_to_cross_operator(p_1) + n * (n.cross(p_1)).transpose());
     };
