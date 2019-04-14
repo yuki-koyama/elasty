@@ -2,6 +2,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <set>
 #include <bigger/app.hpp>
 #include <bigger/scene-object.hpp>
 #include <bigger/materials/blinnphong-material.hpp>
@@ -49,6 +50,9 @@ public:
         }
 
         // Cloth
+        constexpr double cloth_distance_stiffness = 0.9;
+        constexpr double cloth_bending_stiffness = 0.1;
+
         const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * glm::pi<double>(), Eigen::Vector3d::UnitX());
 
         tinyobj::attrib_t attrib;
@@ -57,7 +61,7 @@ public:
 
         std::string warn;
         std::string err;
-        const bool return_value = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "models/cloths/0.05.obj");
+        const bool return_value = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "models/cloths/0.01.obj");
 
         if (!warn.empty()) { std::cerr << warn << std::endl; }
         if (!err.empty()) { std::cerr << err << std::endl; }
@@ -83,16 +87,14 @@ public:
 
             elasty::Particle particle;
             particle.x = cloth_import_transform * position;
-            particle.v = Eigen::Vector3d::Random();
-            particle.m = 1.0;
+            particle.v = 20.0 * Eigen::Vector3d::Random();
+            particle.m = 1.0 / double(attrib.vertices.size());
             particle.i = m_particles.size();
 
             map_from_obj_vertex_index_to_engine_particle_index[i] = particle.i;
 
             m_particles.push_back(particle);
         }
-
-        constexpr double cloth_distance_stiffness = 0.8;
 
         for (unsigned int i = 0; i < shape.mesh.indices.size() / 3; ++ i)
         {
@@ -103,6 +105,104 @@ public:
             addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ p0.i, p1.i }, cloth_distance_stiffness, (p0.x - p1.x).norm()));
             addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ p0.i, p2.i }, cloth_distance_stiffness, (p0.x - p2.x).norm()));
             addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ p1.i, p2.i }, cloth_distance_stiffness, (p1.x - p2.x).norm()));
+        }
+
+        using vertex_t = unsigned int;
+        using triangle_t = unsigned int;
+        using edge_t = std::pair<vertex_t, vertex_t>;
+        std::map<edge_t, std::vector<triangle_t>> edges_and_triangles;
+        for (unsigned int i = 0; i < shape.mesh.indices.size() / 3; ++ i)
+        {
+            const vertex_t index_0 = shape.mesh.indices[i * 3 + 0].vertex_index;
+            const vertex_t index_1 = shape.mesh.indices[i * 3 + 1].vertex_index;
+            const vertex_t index_2 = shape.mesh.indices[i * 3 + 2].vertex_index;
+
+            const edge_t e_01 = std::make_pair(std::min(index_0, index_1), std::max(index_0, index_1));
+            const edge_t e_02 = std::make_pair(std::min(index_0, index_2), std::max(index_0, index_2));
+            const edge_t e_12 = std::make_pair(std::min(index_1, index_2), std::max(index_1, index_2));
+
+            auto register_edge = [&](const edge_t& edge)
+            {
+                if (edges_and_triangles.find(edge) == edges_and_triangles.end())
+                {
+                    edges_and_triangles[edge] =  { i };
+                }
+                else
+                {
+                    edges_and_triangles[edge].push_back(i);
+                }
+            };
+
+            register_edge(e_01);
+            register_edge(e_02);
+            register_edge(e_12);
+        }
+
+        for (const auto& key_value : edges_and_triangles)
+        {
+            const edge_t& edge = key_value.first;
+            const std::vector<triangle_t>& triangles = key_value.second;
+
+            assert(triangles.size() == 1 || triangles.size() == 2);
+
+            // Boundary
+            if (triangles.size() == 1) { continue; }
+
+            auto obtain_another_vertex = [&](const triangle_t& triangle, const edge_t& edge)
+            {
+                const vertex_t vertex_0 = shape.mesh.indices[3 * triangle + 0].vertex_index;
+                const vertex_t vertex_1 = shape.mesh.indices[3 * triangle + 1].vertex_index;
+                const vertex_t vertex_2 = shape.mesh.indices[3 * triangle + 2].vertex_index;
+
+                if (vertex_0 != edge.first && vertex_0 != edge.second)
+                {
+                    return vertex_0;
+                }
+                else if (vertex_1 != edge.first && vertex_1 != edge.second)
+                {
+                    return vertex_1;
+                }
+                else
+                {
+                    assert(vertex_2 != edge.first && vertex_2 != edge.second);
+                    return vertex_2;
+                }
+            };
+
+            const triangle_t another_vertex_0 = obtain_another_vertex(triangles[0], edge);
+            const triangle_t another_vertex_1 = obtain_another_vertex(triangles[1], edge);
+
+            const unsigned i_0 = map_from_obj_vertex_index_to_engine_particle_index[edge.first];
+            const unsigned i_1 = map_from_obj_vertex_index_to_engine_particle_index[edge.second];
+            const unsigned i_2 = map_from_obj_vertex_index_to_engine_particle_index[another_vertex_0];
+            const unsigned i_3 = map_from_obj_vertex_index_to_engine_particle_index[another_vertex_1];
+
+            const Eigen::Vector3d& x_0 = m_particles[i_0].x;
+            const Eigen::Vector3d& x_1 = m_particles[i_1].x;
+            const Eigen::Vector3d& x_2 = m_particles[i_2].x;
+            const Eigen::Vector3d& x_3 = m_particles[i_3].x;
+
+            const Eigen::Vector3d p_10 = x_1 - x_0;
+            const Eigen::Vector3d p_20 = x_2 - x_0;
+            const Eigen::Vector3d p_30 = x_3 - x_0;
+
+            const Eigen::Vector3d n_0 = p_10.cross(p_20).normalized();
+            const Eigen::Vector3d n_1 = p_10.cross(p_30).normalized();
+
+            assert(!n_0.hasNaN());
+            assert(!n_1.hasNaN());
+
+            // Typical value is 0.0 or pi
+            const double dihedral_angle = std::acos(std::max(- 1.0, std::min(+ 1.0, n_0.dot(n_1))));
+
+            assert(!std::isnan(dihedral_angle));
+
+            addConstraint(std::make_shared<elasty::BendingConstraint>(this, std::vector<unsigned int>{ i_0, i_1, i_2, i_3 }, cloth_bending_stiffness, dihedral_angle));
+
+#if 0
+            // Another popular approach to achieve bend resistance
+            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ i_2, i_3 }, cloth_bending_stiffness, (x_2 - x_3).norm()));
+#endif
         }
 
         const auto find_and_constrain_fixed_point = [&](const Eigen::Vector3d& search_position,
