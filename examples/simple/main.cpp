@@ -65,11 +65,11 @@ public:
 
         if (attrib.vertices.empty() || attrib.normals.empty()) { throw std::runtime_error(""); }
 
+        const auto& shape = shapes[0];
+
         assert(shapes.size() == 1);
         assert(attrib.vertices.size() % 3 == 0);
         assert(shape.mesh.indices.size() % 3 == 0);
-
-        const auto& shape = shapes[0];
 
         std::map<unsigned int, unsigned int> map_from_obj_vertex_index_to_engine_particle_index;
         for (unsigned int i = 0; i < attrib.vertices.size() / 3; ++ i)
