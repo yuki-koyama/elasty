@@ -30,11 +30,37 @@ namespace elasty
         const double m_stiffness;
     };
 
+    class BendingConstraint final : public Constraint
+    {
+    public:
+
+        BendingConstraint(const Engine* engine,
+                          const std::vector<unsigned int>& indices,
+                          const double stiffness,
+                          const double dihedral_angle) :
+        Constraint(engine, indices, stiffness),
+        m_dihedral_angle(dihedral_angle)
+        {
+            assert(indices.size() == 4);
+        }
+
+        double calculateValue() override;
+        Eigen::VectorXd calculateGrad() override;
+        ConstraintType getType() override { return ConstraintType::Bilateral; }
+
+    private:
+
+        const double m_dihedral_angle;
+    };
+
     class DistanceConstraint final : public Constraint
     {
     public:
 
-        DistanceConstraint(const Engine* engine, const std::vector<unsigned int>& indices, const double stiffness, const double d) :
+        DistanceConstraint(const Engine* engine,
+                           const std::vector<unsigned int>& indices,
+                           const double stiffness,
+                           const double d) :
         Constraint(engine, indices, stiffness),
         m_d(d)
         {
