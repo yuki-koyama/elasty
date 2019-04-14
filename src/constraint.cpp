@@ -61,9 +61,10 @@ Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
 
     const double d = n_0.dot(n_1);
 
-    const double common_coeff = - 1.0 / std::sqrt(1.0 - d * d);
+    constexpr double epsilon = 1e-12;
+    if (std::abs(d) - 1.0 < epsilon) { return Eigen::VectorXd::Random(3 * 4); }
 
-    assert(!std::isnan(common_coeff) && "TODO: Handle NaN cases in the bending constraint");
+    const double common_coeff = - 1.0 / std::sqrt(1.0 - d * d);
 
     auto calculate_gradient_of_normalized_cross_product_wrt_p_1 = [](const Eigen::Vector3d& p_1,
                                                                      const Eigen::Vector3d& p_2,
