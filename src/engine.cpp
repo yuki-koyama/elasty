@@ -94,4 +94,6 @@ void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
     {
         m_particles[constraint->m_indices[j]].p += constraint->m_stiffness * delta_x.segment<3>(3 * j);
     }
+
+    assert(std::abs(C) >= std::abs(constraint->calculateValue()));
 }
