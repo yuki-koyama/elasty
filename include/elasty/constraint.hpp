@@ -122,6 +122,23 @@ namespace elasty
 
         const Eigen::Vector3d m_point;
     };
+
+    class IsometricBendingConstraint final : public Constraint
+    {
+    public:
+
+        IsometricBendingConstraint(const Engine* engine,
+                                   const std::vector<unsigned int>& indices,
+                                   const double stiffness);
+
+        double calculateValue() override;
+        Eigen::VectorXd calculateGrad() override;
+        ConstraintType getType() override { return ConstraintType::Bilateral; }
+
+    private:
+
+        Eigen::Matrix4d m_Q;
+    };
 }
 
 #endif /* constraint_hpp */

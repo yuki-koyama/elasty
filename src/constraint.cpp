@@ -15,6 +15,13 @@ namespace
         mat(2, 1) = - vec(0);
         return mat;
     };
+
+    inline double calculateCotTheta(const Eigen::Vector3d& x, const Eigen::Vector3d& y)
+    {
+        const double cos_theta = x.dot(y);
+        const double sin_theta = x.cross(y).norm();
+        return cos_theta / sin_theta;
+    }
 }
 
 double elasty::BendingConstraint::calculateValue()
@@ -157,4 +164,65 @@ Eigen::VectorXd elasty::FixedPointConstraint::calculateGrad()
     if (n.hasNaN()) { return Eigen::Vector3d::Zero(); }
 
     return n;
+}
+
+elasty::IsometricBendingConstraint::IsometricBendingConstraint(const Engine* engine,
+                                                               const std::vector<unsigned int>& indices,
+                                                               const double stiffness) :
+Constraint(engine, indices, stiffness)
+{
+    assert(indices.size() == 4);
+
+    const Eigen::Vector3d& x_0 = m_engine->m_particles[m_indices[0]].x;
+    const Eigen::Vector3d& x_1 = m_engine->m_particles[m_indices[1]].x;
+    const Eigen::Vector3d& x_2 = m_engine->m_particles[m_indices[2]].x;
+    const Eigen::Vector3d& x_3 = m_engine->m_particles[m_indices[3]].x;
+
+    const Eigen::Vector3d e0 = x_1 - x_0;
+    const Eigen::Vector3d e1 = x_2 - x_1;
+    const Eigen::Vector3d e2 = x_0 - x_2;
+    const Eigen::Vector3d e3 = x_3 - x_0;
+    const Eigen::Vector3d e4 = x_1 - x_3;
+
+    const double cot_01 = calculateCotTheta(e0, - e1);
+    const double cot_02 = calculateCotTheta(e0, - e2);
+    const double cot_03 = calculateCotTheta(e0, e3);
+    const double cot_04 = calculateCotTheta(e0, e4);
+
+    const Eigen::Vector4d K = Eigen::Vector4d(cot_01 + cot_04, cot_02 + cot_03, - cot_01 - cot_02, - cot_03 - cot_04);
+
+    const double A_0 = 0.5 * e0.cross(e1).norm();
+    const double A_1 = 0.5 * e0.cross(e3).norm();
+
+    m_Q = (3.0 / (A_0 + A_1)) * K * K.transpose();
+}
+
+double elasty::IsometricBendingConstraint::calculateValue()
+{
+    double sum = 0.0;
+    for (unsigned int i = 0; i < 4; ++ i)
+    {
+        for (unsigned int j = 0; j < 4; ++ j)
+        {
+            sum += m_Q(i, j) * double(m_engine->m_particles[m_indices[i]].p.transpose() * m_engine->m_particles[m_indices[j]].p);
+        }
+    }
+    return 0.5 * sum;
+}
+
+Eigen::VectorXd elasty::IsometricBendingConstraint::calculateGrad()
+{
+    Eigen::VectorXd grad_C = Eigen::VectorXd(3 * 4);
+
+    for (unsigned int i = 0; i < 4; ++ i)
+    {
+        Eigen::Vector3d sum = Eigen::Vector3d::Zero();
+        for (unsigned int j = 0; j < 4; ++ j)
+        {
+            sum += m_Q(i, j) * m_engine->m_particles[m_indices[j]].p;
+        }
+        grad_C.segment<3>(3 * i) = sum;
+    }
+
+    return grad_C;
 }
