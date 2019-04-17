@@ -50,8 +50,8 @@ public:
         }
 
         // Cloth
-        constexpr double cloth_distance_stiffness = 0.9;
-        constexpr double cloth_bending_stiffness = 0.1;
+        constexpr double cloth_distance_stiffness = 0.20;
+        constexpr double cloth_bending_stiffness = 0.05;
 
         const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * glm::pi<double>(), Eigen::Vector3d::UnitX());
 
@@ -172,6 +172,7 @@ public:
             const triangle_t another_vertex_0 = obtain_another_vertex(triangles[0], edge);
             const triangle_t another_vertex_1 = obtain_another_vertex(triangles[1], edge);
 
+#if 0
             const unsigned i_0 = map_from_obj_vertex_index_to_engine_particle_index[edge.first];
             const unsigned i_1 = map_from_obj_vertex_index_to_engine_particle_index[edge.second];
             const unsigned i_2 = map_from_obj_vertex_index_to_engine_particle_index[another_vertex_0];
@@ -198,9 +199,20 @@ public:
             assert(!std::isnan(dihedral_angle));
 
             addConstraint(std::make_shared<elasty::BendingConstraint>(this, std::vector<unsigned int>{ i_0, i_1, i_2, i_3 }, cloth_bending_stiffness, dihedral_angle));
+#elif 1
+            const unsigned i_0 = map_from_obj_vertex_index_to_engine_particle_index[edge.first];
+            const unsigned i_1 = map_from_obj_vertex_index_to_engine_particle_index[edge.second];
+            const unsigned i_2 = map_from_obj_vertex_index_to_engine_particle_index[another_vertex_0];
+            const unsigned i_3 = map_from_obj_vertex_index_to_engine_particle_index[another_vertex_1];
 
-#if 0
-            // Another popular approach to achieve bend resistance
+            addConstraint(std::make_shared<elasty::IsometricBendingConstraint>(this, std::vector<unsigned int>{ i_0, i_1, i_2, i_3 }, cloth_bending_stiffness));
+#else
+            const unsigned i_2 = map_from_obj_vertex_index_to_engine_particle_index[another_vertex_0];
+            const unsigned i_3 = map_from_obj_vertex_index_to_engine_particle_index[another_vertex_1];
+
+            const Eigen::Vector3d& x_2 = m_particles[i_2].x;
+            const Eigen::Vector3d& x_3 = m_particles[i_3].x;
+
             addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<unsigned int>{ i_2, i_3 }, cloth_bending_stiffness, (x_2 - x_3).norm()));
 #endif
         }
