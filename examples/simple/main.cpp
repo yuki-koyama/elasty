@@ -421,6 +421,16 @@ void SimpleApp::updateApp()
     }
     ImGui::End();
 
+    ImGui::Begin("Control");
+    {
+        if (ImGui::Button("Reset"))
+        {
+            m_engine->clearScene();
+            m_engine->initializeScene();
+        }
+    }
+    ImGui::End();
+
     // Physics
     m_engine->stepTime();
 }
