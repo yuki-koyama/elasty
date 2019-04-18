@@ -29,7 +29,8 @@ namespace elasty
 
         const Engine* m_engine;
         const std::vector<unsigned int> m_indices;
-        const double m_stiffness;
+
+        double m_stiffness;
     };
 
     class BendingConstraint final : public Constraint
