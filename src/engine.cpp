@@ -97,3 +97,10 @@ void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
 
     assert(std::abs(C) >= std::abs(constraint->calculateValue()));
 }
+
+void elasty::Engine::clearScene()
+{
+    m_particles.clear();
+    m_constraints.clear();
+    m_instant_constraints.clear();
+}

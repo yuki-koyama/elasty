@@ -21,6 +21,8 @@ namespace elasty
         virtual void generateCollisionConstraints() = 0;
         virtual void updateVelocities() = 0;
 
+        void clearScene();
+
         std::vector<Particle> m_particles;
 
         std::vector<std::shared_ptr<Constraint>> m_constraints;
