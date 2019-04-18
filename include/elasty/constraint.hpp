@@ -40,14 +40,12 @@ namespace elasty
     public:
 
         BendingConstraint(const Engine* engine,
-                          const std::vector<std::shared_ptr<Particle>>& particles,
+                          const std::shared_ptr<Particle> p_0,
+                          const std::shared_ptr<Particle> p_1,
+                          const std::shared_ptr<Particle> p_2,
+                          const std::shared_ptr<Particle> p_3,
                           const double stiffness,
-                          const double dihedral_angle) :
-        Constraint(engine, particles, stiffness),
-        m_dihedral_angle(dihedral_angle)
-        {
-            assert(particles.size() == 4);
-        }
+                          const double dihedral_angle);
 
         double calculateValue() override;
         Eigen::VectorXd calculateGrad() override;
@@ -63,16 +61,11 @@ namespace elasty
     public:
 
         DistanceConstraint(const Engine* engine,
-                           const std::vector<std::shared_ptr<Particle>>& particles,
+                           const std::shared_ptr<Particle> p_0,
+                           const std::shared_ptr<Particle> p_1,
                            const double stiffness,
-                           const double d) :
-        Constraint(engine, particles, stiffness),
-        m_d(d)
-        {
-            assert(particles.size() == 2);
-            assert(d >= 0.0);
-        }
-
+                           const double d);
+        
         double calculateValue() override;
         Eigen::VectorXd calculateGrad() override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }

@@ -47,7 +47,7 @@ public:
 
             if (last_particle != nullptr)
             {
-                addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<std::shared_ptr<elasty::Particle>>{ last_particle, particle }, 0.5, segment_length));
+                addConstraint(std::make_shared<elasty::DistanceConstraint>(this, last_particle, particle, 0.5, segment_length));
             }
 
             last_particle = particle;
@@ -104,13 +104,13 @@ public:
 
         for (unsigned int i = 0; i < shape.mesh.indices.size() / 3; ++ i)
         {
-            const auto p0 = map_from_obj_vertex_index_to_particle[shape.mesh.indices[i * 3 + 0].vertex_index];
-            const auto p1 = map_from_obj_vertex_index_to_particle[shape.mesh.indices[i * 3 + 1].vertex_index];
-            const auto p2 = map_from_obj_vertex_index_to_particle[shape.mesh.indices[i * 3 + 2].vertex_index];
+            const auto p_0 = map_from_obj_vertex_index_to_particle[shape.mesh.indices[i * 3 + 0].vertex_index];
+            const auto p_1 = map_from_obj_vertex_index_to_particle[shape.mesh.indices[i * 3 + 1].vertex_index];
+            const auto p_2 = map_from_obj_vertex_index_to_particle[shape.mesh.indices[i * 3 + 2].vertex_index];
 
-            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<std::shared_ptr<elasty::Particle>>{ p0, p1 }, cloth_distance_stiffness, (p0->x - p1->x).norm()));
-            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<std::shared_ptr<elasty::Particle>>{ p0, p2 }, cloth_distance_stiffness, (p0->x - p2->x).norm()));
-            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<std::shared_ptr<elasty::Particle>>{ p1, p2 }, cloth_distance_stiffness, (p1->x - p2->x).norm()));
+            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, p_0, p_1, cloth_distance_stiffness, (p_0->x - p_1->x).norm()));
+            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, p_0, p_2, cloth_distance_stiffness, (p_0->x - p_2->x).norm()));
+            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, p_1, p_2, cloth_distance_stiffness, (p_1->x - p_2->x).norm()));
         }
 
         using vertex_t = unsigned int;
@@ -204,7 +204,7 @@ public:
 
             assert(!std::isnan(dihedral_angle));
 
-            addConstraint(std::make_shared<elasty::BendingConstraint>(this, std::vector<std::shared_ptr<elasty::Particle>>{ p_0, p_1, p_2, p_3 }, cloth_bending_stiffness, dihedral_angle));
+            addConstraint(std::make_shared<elasty::BendingConstraint>(this, p_0, p_1, p_2, p_3, cloth_bending_stiffness, dihedral_angle));
 #elif 1
             const auto p_0 = map_from_obj_vertex_index_to_particle[edge.first];
             const auto p_1 = map_from_obj_vertex_index_to_particle[edge.second];
@@ -219,7 +219,7 @@ public:
             const Eigen::Vector3d& x_2 = p_2->x;
             const Eigen::Vector3d& x_3 = p_3->x;
 
-            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, std::vector<std::shared_ptr<elasty::Particle>>{ p_2, p_3 }, cloth_bending_stiffness, (x_2 - x_3).norm()));
+            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, p_2, p_3, cloth_bending_stiffness, (x_2 - x_3).norm()));
 #endif
         }
 

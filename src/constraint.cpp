@@ -25,6 +25,18 @@ namespace
     }
 }
 
+elasty::BendingConstraint::BendingConstraint(const Engine* engine,
+                                             const std::shared_ptr<Particle> p_0,
+                                             const std::shared_ptr<Particle> p_1,
+                                             const std::shared_ptr<Particle> p_2,
+                                             const std::shared_ptr<Particle> p_3,
+                                             const double stiffness,
+                                             const double dihedral_angle) :
+Constraint(engine, std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness),
+m_dihedral_angle(dihedral_angle)
+{
+}
+
 double elasty::BendingConstraint::calculateValue()
 {
     const Eigen::Vector3d& x_0 = m_particles[0]->p;
@@ -104,6 +116,17 @@ Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
     assert(!grad_C.hasNaN());
 
     return grad_C;
+}
+
+elasty::DistanceConstraint::DistanceConstraint(const Engine* engine,
+                                               const std::shared_ptr<Particle> p_0,
+                                               const std::shared_ptr<Particle> p_1,
+                                               const double stiffness,
+                                               const double d) :
+Constraint(engine, std::vector<std::shared_ptr<Particle>>{ p_0, p_1 }, stiffness),
+m_d(d)
+{
+    assert(d >= 0.0);
 }
 
 double elasty::DistanceConstraint::calculateValue()
