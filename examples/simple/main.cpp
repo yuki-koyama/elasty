@@ -312,6 +312,8 @@ public:
 
     void draw(const glm::mat4& parent_transform_matrix = glm::mat4(1.0f))
     {
+        m_material->submitUniforms();
+
         for (auto& particle : m_engine->m_particles)
         {
             const glm::mat4 translate_matrix = glm::translate(eigen2glm(particle.x));
@@ -321,8 +323,7 @@ public:
 
             bgfx::setTransform(glm::value_ptr(transform));
 
-            m_material->submitUniforms();
-            m_sphere_primitive->submitPrimitive(m_material->m_program);
+            m_sphere_primitive->submitPrimitive(m_material->m_program, true);
         }
     }
 
