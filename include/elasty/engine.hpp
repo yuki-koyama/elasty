@@ -3,11 +3,11 @@
 
 #include <memory>
 #include <vector>
-#include <elasty/particle.hpp>
 
 namespace elasty
 {
     class Constraint;
+    struct Particle;
 
     class Engine
     {
@@ -23,7 +23,7 @@ namespace elasty
 
         void clearScene();
 
-        std::vector<Particle> m_particles;
+        std::vector<std::shared_ptr<Particle>> m_particles;
 
         std::vector<std::shared_ptr<Constraint>> m_constraints;
         std::vector<std::shared_ptr<Constraint>> m_instant_constraints;

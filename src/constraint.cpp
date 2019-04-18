@@ -1,5 +1,6 @@
 #include <elasty/constraint.hpp>
 #include <elasty/engine.hpp>
+#include <elasty/particle.hpp>
 #include <Eigen/Geometry>
 
 namespace
@@ -26,10 +27,10 @@ namespace
 
 double elasty::BendingConstraint::calculateValue()
 {
-    const Eigen::Vector3d& x_0 = m_engine->m_particles[m_indices[0]].p;
-    const Eigen::Vector3d& x_1 = m_engine->m_particles[m_indices[1]].p;
-    const Eigen::Vector3d& x_2 = m_engine->m_particles[m_indices[2]].p;
-    const Eigen::Vector3d& x_3 = m_engine->m_particles[m_indices[3]].p;
+    const Eigen::Vector3d& x_0 = m_particles[0]->p;
+    const Eigen::Vector3d& x_1 = m_particles[1]->p;
+    const Eigen::Vector3d& x_2 = m_particles[2]->p;
+    const Eigen::Vector3d& x_3 = m_particles[3]->p;
 
     const Eigen::Vector3d p_10 = x_1 - x_0;
     const Eigen::Vector3d p_20 = x_2 - x_0;
@@ -50,10 +51,10 @@ double elasty::BendingConstraint::calculateValue()
 
 Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
 {
-    const Eigen::Vector3d& x_0 = m_engine->m_particles[m_indices[0]].p;
-    const Eigen::Vector3d& x_1 = m_engine->m_particles[m_indices[1]].p;
-    const Eigen::Vector3d& x_2 = m_engine->m_particles[m_indices[2]].p;
-    const Eigen::Vector3d& x_3 = m_engine->m_particles[m_indices[3]].p;
+    const Eigen::Vector3d& x_0 = m_particles[0]->p;
+    const Eigen::Vector3d& x_1 = m_particles[1]->p;
+    const Eigen::Vector3d& x_2 = m_particles[2]->p;
+    const Eigen::Vector3d& x_3 = m_particles[3]->p;
 
     // Assuming that p_0 = [ 0, 0, 0 ]^T without loss of generality
     const Eigen::Vector3d p_1 = x_1 - x_0;
@@ -107,16 +108,16 @@ Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
 
 double elasty::DistanceConstraint::calculateValue()
 {
-    const Eigen::Vector3d& x_0 = m_engine->m_particles[m_indices[0]].p;
-    const Eigen::Vector3d& x_1 = m_engine->m_particles[m_indices[1]].p;
+    const Eigen::Vector3d& x_0 = m_particles[0]->p;
+    const Eigen::Vector3d& x_1 = m_particles[1]->p;
 
     return (x_0 - x_1).norm() - m_d;
 }
 
 Eigen::VectorXd elasty::DistanceConstraint::calculateGrad()
 {
-    const Eigen::Vector3d& x_0 = m_engine->m_particles[m_indices[0]].p;
-    const Eigen::Vector3d& x_1 = m_engine->m_particles[m_indices[1]].p;
+    const Eigen::Vector3d& x_0 = m_particles[0]->p;
+    const Eigen::Vector3d& x_1 = m_particles[1]->p;
 
     Eigen::Vector3d n = (x_0 - x_1).normalized();
 
@@ -131,7 +132,7 @@ Eigen::VectorXd elasty::DistanceConstraint::calculateGrad()
 
 double elasty::EnvironmentalCollisionConstraint::calculateValue()
 {
-    const Eigen::Vector3d& x = m_engine->m_particles[m_indices[0]].p;
+    const Eigen::Vector3d& x = m_particles[0]->p;
     return m_n.transpose() * x - m_d;
 }
 
@@ -141,24 +142,24 @@ Eigen::VectorXd elasty::EnvironmentalCollisionConstraint::calculateGrad()
 }
 
 elasty::FixedPointConstraint::FixedPointConstraint(const Engine* engine,
-                                                   const std::vector<unsigned int>& indices,
+                                                   const std::vector<std::shared_ptr<Particle>>& particles,
                                                    const double stiffness,
                                                    const Eigen::Vector3d& point) :
-Constraint(engine, indices, stiffness),
+Constraint(engine, particles, stiffness),
 m_point(point)
 {
-    assert(indices.size() == 1);
+    assert(particles.size() == 1);
 }
 
 double elasty::FixedPointConstraint::calculateValue()
 {
-    const Eigen::Vector3d& x = m_engine->m_particles[m_indices[0]].p;
+    const Eigen::Vector3d& x = m_particles[0]->p;
     return (x - m_point).norm();
 }
 
 Eigen::VectorXd elasty::FixedPointConstraint::calculateGrad()
 {
-    const Eigen::Vector3d& x = m_engine->m_particles[m_indices[0]].p;
+    const Eigen::Vector3d& x = m_particles[0]->p;
     const Eigen::Vector3d n = (x - m_point).normalized();
 
     if (n.hasNaN()) { return Eigen::Vector3d::Zero(); }
@@ -167,16 +168,16 @@ Eigen::VectorXd elasty::FixedPointConstraint::calculateGrad()
 }
 
 elasty::IsometricBendingConstraint::IsometricBendingConstraint(const Engine* engine,
-                                                               const std::vector<unsigned int>& indices,
+                                                               const std::vector<std::shared_ptr<Particle>>& particles,
                                                                const double stiffness) :
-Constraint(engine, indices, stiffness)
+Constraint(engine, particles, stiffness)
 {
-    assert(indices.size() == 4);
+    assert(particles.size() == 4);
 
-    const Eigen::Vector3d& x_0 = m_engine->m_particles[m_indices[0]].x;
-    const Eigen::Vector3d& x_1 = m_engine->m_particles[m_indices[1]].x;
-    const Eigen::Vector3d& x_2 = m_engine->m_particles[m_indices[2]].x;
-    const Eigen::Vector3d& x_3 = m_engine->m_particles[m_indices[3]].x;
+    const Eigen::Vector3d& x_0 = m_particles[0]->x;
+    const Eigen::Vector3d& x_1 = m_particles[1]->x;
+    const Eigen::Vector3d& x_2 = m_particles[2]->x;
+    const Eigen::Vector3d& x_3 = m_particles[3]->x;
 
     const Eigen::Vector3d e0 = x_1 - x_0;
     const Eigen::Vector3d e1 = x_2 - x_1;
@@ -204,7 +205,7 @@ double elasty::IsometricBendingConstraint::calculateValue()
     {
         for (unsigned int j = 0; j < 4; ++ j)
         {
-            sum += m_Q(i, j) * double(m_engine->m_particles[m_indices[i]].p.transpose() * m_engine->m_particles[m_indices[j]].p);
+            sum += m_Q(i, j) * double(m_particles[i]->p.transpose() * m_particles[j]->p);
         }
     }
     return 0.5 * sum;
@@ -219,7 +220,7 @@ Eigen::VectorXd elasty::IsometricBendingConstraint::calculateGrad()
         Eigen::Vector3d sum = Eigen::Vector3d::Zero();
         for (unsigned int j = 0; j < 4; ++ j)
         {
-            sum += m_Q(i, j) * m_engine->m_particles[m_indices[j]].p;
+            sum += m_Q(i, j) * m_particles[j]->p;
         }
         grad_C.segment<3>(3 * i) = sum;
     }

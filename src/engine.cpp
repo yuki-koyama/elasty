@@ -1,5 +1,6 @@
 #include <elasty/engine.hpp>
 #include <elasty/constraint.hpp>
+#include <elasty/particle.hpp>
 
 void elasty::Engine::stepTime()
 {
@@ -7,13 +8,13 @@ void elasty::Engine::stepTime()
     setExternalForces();
     for (auto& particle : m_particles)
     {
-        particle.v = particle.v + m_dt * (1.0 / particle.m) * particle.f;
+        particle->v = particle->v + m_dt * (1.0 / particle->m) * particle->f;
     }
 
     // Calculate predicted positions
     for (auto& particle : m_particles)
     {
-        particle.p = particle.x + m_dt * particle.v;
+        particle->p = particle->x + m_dt * particle->v;
     }
 
     // Generate collision constraints
@@ -36,8 +37,8 @@ void elasty::Engine::stepTime()
     // Apply the results
     for (auto& particle : m_particles)
     {
-        particle.v = (particle.p - particle.x) * (1.0 / m_dt);
-        particle.x = particle.p;
+        particle->v = (particle->p - particle->x) * (1.0 / m_dt);
+        particle->x = particle->p;
     }
 
     // Update velocities
@@ -72,13 +73,13 @@ void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
     if (grad_C.isApprox(Eigen::VectorXd::Zero(grad_C.size()))) { return; }
 
     // Calculate $\mathbf{M}^{-1}$
-    const unsigned int n = constraint->m_indices.size();
+    const unsigned int n = constraint->m_particles.size();
     std::vector<double> inverse_mass_raw(3 * n);
     for (unsigned int j = 0; j < n; ++ j)
     {
-        inverse_mass_raw[j * 3 + 0] = 1.0 / m_particles[constraint->m_indices[j]].m;
-        inverse_mass_raw[j * 3 + 1] = 1.0 / m_particles[constraint->m_indices[j]].m;
-        inverse_mass_raw[j * 3 + 2] = 1.0 / m_particles[constraint->m_indices[j]].m;
+        inverse_mass_raw[j * 3 + 0] = 1.0 / constraint->m_particles[j]->m;
+        inverse_mass_raw[j * 3 + 1] = 1.0 / constraint->m_particles[j]->m;
+        inverse_mass_raw[j * 3 + 2] = 1.0 / constraint->m_particles[j]->m;
     }
     const auto inverse_M_diagnal = Eigen::Map<Eigen::VectorXd>(inverse_mass_raw.data(), 3 * n);
 
@@ -92,7 +93,7 @@ void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
     // Update predicted positions
     for (unsigned int j = 0; j < n; ++ j)
     {
-        m_particles[constraint->m_indices[j]].p += constraint->m_stiffness * delta_x.segment<3>(3 * j);
+        constraint->m_particles[j]->p += constraint->m_stiffness * delta_x.segment<3>(3 * j);
     }
 
     assert(std::abs(C) >= std::abs(constraint->calculateValue()));

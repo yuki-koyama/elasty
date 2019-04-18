@@ -15,7 +15,6 @@ namespace elasty
         Eigen::Vector3d p;
         Eigen::Vector3d f;
         double m;
-        unsigned int i;
     };
 }
 
