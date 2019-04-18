@@ -8,7 +8,7 @@ void elasty::Engine::stepTime()
     setExternalForces();
     for (auto& particle : m_particles)
     {
-        particle->v = particle->v + m_dt * (1.0 / particle->m) * particle->f;
+        particle->v = particle->v + m_dt * particle->w * particle->f;
     }
 
     // Calculate predicted positions
@@ -77,9 +77,9 @@ void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
     std::vector<double> inverse_mass_raw(3 * n);
     for (unsigned int j = 0; j < n; ++ j)
     {
-        inverse_mass_raw[j * 3 + 0] = 1.0 / constraint->m_particles[j]->m;
-        inverse_mass_raw[j * 3 + 1] = 1.0 / constraint->m_particles[j]->m;
-        inverse_mass_raw[j * 3 + 2] = 1.0 / constraint->m_particles[j]->m;
+        inverse_mass_raw[j * 3 + 0] = constraint->m_particles[j]->w;
+        inverse_mass_raw[j * 3 + 1] = constraint->m_particles[j]->w;
+        inverse_mass_raw[j * 3 + 2] = constraint->m_particles[j]->w;
     }
     const auto inverse_M_diagnal = Eigen::Map<Eigen::VectorXd>(inverse_mass_raw.data(), 3 * n);
 

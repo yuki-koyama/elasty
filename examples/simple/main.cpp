@@ -37,11 +37,11 @@ public:
 
         for (unsigned int i = 0; i < num_particles; ++ i)
         {
-            auto particle = std::make_shared<elasty::Particle>();
+            const Eigen::Vector3d x = Eigen::Vector3d(- 1.0, 1.0 + segment_length * double(i), 0.0);
+            const Eigen::Vector3d v = 50.0 * Eigen::Vector3d::Random();
+            const double m = 1.0;
 
-            particle->x = Eigen::Vector3d(- 1.0, 1.0 + segment_length * double(i), 0.0);
-            particle->v = 50.0 * Eigen::Vector3d::Random();
-            particle->m = 1.0;
+            auto particle = std::make_shared<elasty::Particle>(x, v, m);
 
             m_particles.push_back(particle);
 
@@ -91,11 +91,11 @@ public:
                 attrib.vertices[3 * i + 2]
             };
 
-            auto particle = std::make_shared<elasty::Particle>();
+            const Eigen::Vector3d x = cloth_import_transform * position;
+            const Eigen::Vector3d v = 20.0 * Eigen::Vector3d::Random();
+            const double m = 1.0 / double(attrib.vertices.size());
 
-            particle->x = cloth_import_transform * position;
-            particle->v = 20.0 * Eigen::Vector3d::Random();
-            particle->m = 1.0 / double(attrib.vertices.size());
+            auto particle = std::make_shared<elasty::Particle>(x, v, m);
 
             map_from_obj_vertex_index_to_particle[i] = particle;
 
