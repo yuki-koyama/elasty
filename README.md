@@ -44,3 +44,20 @@ A research-oriented elastic body simulator
 brew install eigen
 ```
 
+## Build
+
+```bash
+git clone https://github.com/yuki-koyama/elasty.git --recursive
+mkdir build
+cd build
+cmake ../elasty
+make
+```
+
+## License
+
+MIT License
+
+## References
+
+(TODO)
