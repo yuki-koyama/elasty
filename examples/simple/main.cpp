@@ -178,49 +178,66 @@ public:
             const triangle_t another_vertex_0 = obtain_another_vertex(triangles[0], edge);
             const triangle_t another_vertex_1 = obtain_another_vertex(triangles[1], edge);
 
-#if 0
-            const auto p_0 = map_from_obj_vertex_index_to_particle[edge.first];
-            const auto p_1 = map_from_obj_vertex_index_to_particle[edge.second];
-            const auto p_2 = map_from_obj_vertex_index_to_particle[another_vertex_0];
-            const auto p_3 = map_from_obj_vertex_index_to_particle[another_vertex_1];
+            enum class Strategy { Bending, IsometricBending, Cross };
+            constexpr Strategy strategy = Strategy::IsometricBending;
 
-            const Eigen::Vector3d& x_0 = p_0->x;
-            const Eigen::Vector3d& x_1 = p_1->x;
-            const Eigen::Vector3d& x_2 = p_2->x;
-            const Eigen::Vector3d& x_3 = p_3->x;
+            switch (strategy)
+            {
+                case Strategy::Bending:
+                {
+                    const auto p_0 = map_from_obj_vertex_index_to_particle[edge.first];
+                    const auto p_1 = map_from_obj_vertex_index_to_particle[edge.second];
+                    const auto p_2 = map_from_obj_vertex_index_to_particle[another_vertex_0];
+                    const auto p_3 = map_from_obj_vertex_index_to_particle[another_vertex_1];
 
-            const Eigen::Vector3d p_10 = x_1 - x_0;
-            const Eigen::Vector3d p_20 = x_2 - x_0;
-            const Eigen::Vector3d p_30 = x_3 - x_0;
+                    const Eigen::Vector3d& x_0 = p_0->x;
+                    const Eigen::Vector3d& x_1 = p_1->x;
+                    const Eigen::Vector3d& x_2 = p_2->x;
+                    const Eigen::Vector3d& x_3 = p_3->x;
 
-            const Eigen::Vector3d n_0 = p_10.cross(p_20).normalized();
-            const Eigen::Vector3d n_1 = p_10.cross(p_30).normalized();
+                    const Eigen::Vector3d p_10 = x_1 - x_0;
+                    const Eigen::Vector3d p_20 = x_2 - x_0;
+                    const Eigen::Vector3d p_30 = x_3 - x_0;
 
-            assert(!n_0.hasNaN());
-            assert(!n_1.hasNaN());
+                    const Eigen::Vector3d n_0 = p_10.cross(p_20).normalized();
+                    const Eigen::Vector3d n_1 = p_10.cross(p_30).normalized();
 
-            // Typical value is 0.0 or pi
-            const double dihedral_angle = std::acos(std::max(- 1.0, std::min(+ 1.0, n_0.dot(n_1))));
+                    assert(!n_0.hasNaN());
+                    assert(!n_1.hasNaN());
 
-            assert(!std::isnan(dihedral_angle));
+                    // Typical value is 0.0 or pi
+                    const double dihedral_angle = std::acos(std::max(- 1.0, std::min(+ 1.0, n_0.dot(n_1))));
 
-            addConstraint(std::make_shared<elasty::BendingConstraint>(this, p_0, p_1, p_2, p_3, cloth_bending_stiffness, dihedral_angle));
-#elif 1
-            const auto p_0 = map_from_obj_vertex_index_to_particle[edge.first];
-            const auto p_1 = map_from_obj_vertex_index_to_particle[edge.second];
-            const auto p_2 = map_from_obj_vertex_index_to_particle[another_vertex_0];
-            const auto p_3 = map_from_obj_vertex_index_to_particle[another_vertex_1];
+                    assert(!std::isnan(dihedral_angle));
 
-            addConstraint(std::make_shared<elasty::IsometricBendingConstraint>(this, p_0, p_1, p_2, p_3, cloth_bending_stiffness));
-#else
-            const auto p_2 = map_from_obj_vertex_index_to_particle[another_vertex_0];
-            const auto p_3 = map_from_obj_vertex_index_to_particle[another_vertex_1];
+                    addConstraint(std::make_shared<elasty::BendingConstraint>(this, p_0, p_1, p_2, p_3, cloth_bending_stiffness, dihedral_angle));
 
-            const Eigen::Vector3d& x_2 = p_2->x;
-            const Eigen::Vector3d& x_3 = p_3->x;
+                    break;
+                }
+                case Strategy::IsometricBending:
+                {
+                    const auto p_0 = map_from_obj_vertex_index_to_particle[edge.first];
+                    const auto p_1 = map_from_obj_vertex_index_to_particle[edge.second];
+                    const auto p_2 = map_from_obj_vertex_index_to_particle[another_vertex_0];
+                    const auto p_3 = map_from_obj_vertex_index_to_particle[another_vertex_1];
 
-            addConstraint(std::make_shared<elasty::DistanceConstraint>(this, p_2, p_3, cloth_bending_stiffness, (x_2 - x_3).norm()));
-#endif
+                    addConstraint(std::make_shared<elasty::IsometricBendingConstraint>(this, p_0, p_1, p_2, p_3, cloth_bending_stiffness));
+
+                    break;
+                }
+                case Strategy::Cross:
+                {
+                    const auto p_2 = map_from_obj_vertex_index_to_particle[another_vertex_0];
+                    const auto p_3 = map_from_obj_vertex_index_to_particle[another_vertex_1];
+
+                    const Eigen::Vector3d& x_2 = p_2->x;
+                    const Eigen::Vector3d& x_3 = p_3->x;
+
+                    addConstraint(std::make_shared<elasty::DistanceConstraint>(this, p_2, p_3, cloth_bending_stiffness, (x_2 - x_3).norm()));
+
+                    break;
+                }
+            }
         }
 
         const auto find_and_constrain_fixed_point = [&](const Eigen::Vector3d& search_position,
