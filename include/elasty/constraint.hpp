@@ -80,16 +80,10 @@ namespace elasty
     public:
 
         EnvironmentalCollisionConstraint(const Engine* engine,
-                                         const std::vector<std::shared_ptr<Particle>>& particles,
+                                         const std::shared_ptr<Particle> p_0,
                                          const double stiffness,
                                          const Eigen::Vector3d& n,
-                                         const double d) :
-        Constraint(engine, particles, stiffness),
-        m_n(n),
-        m_d(d)
-        {
-            assert(particles.size() == 1);
-        }
+                                         const double d);
 
         double calculateValue() override;
         Eigen::VectorXd calculateGrad() override;
@@ -106,7 +100,7 @@ namespace elasty
     public:
 
         FixedPointConstraint(const Engine* engine,
-                             const std::vector<std::shared_ptr<Particle>>& particles,
+                             const std::shared_ptr<Particle> p_0,
                              const double stiffness,
                              const Eigen::Vector3d& point);
 
@@ -124,7 +118,10 @@ namespace elasty
     public:
 
         IsometricBendingConstraint(const Engine* engine,
-                                   const std::vector<std::shared_ptr<Particle>>& particles,
+                                   const std::shared_ptr<Particle> p_0,
+                                   const std::shared_ptr<Particle> p_1,
+                                   const std::shared_ptr<Particle> p_2,
+                                   const std::shared_ptr<Particle> p_3,
                                    const double stiffness);
 
         double calculateValue() override;

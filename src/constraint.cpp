@@ -153,6 +153,17 @@ Eigen::VectorXd elasty::DistanceConstraint::calculateGrad()
     return grad_C;
 }
 
+elasty::EnvironmentalCollisionConstraint::EnvironmentalCollisionConstraint(const Engine* engine,
+                                                                           const std::shared_ptr<Particle> p_0,
+                                                                           const double stiffness,
+                                                                           const Eigen::Vector3d& n,
+                                                                           const double d) :
+Constraint(engine, std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
+m_n(n),
+m_d(d)
+{
+}
+
 double elasty::EnvironmentalCollisionConstraint::calculateValue()
 {
     const Eigen::Vector3d& x = m_particles[0]->p;
@@ -165,13 +176,12 @@ Eigen::VectorXd elasty::EnvironmentalCollisionConstraint::calculateGrad()
 }
 
 elasty::FixedPointConstraint::FixedPointConstraint(const Engine* engine,
-                                                   const std::vector<std::shared_ptr<Particle>>& particles,
+                                                   const std::shared_ptr<Particle> p_0,
                                                    const double stiffness,
                                                    const Eigen::Vector3d& point) :
-Constraint(engine, particles, stiffness),
+Constraint(engine, std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
 m_point(point)
 {
-    assert(particles.size() == 1);
 }
 
 double elasty::FixedPointConstraint::calculateValue()
@@ -191,16 +201,17 @@ Eigen::VectorXd elasty::FixedPointConstraint::calculateGrad()
 }
 
 elasty::IsometricBendingConstraint::IsometricBendingConstraint(const Engine* engine,
-                                                               const std::vector<std::shared_ptr<Particle>>& particles,
+                                                               const std::shared_ptr<Particle> p_0,
+                                                               const std::shared_ptr<Particle> p_1,
+                                                               const std::shared_ptr<Particle> p_2,
+                                                               const std::shared_ptr<Particle> p_3,
                                                                const double stiffness) :
-Constraint(engine, particles, stiffness)
+Constraint(engine, std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness)
 {
-    assert(particles.size() == 4);
-
-    const Eigen::Vector3d& x_0 = m_particles[0]->x;
-    const Eigen::Vector3d& x_1 = m_particles[1]->x;
-    const Eigen::Vector3d& x_2 = m_particles[2]->x;
-    const Eigen::Vector3d& x_3 = m_particles[3]->x;
+    const Eigen::Vector3d& x_0 = p_0->x;
+    const Eigen::Vector3d& x_1 = p_1->x;
+    const Eigen::Vector3d& x_2 = p_2->x;
+    const Eigen::Vector3d& x_3 = p_3->x;
 
     const Eigen::Vector3d e0 = x_1 - x_0;
     const Eigen::Vector3d e1 = x_2 - x_1;

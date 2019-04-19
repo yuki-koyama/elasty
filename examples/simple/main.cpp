@@ -53,7 +53,7 @@ public:
             last_particle = particle;
         }
 
-        addConstraint(std::make_shared<elasty::FixedPointConstraint>(this, std::vector<std::shared_ptr<elasty::Particle>>{ last_particle }, 1.0, last_particle->x));
+        addConstraint(std::make_shared<elasty::FixedPointConstraint>(this, last_particle, 1.0, last_particle->x));
 
         // Cloth
         constexpr double cloth_distance_stiffness = 0.20;
@@ -211,7 +211,7 @@ public:
             const auto p_2 = map_from_obj_vertex_index_to_particle[another_vertex_0];
             const auto p_3 = map_from_obj_vertex_index_to_particle[another_vertex_1];
 
-            addConstraint(std::make_shared<elasty::IsometricBendingConstraint>(this, std::vector<std::shared_ptr<elasty::Particle>>{ p_0, p_1, p_2, p_3 }, cloth_bending_stiffness));
+            addConstraint(std::make_shared<elasty::IsometricBendingConstraint>(this, p_0, p_1, p_2, p_3, cloth_bending_stiffness));
 #else
             const auto p_2 = map_from_obj_vertex_index_to_particle[another_vertex_0];
             const auto p_3 = map_from_obj_vertex_index_to_particle[another_vertex_1];
@@ -229,7 +229,7 @@ public:
         {
             if (particle->x.isApprox(search_position))
             {
-                addConstraint(std::make_shared<elasty::FixedPointConstraint>(this, std::vector<std::shared_ptr<elasty::Particle>>{ particle }, 1.0, fixed_position));
+                addConstraint(std::make_shared<elasty::FixedPointConstraint>(this, particle, 1.0, fixed_position));
             }
         };
 
@@ -258,7 +258,7 @@ public:
         {
             if (particle->p.y() < 0.0)
             {
-                addInstantConstraint(std::make_shared<elasty::EnvironmentalCollisionConstraint>(this, std::vector<std::shared_ptr<elasty::Particle>>{ particle }, 1.0, Eigen::Vector3d(0.0, 1.0, 0.0), 0.0));
+                addInstantConstraint(std::make_shared<elasty::EnvironmentalCollisionConstraint>(this, particle, 1.0, Eigen::Vector3d(0.0, 1.0, 0.0), 0.0));
             }
         }
     }
