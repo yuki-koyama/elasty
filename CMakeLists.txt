@@ -23,3 +23,13 @@ if(ELASTY_EXAMPLES)
   add_custom_command(TARGET simple POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${BIGGER_SHADER_OUTPUT_DIR} $<TARGET_FILE_DIR:simple>/shaders)
   add_custom_command(TARGET simple POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/models $<TARGET_FILE_DIR:simple>/models)
 endif()
+
+option(ELASTY_TESTS ON "")
+if(ELASTY_TESTS)
+    enable_testing()
+
+    add_executable(test-bending-constraint ${CMAKE_CURRENT_SOURCE_DIR}/tests/test-bending-constraint.cpp)
+    target_link_libraries(test-bending-constraint elasty)
+
+    add_test(NAME test-bending-constraint COMMAND $<TARGET_FILE:test-bending-constraint>)
+endif()
