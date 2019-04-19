@@ -25,14 +25,13 @@ namespace
     }
 }
 
-elasty::BendingConstraint::BendingConstraint(const Engine* engine,
-                                             const std::shared_ptr<Particle> p_0,
+elasty::BendingConstraint::BendingConstraint(const std::shared_ptr<Particle> p_0,
                                              const std::shared_ptr<Particle> p_1,
                                              const std::shared_ptr<Particle> p_2,
                                              const std::shared_ptr<Particle> p_3,
                                              const double stiffness,
                                              const double dihedral_angle) :
-Constraint(engine, std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness),
+Constraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness),
 m_dihedral_angle(dihedral_angle)
 {
 }
@@ -118,12 +117,11 @@ Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
     return grad_C;
 }
 
-elasty::DistanceConstraint::DistanceConstraint(const Engine* engine,
-                                               const std::shared_ptr<Particle> p_0,
+elasty::DistanceConstraint::DistanceConstraint(const std::shared_ptr<Particle> p_0,
                                                const std::shared_ptr<Particle> p_1,
                                                const double stiffness,
                                                const double d) :
-Constraint(engine, std::vector<std::shared_ptr<Particle>>{ p_0, p_1 }, stiffness),
+Constraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1 }, stiffness),
 m_d(d)
 {
     assert(d >= 0.0);
@@ -153,12 +151,11 @@ Eigen::VectorXd elasty::DistanceConstraint::calculateGrad()
     return grad_C;
 }
 
-elasty::EnvironmentalCollisionConstraint::EnvironmentalCollisionConstraint(const Engine* engine,
-                                                                           const std::shared_ptr<Particle> p_0,
+elasty::EnvironmentalCollisionConstraint::EnvironmentalCollisionConstraint(const std::shared_ptr<Particle> p_0,
                                                                            const double stiffness,
                                                                            const Eigen::Vector3d& n,
                                                                            const double d) :
-Constraint(engine, std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
+Constraint(std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
 m_n(n),
 m_d(d)
 {
@@ -175,11 +172,10 @@ Eigen::VectorXd elasty::EnvironmentalCollisionConstraint::calculateGrad()
     return m_n;
 }
 
-elasty::FixedPointConstraint::FixedPointConstraint(const Engine* engine,
-                                                   const std::shared_ptr<Particle> p_0,
+elasty::FixedPointConstraint::FixedPointConstraint(const std::shared_ptr<Particle> p_0,
                                                    const double stiffness,
                                                    const Eigen::Vector3d& point) :
-Constraint(engine, std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
+Constraint(std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
 m_point(point)
 {
 }
@@ -200,13 +196,12 @@ Eigen::VectorXd elasty::FixedPointConstraint::calculateGrad()
     return n;
 }
 
-elasty::IsometricBendingConstraint::IsometricBendingConstraint(const Engine* engine,
-                                                               const std::shared_ptr<Particle> p_0,
+elasty::IsometricBendingConstraint::IsometricBendingConstraint(const std::shared_ptr<Particle> p_0,
                                                                const std::shared_ptr<Particle> p_1,
                                                                const std::shared_ptr<Particle> p_2,
                                                                const std::shared_ptr<Particle> p_3,
                                                                const double stiffness) :
-Constraint(engine, std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness)
+Constraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness)
 {
     const Eigen::Vector3d& x_0 = p_0->x;
     const Eigen::Vector3d& x_1 = p_1->x;

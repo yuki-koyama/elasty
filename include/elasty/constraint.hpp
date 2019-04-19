@@ -7,7 +7,6 @@
 
 namespace elasty
 {
-    class Engine;
     struct Particle;
 
     enum class ConstraintType { Bilateral, Unilateral };
@@ -16,10 +15,8 @@ namespace elasty
     {
     public:
 
-        Constraint(const Engine* engine,
-                   const std::vector<std::shared_ptr<Particle>>& indices,
+        Constraint(const std::vector<std::shared_ptr<Particle>>& indices,
                    const double stiffness) :
-        m_engine(engine),
         m_particles(indices),
         m_stiffness(stiffness)
         {
@@ -29,7 +26,6 @@ namespace elasty
         virtual Eigen::VectorXd calculateGrad() = 0;
         virtual ConstraintType getType() = 0;
 
-        const Engine* m_engine;
         const std::vector<std::shared_ptr<Particle>> m_particles;
 
         double m_stiffness;
@@ -39,8 +35,7 @@ namespace elasty
     {
     public:
 
-        BendingConstraint(const Engine* engine,
-                          const std::shared_ptr<Particle> p_0,
+        BendingConstraint(const std::shared_ptr<Particle> p_0,
                           const std::shared_ptr<Particle> p_1,
                           const std::shared_ptr<Particle> p_2,
                           const std::shared_ptr<Particle> p_3,
@@ -60,8 +55,7 @@ namespace elasty
     {
     public:
 
-        DistanceConstraint(const Engine* engine,
-                           const std::shared_ptr<Particle> p_0,
+        DistanceConstraint(const std::shared_ptr<Particle> p_0,
                            const std::shared_ptr<Particle> p_1,
                            const double stiffness,
                            const double d);
@@ -79,8 +73,7 @@ namespace elasty
     {
     public:
 
-        EnvironmentalCollisionConstraint(const Engine* engine,
-                                         const std::shared_ptr<Particle> p_0,
+        EnvironmentalCollisionConstraint(const std::shared_ptr<Particle> p_0,
                                          const double stiffness,
                                          const Eigen::Vector3d& n,
                                          const double d);
@@ -99,8 +92,7 @@ namespace elasty
     {
     public:
 
-        FixedPointConstraint(const Engine* engine,
-                             const std::shared_ptr<Particle> p_0,
+        FixedPointConstraint(const std::shared_ptr<Particle> p_0,
                              const double stiffness,
                              const Eigen::Vector3d& point);
 
@@ -117,8 +109,7 @@ namespace elasty
     {
     public:
 
-        IsometricBendingConstraint(const Engine* engine,
-                                   const std::shared_ptr<Particle> p_0,
+        IsometricBendingConstraint(const std::shared_ptr<Particle> p_0,
                                    const std::shared_ptr<Particle> p_1,
                                    const std::shared_ptr<Particle> p_2,
                                    const std::shared_ptr<Particle> p_3,
