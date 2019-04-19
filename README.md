@@ -14,7 +14,7 @@ A research-oriented elastic body simulator
 ### Constraints for PBD/XPBD
 
 - [ ] Area conservation constraint
-- [ ] Bending constraint
+- [x] Bending constraint
 - [x] Distance constraint
 - [x] Environmental collision constraint
 - [x] Fixed-point constraint
