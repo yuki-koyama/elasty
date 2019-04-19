@@ -12,6 +12,7 @@
 #include <elasty/constraint.hpp>
 #include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
+#include <string-util.hpp>
 #include <tiny_obj_loader.h>
 
 namespace
@@ -303,6 +304,8 @@ public:
 
     std::shared_ptr<SimpleEngine> m_engine;
 
+    bool m_capture_screen;
+
 private:
 
     // Shared resources
@@ -318,6 +321,8 @@ SimpleApp::SimpleApp()
     getCamera().m_position = glm::vec3(1.0f, 2.0f, - 8.0f);
     getCamera().m_target = glm::vec3(0.0f, 1.5f, 0.0f);
     getCamera().m_fov = 45.0f;
+
+    m_capture_screen = false;
 }
 
 class ParticlesObject final : public bigger::SceneObject
@@ -455,6 +460,15 @@ void SimpleApp::updateApp()
     }
     ImGui::End();
 
+    // Request screen capture
+    if (m_capture_screen)
+    {
+        const std::string dir_path = ".";
+        const std::string file_name = stringutil::ConvertWithZeroPadding(m_frame, 5);
+        const std::string file_path = dir_path + "/" + file_name;
+        bgfx::requestScreenShot(BGFX_INVALID_HANDLE, file_path.c_str());
+    }
+
     // Physics
     m_engine->stepTime();
 }
@@ -470,5 +484,10 @@ void SimpleApp::releaseSharedResources()
 int main(int argc, char** argv)
 {
     SimpleApp app;
-    return app.run(argc, argv);
+#if 0
+    app.m_capture_screen = true;
+    return app.runApp(argc, argv, bgfx::RendererType::OpenGL);
+#else
+    return app.runApp(argc, argv);
+#endif
 }
