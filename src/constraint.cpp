@@ -81,7 +81,7 @@ Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
     const double d = n_0.dot(n_1);
 
     constexpr double epsilon = 1e-12;
-    if (std::abs(d) - 1.0 < epsilon) { return Eigen::VectorXd::Random(3 * 4); }
+    if (std::abs(d) - 1.0 < epsilon) { return Eigen::VectorXd::Zero(3 * 4); }
 
     const double common_coeff = - 1.0 / std::sqrt(1.0 - d * d);
 
