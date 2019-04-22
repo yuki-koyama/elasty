@@ -13,6 +13,7 @@
 #include <elasty/constraint.hpp>
 #include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
+#include <elasty/sim-object.hpp>
 #include <string-util.hpp>
 #include <tiny_obj_loader.h>
 
@@ -20,15 +21,7 @@ using ParticlePtr = std::shared_ptr<elasty::Particle>;
 using ConstraintPtr = std::shared_ptr<elasty::Constraint>;
 using TriangleIndices = Eigen::Matrix<uint16_t, Eigen::Dynamic, 3, Eigen::RowMajor>;
 
-class SimObject
-{
-public:
-
-    std::vector<ParticlePtr> m_particles;
-    std::vector<ConstraintPtr> m_constraints;
-};
-
-class ClothSimObject : public SimObject
+class ClothSimObject : public elasty::SimObject
 {
 public:
 
