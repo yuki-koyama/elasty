@@ -2,10 +2,11 @@
 #define sim_object_hpp
 
 #include <memory>
+#include <vector>
 
 namespace elasty
 {
-    class Particle;
+    struct Particle;
     class Constraint;
 
     class SimObject
