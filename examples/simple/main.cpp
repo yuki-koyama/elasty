@@ -6,6 +6,7 @@
 #include <bigger/app.hpp>
 #include <bigger/scene-object.hpp>
 #include <bigger/materials/blinnphong-material.hpp>
+#include <bigger/primitives/dynamic-mesh-primitive.hpp>
 #include <bigger/primitives/plane-primitive.hpp>
 #include <bigger/primitives/sphere-primitive.hpp>
 #include <Eigen/Geometry>
@@ -370,16 +371,33 @@ public:
     bigger::SceneObject(material),
     m_cloth_sim_object(cloth_sim_object)
     {
+        std::vector<bigger::PositionNormalVertex> vertex_data = generateVertexData();
+
+        std::vector<uint16_t> triangle_list;
+        for (unsigned int i = 0; i < cloth_sim_object->m_triangle_indices.rows(); ++ i)
+        {
+            triangle_list.push_back(cloth_sim_object->m_triangle_indices(i, 0));
+            triangle_list.push_back(cloth_sim_object->m_triangle_indices(i, 1));
+            triangle_list.push_back(cloth_sim_object->m_triangle_indices(i, 2));
+        }
+
+        m_dynamic_mesh_primitive = std::make_unique<bigger::DynamicMeshPrimitive>(vertex_data, triangle_list);
+        m_dynamic_mesh_primitive->initializePrimitive();
     }
 
     void draw(const glm::mat4& parent_transform_matrix = glm::mat4(1.0f)) override
     {
-        // TODO
+        std::vector<bigger::PositionNormalVertex> vertex_data = generateVertexData();
+        m_material->submitUniforms();
+        m_dynamic_mesh_primitive->updateVertexData(vertex_data);
+        m_dynamic_mesh_primitive->submitPrimitive(m_material->m_program);
     }
 
     std::shared_ptr<ClothSimObject> m_cloth_sim_object;
 
 private:
+
+    std::unique_ptr<bigger::DynamicMeshPrimitive> m_dynamic_mesh_primitive;
 
     std::vector<bigger::PositionNormalVertex> generateVertexData() const
     {
@@ -520,7 +538,7 @@ void SimpleApp::initialize(int argc, char** argv)
 
     addSceneObject(std::make_shared<ParticlesObject>(m_engine, m_sphere_primitive, m_default_material));
     addSceneObject(std::make_shared<CheckerBoardObject>(m_plane_primitive, m_checker_white_material, m_checker_black_material));
-    addSceneObject(std::make_shared<ClothObject>(m_engine->m_cloth_sim_object, m_default_material));
+    addSceneObject(std::make_shared<ClothObject>(m_engine->m_cloth_sim_object, m_default_material), "cloth");
 }
 
 void SimpleApp::onReset()
@@ -550,8 +568,16 @@ void SimpleApp::updateApp()
     {
         if (ImGui::Button("Reset"))
         {
+            // Clear
+            m_engine->m_cloth_sim_object = nullptr;
             m_engine->clearScene();
+
+            // Init
+            m_engine->m_cloth_sim_object = std::make_shared<ClothSimObject>();
             m_engine->initializeScene();
+
+            // Re-register
+            m_scene_objects["cloth"] = std::make_shared<ClothObject>(m_engine->m_cloth_sim_object, m_default_material);
         }
     }
     ImGui::End();
