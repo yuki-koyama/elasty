@@ -171,9 +171,14 @@ public:
 
     void draw(const glm::mat4& parent_transform_matrix = glm::mat4(1.0f)) override
     {
-        std::vector<bigger::PositionNormalVertex> vertex_data = generateVertexData();
         m_material->submitUniforms();
+
+        const std::vector<bigger::PositionNormalVertex> vertex_data = generateVertexData();
         m_dynamic_mesh_primitive->updateVertexData(vertex_data);
+
+        // Do not cull back-facing triangles
+        bgfx::setState(BGFX_STATE_DEFAULT & (~ BGFX_STATE_CULL_CW));
+
         m_dynamic_mesh_primitive->submitPrimitive(m_material->m_program);
     }
 
@@ -257,7 +262,7 @@ public:
 
 private:
 
-    const float scale = 0.05f;
+    const float scale = 0.02f;
 
     std::shared_ptr<SimpleEngine> m_engine;
     std::shared_ptr<bigger::SpherePrimitive> m_sphere_primitive;
