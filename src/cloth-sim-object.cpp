@@ -5,13 +5,13 @@
 #include <Eigen/Geometry>
 #include <tiny_obj_loader.h>
 
-elasty::ClothSimObject::ClothSimObject(const std::string& obj_path)
+elasty::ClothSimObject::ClothSimObject(const std::string& obj_path,
+                                       const Eigen::Affine3d& transform,
+                                       const Strategy strategy)
 {
     constexpr double cloth_distance_stiffness = 0.20;
     constexpr double cloth_bending_stiffness = 0.05;
     constexpr double pi = 3.14159265358979323846244;
-
-    const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * pi, Eigen::Vector3d::UnitX());
 
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -51,7 +51,7 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path)
             attrib.vertices[3 * i + 2]
         };
 
-        const Eigen::Vector3d x = cloth_import_transform * position;
+        const Eigen::Vector3d x = transform * position;
         const Eigen::Vector3d v = 20.0 * Eigen::Vector3d::Random();
         const double m = 1.0 / double(attrib.vertices.size());
 
@@ -137,9 +137,6 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path)
 
         const triangle_t another_vertex_0 = obtain_another_vertex(triangles[0], edge);
         const triangle_t another_vertex_1 = obtain_another_vertex(triangles[1], edge);
-
-        enum class Strategy { Bending, IsometricBending, Cross };
-        constexpr Strategy strategy = Strategy::IsometricBending;
 
         switch (strategy)
         {
