@@ -382,7 +382,6 @@ public:
         }
 
         m_dynamic_mesh_primitive = std::make_unique<bigger::DynamicMeshPrimitive>(vertex_data, triangle_list);
-        m_dynamic_mesh_primitive->initializePrimitive();
     }
 
     void draw(const glm::mat4& parent_transform_matrix = glm::mat4(1.0f)) override
@@ -529,9 +528,7 @@ void SimpleApp::initialize(int argc, char** argv)
     m_checker_black_material->u_diffuse = glm::vec3(0.3);
     m_checker_black_material->u_specular = glm::vec3(0.0);
     m_sphere_primitive = std::make_shared<bigger::SpherePrimitive>();
-    m_sphere_primitive->initializePrimitive();
     m_plane_primitive = std::make_shared<bigger::PlanePrimitive>();
-    m_plane_primitive->initializePrimitive();
 
     m_engine = std::make_unique<SimpleEngine>();
     m_engine->initializeScene();
