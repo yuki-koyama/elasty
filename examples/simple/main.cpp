@@ -15,9 +15,6 @@
 #include <elasty/particle.hpp>
 #include <string-util.hpp>
 
-using ParticlePtr = std::shared_ptr<elasty::Particle>;
-using ConstraintPtr = std::shared_ptr<elasty::Constraint>;
-
 namespace
 {
     inline glm::vec3 eigen2glm(const Eigen::Vector3d& eigen)
@@ -184,6 +181,7 @@ private:
                 glm::vec3(0.0f)
             };
         }
+
         for (unsigned int i = 0; i < m_cloth_sim_object->m_triangle_indices.rows(); ++ i)
         {
             const auto& i_0 = m_cloth_sim_object->m_triangle_indices(i, 0);
@@ -200,10 +198,12 @@ private:
             vertex_data[i_1].normal += area_scaled_face_normal;
             vertex_data[i_2].normal += area_scaled_face_normal;
         }
+
         for (unsigned int i = 0; i < m_cloth_sim_object->m_particles.size(); ++ i)
         {
             vertex_data[i].normal = glm::normalize(vertex_data[i].normal);
         }
+
         return vertex_data;
     }
 };
@@ -228,7 +228,7 @@ public:
         for (auto& particle : m_engine->m_particles)
         {
             const glm::mat4 translate_matrix = glm::translate(eigen2glm(particle->x));
-            const glm::mat4 scale_matrix = glm::scale(glm::vec3(0.05f));
+            const glm::mat4 scale_matrix = glm::scale(glm::vec3(scale));
 
             const glm::mat4 transform = parent_transform_matrix * translate_matrix * scale_matrix;
 
@@ -239,6 +239,8 @@ public:
     }
 
 private:
+
+    const float scale = 0.05f;
 
     std::shared_ptr<SimpleEngine> m_engine;
     std::shared_ptr<bigger::SpherePrimitive> m_sphere_primitive;
