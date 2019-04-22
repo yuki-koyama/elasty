@@ -597,6 +597,7 @@ void SimpleApp::updateApp()
 
 void SimpleApp::releaseSharedResources()
 {
+    m_plane_primitive = nullptr;
     m_sphere_primitive = nullptr;
     m_default_material = nullptr;
     m_checker_white_material = nullptr;
