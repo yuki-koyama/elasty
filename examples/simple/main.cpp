@@ -15,48 +15,24 @@
 #include <string-util.hpp>
 #include <tiny_obj_loader.h>
 
-namespace
-{
-    inline glm::vec3 eigen2glm(const Eigen::Vector3d& eigen)
-    {
-        return glm::vec3(eigen.x(), eigen.y(), eigen.z());
-    }
-}
+using ParticlePtr = std::shared_ptr<elasty::Particle>;
+using ConstraintPtr = std::shared_ptr<elasty::Constraint>;
+using TriangleIndices = Eigen::Matrix<uint16_t, Eigen::Dynamic, 3, Eigen::RowMajor>;
 
-class SimpleEngine final : public elasty::Engine
+class SimObject
 {
 public:
 
-    void initializeScene() override
+    std::vector<ParticlePtr> m_particles;
+    std::vector<ConstraintPtr> m_constraints;
+};
+
+class ClothSimObject : public SimObject
+{
+public:
+
+    ClothSimObject()
     {
-        // Rod
-        constexpr unsigned int num_particles = 20;
-        constexpr double total_length = 2.0;
-        constexpr double segment_length = total_length / double(num_particles - 1);
-
-        std::shared_ptr<elasty::Particle> last_particle = nullptr;
-
-        for (unsigned int i = 0; i < num_particles; ++ i)
-        {
-            const Eigen::Vector3d x = Eigen::Vector3d(- 1.0, 1.0 + segment_length * double(i), 0.0);
-            const Eigen::Vector3d v = 50.0 * Eigen::Vector3d::Random();
-            const double m = 1.0;
-
-            auto particle = std::make_shared<elasty::Particle>(x, v, m);
-
-            m_particles.push_back(particle);
-
-            if (last_particle != nullptr)
-            {
-                addConstraint(std::make_shared<elasty::DistanceConstraint>(last_particle, particle, 0.5, segment_length));
-            }
-
-            last_particle = particle;
-        }
-
-        addConstraint(std::make_shared<elasty::FixedPointConstraint>(last_particle, 1.0, last_particle->x));
-
-        // Cloth
         constexpr double cloth_distance_stiffness = 0.20;
         constexpr double cloth_bending_stiffness = 0.05;
 
@@ -82,7 +58,15 @@ public:
         assert(attrib.vertices.size() % 3 == 0);
         assert(shape.mesh.indices.size() % 3 == 0);
 
-        std::map<unsigned int, std::shared_ptr<elasty::Particle>> map_from_obj_vertex_index_to_particle;
+        m_triangle_indices.resize(shape.mesh.indices.size() / 3, 3);
+        for (unsigned int i = 0; i < shape.mesh.indices.size() / 3; ++ i)
+        {
+            m_triangle_indices(i, 0) = shape.mesh.indices[i * 3 + 0].vertex_index;
+            m_triangle_indices(i, 1) = shape.mesh.indices[i * 3 + 1].vertex_index;
+            m_triangle_indices(i, 2) = shape.mesh.indices[i * 3 + 2].vertex_index;
+        }
+
+        std::map<unsigned int, ParticlePtr> map_from_obj_vertex_index_to_particle;
         for (unsigned int i = 0; i < attrib.vertices.size() / 3; ++ i)
         {
             const Eigen::Vector3d position
@@ -109,9 +93,9 @@ public:
             const auto p_1 = map_from_obj_vertex_index_to_particle[shape.mesh.indices[i * 3 + 1].vertex_index];
             const auto p_2 = map_from_obj_vertex_index_to_particle[shape.mesh.indices[i * 3 + 2].vertex_index];
 
-            addConstraint(std::make_shared<elasty::DistanceConstraint>(p_0, p_1, cloth_distance_stiffness, (p_0->x - p_1->x).norm()));
-            addConstraint(std::make_shared<elasty::DistanceConstraint>(p_0, p_2, cloth_distance_stiffness, (p_0->x - p_2->x).norm()));
-            addConstraint(std::make_shared<elasty::DistanceConstraint>(p_1, p_2, cloth_distance_stiffness, (p_1->x - p_2->x).norm()));
+            m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_0, p_1, cloth_distance_stiffness, (p_0->x - p_1->x).norm()));
+            m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_0, p_2, cloth_distance_stiffness, (p_0->x - p_2->x).norm()));
+            m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_1, p_2, cloth_distance_stiffness, (p_1->x - p_2->x).norm()));
         }
 
         using vertex_t = unsigned int;
@@ -211,7 +195,7 @@ public:
 
                     assert(!std::isnan(dihedral_angle));
 
-                    addConstraint(std::make_shared<elasty::BendingConstraint>(p_0, p_1, p_2, p_3, cloth_bending_stiffness, dihedral_angle));
+                    m_constraints.push_back(std::make_shared<elasty::BendingConstraint>(p_0, p_1, p_2, p_3, cloth_bending_stiffness, dihedral_angle));
 
                     break;
                 }
@@ -222,7 +206,7 @@ public:
                     const auto p_2 = map_from_obj_vertex_index_to_particle[another_vertex_0];
                     const auto p_3 = map_from_obj_vertex_index_to_particle[another_vertex_1];
 
-                    addConstraint(std::make_shared<elasty::IsometricBendingConstraint>(p_0, p_1, p_2, p_3, cloth_bending_stiffness));
+                    m_constraints.push_back(std::make_shared<elasty::IsometricBendingConstraint>(p_0, p_1, p_2, p_3, cloth_bending_stiffness));
 
                     break;
                 }
@@ -234,7 +218,7 @@ public:
                     const Eigen::Vector3d& x_2 = p_2->x;
                     const Eigen::Vector3d& x_3 = p_3->x;
 
-                    addConstraint(std::make_shared<elasty::DistanceConstraint>(p_2, p_3, cloth_bending_stiffness, (x_2 - x_3).norm()));
+                    m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_2, p_3, cloth_bending_stiffness, (x_2 - x_3).norm()));
 
                     break;
                 }
@@ -247,7 +231,7 @@ public:
         {
             if (particle->x.isApprox(search_position))
             {
-                addConstraint(std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, fixed_position));
+                m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, fixed_position));
             }
         };
 
@@ -258,6 +242,56 @@ public:
             find_and_constrain_fixed_point(Eigen::Vector3d(+ 1.0 + 1.0, + 2.0, 0.0), Eigen::Vector3d(+ 1.0 + 1.0, 3.0, 0.0), particle);
             find_and_constrain_fixed_point(Eigen::Vector3d(- 1.0 + 1.0, + 2.0, 0.0), Eigen::Vector3d(- 1.0 + 1.0, 3.0, 0.0), particle);
         }
+    }
+
+    TriangleIndices m_triangle_indices;
+};
+
+namespace
+{
+    inline glm::vec3 eigen2glm(const Eigen::Vector3d& eigen)
+    {
+        return glm::vec3(eigen.x(), eigen.y(), eigen.z());
+    }
+}
+
+class SimpleEngine final : public elasty::Engine
+{
+public:
+
+    void initializeScene() override
+    {
+        // Rod
+        constexpr unsigned int num_particles = 20;
+        constexpr double total_length = 2.0;
+        constexpr double segment_length = total_length / double(num_particles - 1);
+
+        std::shared_ptr<elasty::Particle> last_particle = nullptr;
+
+        for (unsigned int i = 0; i < num_particles; ++ i)
+        {
+            const Eigen::Vector3d x = Eigen::Vector3d(- 1.0, 1.0 + segment_length * double(i), 0.0);
+            const Eigen::Vector3d v = 50.0 * Eigen::Vector3d::Random();
+            const double m = 1.0;
+
+            auto particle = std::make_shared<elasty::Particle>(x, v, m);
+
+            m_particles.push_back(particle);
+
+            if (last_particle != nullptr)
+            {
+                addConstraint(std::make_shared<elasty::DistanceConstraint>(last_particle, particle, 0.5, segment_length));
+            }
+
+            last_particle = particle;
+        }
+
+        addConstraint(std::make_shared<elasty::FixedPointConstraint>(last_particle, 1.0, last_particle->x));
+
+        // Cloth
+        m_cloth_sim_object = std::make_shared<ClothSimObject>();
+        std::copy(m_cloth_sim_object->m_particles.begin(), m_cloth_sim_object->m_particles.end(), std::back_inserter(m_particles));
+        std::copy(m_cloth_sim_object->m_constraints.begin(), m_cloth_sim_object->m_constraints.end(), std::back_inserter(m_constraints));
     }
 
     void setExternalForces() override
@@ -288,6 +322,8 @@ public:
             particle->v *= 0.999;
         }
     }
+
+    std::shared_ptr<ClothSimObject> m_cloth_sim_object;
 };
 
 class SimpleApp final : public bigger::App
@@ -325,6 +361,25 @@ SimpleApp::SimpleApp()
     m_capture_screen = false;
 }
 
+class ClothObject final : public bigger::SceneObject
+{
+public:
+
+    ClothObject(std::shared_ptr<ClothSimObject> cloth_sim_object,
+                std::shared_ptr<bigger::BlinnPhongMaterial> material) :
+    bigger::SceneObject(material),
+    m_cloth_sim_object(cloth_sim_object)
+    {
+    }
+
+    void draw(const glm::mat4& parent_transform_matrix = glm::mat4(1.0f)) override
+    {
+        // TODO
+    }
+
+    std::shared_ptr<ClothSimObject> m_cloth_sim_object;
+};
+
 class ParticlesObject final : public bigger::SceneObject
 {
 public:
@@ -338,7 +393,7 @@ public:
     {
     }
 
-    void draw(const glm::mat4& parent_transform_matrix = glm::mat4(1.0f))
+    void draw(const glm::mat4& parent_transform_matrix = glm::mat4(1.0f)) override
     {
         m_material->submitUniforms();
 
@@ -425,6 +480,7 @@ void SimpleApp::initialize(int argc, char** argv)
 
     addSceneObject(std::make_shared<ParticlesObject>(m_engine, m_sphere_primitive, m_default_material));
     addSceneObject(std::make_shared<CheckerBoardObject>(m_plane_primitive, m_checker_white_material, m_checker_black_material));
+    addSceneObject(std::make_shared<ClothObject>(m_engine->m_cloth_sim_object, m_default_material));
 }
 
 void SimpleApp::onReset()
