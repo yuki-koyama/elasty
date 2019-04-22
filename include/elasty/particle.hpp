@@ -1,9 +1,6 @@
 #ifndef particle_hpp
 #define particle_hpp
 
-#include <cassert>
-#include <memory>
-#include <vector>
 #include <Eigen/Core>
 
 namespace elasty
