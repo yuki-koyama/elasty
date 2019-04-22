@@ -378,6 +378,46 @@ public:
     }
 
     std::shared_ptr<ClothSimObject> m_cloth_sim_object;
+
+private:
+
+    std::vector<bigger::PositionNormalVertex> generateVertexData() const
+    {
+        std::vector<bigger::PositionNormalVertex> vertex_data(m_cloth_sim_object->m_particles.size());
+        for (unsigned int i = 0; i < m_cloth_sim_object->m_particles.size(); ++ i)
+        {
+            vertex_data[i] =
+            {
+                {
+                    m_cloth_sim_object->m_particles[i]->x(0),
+                    m_cloth_sim_object->m_particles[i]->x(1),
+                    m_cloth_sim_object->m_particles[i]->x(2)
+                },
+                glm::vec3(0.0f)
+            };
+        }
+        for (unsigned int i = 0; i < m_cloth_sim_object->m_triangle_indices.rows(); ++ i)
+        {
+            const auto& i_0 = m_cloth_sim_object->m_triangle_indices(i, 0);
+            const auto& i_1 = m_cloth_sim_object->m_triangle_indices(i, 1);
+            const auto& i_2 = m_cloth_sim_object->m_triangle_indices(i, 2);
+
+            const glm::vec3& x_0 = vertex_data[i_0].position;
+            const glm::vec3& x_1 = vertex_data[i_1].position;
+            const glm::vec3& x_2 = vertex_data[i_2].position;
+
+            const glm::vec3 area_scaled_face_normal = glm::cross(x_1 - x_0, x_2 - x_0);
+
+            vertex_data[i_0].normal += area_scaled_face_normal;
+            vertex_data[i_1].normal += area_scaled_face_normal;
+            vertex_data[i_2].normal += area_scaled_face_normal;
+        }
+        for (unsigned int i = 0; i < m_cloth_sim_object->m_particles.size(); ++ i)
+        {
+            vertex_data[i].normal = glm::normalize(vertex_data[i].normal);
+        }
+        return vertex_data;
+    }
 };
 
 class ParticlesObject final : public bigger::SceneObject
