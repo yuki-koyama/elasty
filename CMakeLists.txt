@@ -12,7 +12,7 @@ file(GLOB headers ${CMAKE_CURRENT_SOURCE_DIR}/include/elasty/*.hpp)
 
 add_library(elasty STATIC ${sources} ${headers})
 target_include_directories(elasty PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(elasty PUBLIC Eigen3::Eigen)
+target_link_libraries(elasty PUBLIC Eigen3::Eigen tinyobjloader)
 
 option(ELASTY_EXAMPLES ON "")
 if(ELASTY_EXAMPLES)
