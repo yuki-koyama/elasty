@@ -199,22 +199,4 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path)
             }
         }
     }
-
-    const auto find_and_constrain_fixed_point = [&](const Eigen::Vector3d& search_position,
-                                                    const Eigen::Vector3d& fixed_position,
-                                                    const std::shared_ptr<elasty::Particle> particle)
-    {
-        if (particle->x.isApprox(search_position))
-        {
-            m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, fixed_position));
-        }
-    };
-
-    for (const auto& key_value : map_from_obj_vertex_index_to_particle)
-    {
-        const auto particle = key_value.second;
-
-        find_and_constrain_fixed_point(Eigen::Vector3d(+ 1.0 + 1.0, + 2.0, 0.0), Eigen::Vector3d(+ 1.0 + 1.0, 3.0, 0.0), particle);
-        find_and_constrain_fixed_point(Eigen::Vector3d(- 1.0 + 1.0, + 2.0, 0.0), Eigen::Vector3d(- 1.0 + 1.0, 3.0, 0.0), particle);
-    }
 }

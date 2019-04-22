@@ -59,6 +59,23 @@ public:
         // Cloth
         std::copy(m_cloth_sim_object->m_particles.begin(), m_cloth_sim_object->m_particles.end(), std::back_inserter(m_particles));
         std::copy(m_cloth_sim_object->m_constraints.begin(), m_cloth_sim_object->m_constraints.end(), std::back_inserter(m_constraints));
+
+        // Pin two of the corners of the cloth
+        const auto find_and_constrain_fixed_point = [&](const Eigen::Vector3d& search_position,
+                                                        const Eigen::Vector3d& fixed_position,
+                                                        const std::shared_ptr<elasty::Particle> particle)
+        {
+            if (particle->x.isApprox(search_position))
+            {
+                m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, fixed_position));
+            }
+        };
+
+        for (const auto particle : m_cloth_sim_object->m_particles)
+        {
+            find_and_constrain_fixed_point(Eigen::Vector3d(+ 1.0 + 1.0, + 2.0, 0.0), Eigen::Vector3d(+ 1.0 + 1.0, 3.0, 0.0), particle);
+            find_and_constrain_fixed_point(Eigen::Vector3d(- 1.0 + 1.0, + 2.0, 0.0), Eigen::Vector3d(- 1.0 + 1.0, 3.0, 0.0), particle);
+        }
     }
 
     void setExternalForces() override
