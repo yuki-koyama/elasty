@@ -1,3 +1,6 @@
 [submodule "external/bigger"]
 	path = external/bigger
 	url = https://github.com/yuki-koyama/bigger.git
+[submodule "external/alembic"]
+	path = external/alembic
+	url = https://github.com/alembic/alembic.git
