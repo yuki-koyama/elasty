@@ -128,6 +128,8 @@ public:
 
 private:
 
+    const double cloth_distance_stiffness = 0.20;
+    const double cloth_bending_stiffness = 0.05;
     const std::string cloth_obj_path = "models/cloths/0.01.obj";
     const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * glm::pi<double>(), Eigen::Vector3d::UnitX());
 
@@ -327,7 +329,7 @@ void SimpleApp::initialize(int argc, char** argv)
     m_plane_primitive = std::make_shared<bigger::PlanePrimitive>();
 
     m_engine = std::make_unique<SimpleEngine>();
-    m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(cloth_obj_path, cloth_import_transform);
+    m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(cloth_obj_path, cloth_distance_stiffness, cloth_bending_stiffness, cloth_import_transform);
     m_engine->initializeScene();
 
     addSceneObject(std::make_shared<ParticlesObject>(m_engine, m_sphere_primitive, m_default_material));
@@ -367,7 +369,7 @@ void SimpleApp::updateApp()
             m_engine->clearScene();
 
             // Init
-            m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(cloth_obj_path, cloth_import_transform);
+            m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(cloth_obj_path, cloth_distance_stiffness, cloth_bending_stiffness, cloth_import_transform);
             m_engine->initializeScene();
 
             // Re-register
