@@ -12,7 +12,12 @@ namespace elasty
     {
     public:
 
-        enum class Strategy { Bending, IsometricBending, Cross };
+        enum class Strategy
+        {
+            Bending,
+            IsometricBending,
+            Cross,
+        };
 
         using TriangleList = Eigen::Matrix<int32_t, Eigen::Dynamic, 3, Eigen::RowMajor>;
 
@@ -22,7 +27,7 @@ namespace elasty
                        const Eigen::Affine3d& transform = Eigen::Affine3d::Identity(),
                        const Strategy strategy = Strategy::IsometricBending);
 
-        TriangleList m_triangle_indices;
+        TriangleList m_triangle_list;
     };
 }
 

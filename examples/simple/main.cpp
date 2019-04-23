@@ -57,9 +57,13 @@ public:
 
         addConstraint(std::make_shared<elasty::FixedPointConstraint>(last_particle, 1.0, last_particle->x));
 
-        // Cloth
-        std::copy(m_cloth_sim_object->m_particles.begin(), m_cloth_sim_object->m_particles.end(), std::back_inserter(m_particles));
-        std::copy(m_cloth_sim_object->m_constraints.begin(), m_cloth_sim_object->m_constraints.end(), std::back_inserter(m_constraints));
+        // Register the cloth object
+        std::copy(m_cloth_sim_object->m_particles.begin(),
+                  m_cloth_sim_object->m_particles.end(),
+                  std::back_inserter(m_particles));
+        std::copy(m_cloth_sim_object->m_constraints.begin(),
+                  m_cloth_sim_object->m_constraints.end(),
+                  std::back_inserter(m_constraints));
 
         // Pin two of the corners of the cloth
         elasty::generateFixedPointConstraints(Eigen::Vector3d(+ 1.0 + 1.0, + 2.0, 0.0),
@@ -156,11 +160,11 @@ public:
         std::vector<bigger::PositionNormalVertex> vertex_data = generateVertexData();
 
         std::vector<uint16_t> triangle_list;
-        for (unsigned int i = 0; i < cloth_sim_object->m_triangle_indices.rows(); ++ i)
+        for (unsigned int i = 0; i < cloth_sim_object->m_triangle_list.rows(); ++ i)
         {
-            triangle_list.push_back(cloth_sim_object->m_triangle_indices(i, 0));
-            triangle_list.push_back(cloth_sim_object->m_triangle_indices(i, 1));
-            triangle_list.push_back(cloth_sim_object->m_triangle_indices(i, 2));
+            triangle_list.push_back(cloth_sim_object->m_triangle_list(i, 0));
+            triangle_list.push_back(cloth_sim_object->m_triangle_list(i, 1));
+            triangle_list.push_back(cloth_sim_object->m_triangle_list(i, 2));
         }
 
         m_dynamic_mesh_primitive = std::make_unique<bigger::DynamicMeshPrimitive>(vertex_data, triangle_list);
@@ -201,11 +205,11 @@ private:
             };
         }
 
-        for (unsigned int i = 0; i < m_cloth_sim_object->m_triangle_indices.rows(); ++ i)
+        for (unsigned int i = 0; i < m_cloth_sim_object->m_triangle_list.rows(); ++ i)
         {
-            const auto& i_0 = m_cloth_sim_object->m_triangle_indices(i, 0);
-            const auto& i_1 = m_cloth_sim_object->m_triangle_indices(i, 1);
-            const auto& i_2 = m_cloth_sim_object->m_triangle_indices(i, 2);
+            const auto& i_0 = m_cloth_sim_object->m_triangle_list(i, 0);
+            const auto& i_1 = m_cloth_sim_object->m_triangle_list(i, 1);
+            const auto& i_2 = m_cloth_sim_object->m_triangle_list(i, 2);
 
             const glm::vec3& x_0 = vertex_data[i_0].position;
             const glm::vec3& x_1 = vertex_data[i_1].position;

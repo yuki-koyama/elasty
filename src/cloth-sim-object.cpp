@@ -31,12 +31,12 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path,
     assert(attrib.vertices.size() % 3 == 0);
     assert(shape.mesh.indices.size() % 3 == 0);
 
-    m_triangle_indices.resize(shape.mesh.indices.size() / 3, 3);
+    m_triangle_list.resize(shape.mesh.indices.size() / 3, 3);
     for (unsigned int i = 0; i < shape.mesh.indices.size() / 3; ++ i)
     {
-        m_triangle_indices(i, 0) = shape.mesh.indices[i * 3 + 0].vertex_index;
-        m_triangle_indices(i, 1) = shape.mesh.indices[i * 3 + 1].vertex_index;
-        m_triangle_indices(i, 2) = shape.mesh.indices[i * 3 + 2].vertex_index;
+        m_triangle_list(i, 0) = shape.mesh.indices[i * 3 + 0].vertex_index;
+        m_triangle_list(i, 1) = shape.mesh.indices[i * 3 + 1].vertex_index;
+        m_triangle_list(i, 2) = shape.mesh.indices[i * 3 + 2].vertex_index;
     }
 
     std::map<unsigned int, std::shared_ptr<Particle>> map_from_obj_vertex_index_to_particle;
