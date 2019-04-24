@@ -18,7 +18,8 @@ namespace elasty
                                        std::vector<std::shared_ptr<Constraint>>& constraints);
 
     std::shared_ptr<AlembicManager> createAlembicManager(const std::string& file_path,
-                                                         const std::shared_ptr<ClothSimObject> cloth_sim_object);
+                                                         const std::shared_ptr<ClothSimObject> cloth_sim_object,
+                                                         const double dt);
 
     void submitCurrentStatus(const std::shared_ptr<AlembicManager> alembic_manager);
 }
