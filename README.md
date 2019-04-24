@@ -23,6 +23,10 @@ A research-oriented elastic body simulator
 - [ ] Triangle strain constraint
 - [ ] Volume conservation constraint
 
+## Additional Features
+
+- Export simulated cloth meshes as Alembic
+
 ## Dependencies
 
 - Alembic <https://github.com/alembic/alembic> [BSD 3-Clause]
