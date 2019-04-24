@@ -128,7 +128,7 @@ private:
 
     const double cloth_distance_stiffness = 0.20;
     const double cloth_bending_stiffness = 0.05;
-    const std::string cloth_obj_path = "models/cloths/0.01.obj";
+    const std::string cloth_obj_path = "./models/cloths/0.01.obj";
     const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * glm::pi<double>(), Eigen::Vector3d::UnitX());
 
     // Shared resources
@@ -168,6 +168,15 @@ public:
         }
 
         m_dynamic_mesh_primitive = std::make_unique<bigger::DynamicMeshPrimitive>(vertex_data, triangle_list);
+
+        m_alembic_manager = elasty::createAlembicManager("./cloth.abc", m_cloth_sim_object, 1.0 / 60.0);
+        elasty::submitCurrentStatus(m_alembic_manager);
+    }
+
+    void update() override
+    {
+        assert(m_alembic_manager != nullptr);
+        elasty::submitCurrentStatus(m_alembic_manager);
     }
 
     void draw(const glm::mat4& parent_transform_matrix = glm::mat4(1.0f)) override
@@ -186,6 +195,8 @@ public:
     std::shared_ptr<elasty::ClothSimObject> m_cloth_sim_object;
 
 private:
+
+    std::shared_ptr<elasty::AlembicManager> m_alembic_manager;
 
     std::unique_ptr<bigger::DynamicMeshPrimitive> m_dynamic_mesh_primitive;
 
