@@ -12,6 +12,16 @@ namespace elasty
     class ClothSimObject;
     class AlembicManager;
 
+    /// \param particles an array of N particles
+    /// \return an array of 3 * N values:
+    /// std::vector<float>
+    /// {
+    ///     p[0].x, p[0].y, p[0].z,
+    ///     p[1].x, p[1].y, p[1].z,
+    ///     ...
+    /// }
+    std::vector<float> packParticlePositions(const std::vector<std::shared_ptr<Particle>>& particles);
+
     void generateFixedPointConstraints(const Eigen::Vector3d& search_position,
                                        const Eigen::Vector3d& fixed_position,
                                        const std::vector<std::shared_ptr<Particle>>& particles,

@@ -5,6 +5,19 @@
 #include <Alembic/AbcGeom/All.h>
 #include <Alembic/AbcCoreOgawa/All.h>
 
+std::vector<float> elasty::packParticlePositions(const std::vector<std::shared_ptr<Particle>>& particles)
+{
+    std::vector<float> verts;
+    verts.reserve(3 * particles.size());
+    for (const auto& particle : particles)
+    {
+        verts.push_back(particle->x(0));
+        verts.push_back(particle->x(1));
+        verts.push_back(particle->x(2));
+    }
+    return verts;
+}
+
 void elasty::generateFixedPointConstraints(const Eigen::Vector3d& search_position,
                                            const Eigen::Vector3d& fixed_position,
                                            const std::vector<std::shared_ptr<Particle>>& particles,
@@ -44,18 +57,7 @@ public:
         using namespace Alembic::AbcGeom;
 
         const size_t num_verts = m_cloth_sim_object->m_particles.size();
-        const std::vector<float> verts = [&]()
-        {
-            std::vector<float> verts;
-            verts.reserve(3 * num_verts);
-            for (const auto& particle : m_cloth_sim_object->m_particles)
-            {
-                verts.push_back(particle->x(0));
-                verts.push_back(particle->x(1));
-                verts.push_back(particle->x(2));
-            }
-            return verts;
-        }();
+        const std::vector<float> verts = packParticlePositions(m_cloth_sim_object->m_particles);
         const size_t num_indices = m_cloth_sim_object->m_triangle_list.size();
         const std::vector<int32_t> indices = [&]()
         {
