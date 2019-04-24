@@ -36,6 +36,10 @@ option(ELASTY_EXAMPLES ON "")
 if(ELASTY_EXAMPLES)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/bigger)
 
+  add_executable(cloth-alembic ${CMAKE_CURRENT_SOURCE_DIR}/examples/cloth-alembic/main.cpp)
+  target_link_libraries(cloth-alembic elasty)
+  add_custom_command(TARGET cloth-alembic POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/models $<TARGET_FILE_DIR:simple>/models)
+
   add_executable(simple ${CMAKE_CURRENT_SOURCE_DIR}/examples/simple/main.cpp)
   target_link_libraries(simple bigger elasty)
   add_custom_command(TARGET simple POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${BIGGER_SHADER_OUTPUT_DIR} $<TARGET_FILE_DIR:simple>/shaders)

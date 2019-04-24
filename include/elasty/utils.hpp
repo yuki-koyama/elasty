@@ -12,6 +12,8 @@ namespace elasty
     class ClothSimObject;
     class AlembicManager;
 
+    constexpr double pi() { return 3.14159265358979323846264338327950288; }
+
     /// \param particles an array of N particles
     /// \return an array of 3 * N values:
     /// std::vector<float>
