@@ -25,6 +25,8 @@ A research-oriented elastic body simulator
 
 ## Dependencies
 
+- Alembic <https://github.com/alembic/alembic> [BSD 3-Clause]
+  - OpenEXR <https://github.com/openexr/openexr> [BSD 3-Clause]
 - bigger <https://github.com/yuki-koyama/bigger> [MIT]
   - bigg <https://github.com/JoshuaBrookover/bigg> [Unlicense]
     - bgfx.cmake <https://github.com/JoshuaBrookover/bgfx.cmake> [CC0]
@@ -42,7 +44,7 @@ A research-oriented elastic body simulator
 ## Prerequisites
 
 ```bash
-brew install eigen
+brew install eigen openexr
 ```
 
 ## Build
