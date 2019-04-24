@@ -14,7 +14,7 @@ public:
 
         // Instantiate a cloth object
         const double cloth_distance_stiffness = 0.90;
-        const double cloth_bending_stiffness = 0.15;
+        const double cloth_bending_stiffness = 0.05;
         const std::string cloth_obj_path = "./models/cloths/0.10.obj";
         const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(0.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * elasty::pi(), Eigen::Vector3d::UnitX());
         m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(cloth_obj_path,
@@ -53,7 +53,6 @@ public:
     }
 
     void generateCollisionConstraints() override {}
-
     void updateVelocities() override {}
 
     std::shared_ptr<elasty::ClothSimObject> m_cloth_sim_object;
@@ -62,7 +61,6 @@ public:
 int main(int argc, char** argv)
 {
     SimpleEngine engine;
-
     engine.initializeScene();
 
     auto alembic_manager = elasty::createAlembicManager("./cloth.abc", engine.m_cloth_sim_object, engine.m_dt);
@@ -70,7 +68,6 @@ int main(int argc, char** argv)
     for (unsigned int frame = 0; frame < 180; ++ frame)
     {
         elasty::submitCurrentStatus(alembic_manager);
-
         engine.stepTime();
     }
 
