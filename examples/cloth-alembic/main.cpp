@@ -10,13 +10,17 @@ public:
 
     void initializeScene() override
     {
-        m_num_iterations = 20;
+        m_num_iterations = 30;
 
         // Instantiate a cloth object
-        const double cloth_distance_stiffness = 0.90;
+        const double cloth_distance_stiffness = 0.95;
         const double cloth_bending_stiffness = 0.05;
         const std::string cloth_obj_path = "./models/cloths/0.10.obj";
+#if 0 // Drape
         const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(0.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * elasty::pi(), Eigen::Vector3d::UnitX());
+#else // Fall
+        const Eigen::Affine3d cloth_import_transform = Eigen::Affine3d(Eigen::Translation3d(0.0, 2.0, 1.0));
+#endif
         m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(cloth_obj_path,
                                                                       cloth_distance_stiffness,
                                                                       cloth_bending_stiffness,

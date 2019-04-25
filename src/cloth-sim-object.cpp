@@ -50,7 +50,7 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path,
         };
 
         const Eigen::Vector3d x = transform * position;
-        const Eigen::Vector3d v = 20.0 * Eigen::Vector3d::Random();
+        const Eigen::Vector3d v = Eigen::Vector3d::Zero();
         const double m = 1.0 / double(attrib.vertices.size());
 
         auto particle = std::make_shared<elasty::Particle>(x, v, m);
