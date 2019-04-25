@@ -58,24 +58,25 @@ public:
 
         const size_t num_verts = m_cloth_sim_object->m_particles.size();
         const std::vector<float> verts = packParticlePositions(m_cloth_sim_object->m_particles);
-        const size_t num_indices = m_cloth_sim_object->m_triangle_list.size();
-        const std::vector<int32_t> indices = [&]()
-        {
-            std::vector<int32_t> indices;
-            indices.reserve(num_indices);
-            for (unsigned int i = 0; i < m_cloth_sim_object->m_triangle_list.rows(); ++ i)
-            {
-                indices.push_back(m_cloth_sim_object->m_triangle_list(i, 0));
-                indices.push_back(m_cloth_sim_object->m_triangle_list(i, 1));
-                indices.push_back(m_cloth_sim_object->m_triangle_list(i, 2));
-            }
-            return indices;
-        }();
-        const size_t num_counts = m_cloth_sim_object->m_triangle_list.rows();
-        const std::vector<int32_t> counts(num_counts, 3);
 
         if (m_is_first)
         {
+            const size_t num_indices = m_cloth_sim_object->m_triangle_list.size();
+            const std::vector<int32_t> indices = [&]()
+            {
+                std::vector<int32_t> indices;
+                indices.reserve(num_indices);
+                for (unsigned int i = 0; i < m_cloth_sim_object->m_triangle_list.rows(); ++ i)
+                {
+                    indices.push_back(m_cloth_sim_object->m_triangle_list(i, 0));
+                    indices.push_back(m_cloth_sim_object->m_triangle_list(i, 1));
+                    indices.push_back(m_cloth_sim_object->m_triangle_list(i, 2));
+                }
+                return indices;
+            }();
+            const size_t num_counts = m_cloth_sim_object->m_triangle_list.rows();
+            const std::vector<int32_t> counts(num_counts, 3);
+
             const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) verts.data(), num_verts),
                                                  Int32ArraySample(indices.data(), num_indices),
                                                  Int32ArraySample(counts.data(), num_counts));
