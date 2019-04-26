@@ -11,12 +11,12 @@ public:
 
     void initializeScene() override
     {
-        m_num_iterations = 30;
+        m_num_iterations = 40;
 
         // Instantiate a cloth object
         const double cloth_distance_stiffness = 0.95;
         const double cloth_bending_stiffness = 0.03;
-        const std::string cloth_obj_path = "./models/cloths/0.10.obj";
+        const std::string cloth_obj_path = "./models/cloths/0.20.obj";
 #if 0 // Drape
         const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(0.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * elasty::pi(), Eigen::Vector3d::UnitX());
 #else // Fall
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
 
     auto alembic_manager = elasty::createAlembicManager("./cloth.abc", engine.m_cloth_sim_object, engine.m_dt);
 
-    for (unsigned int frame = 0; frame < 180; ++ frame)
+    for (unsigned int frame = 0; frame < 300; ++ frame)
     {
         timer::Timer t(std::to_string(frame));
         elasty::submitCurrentStatus(alembic_manager);
