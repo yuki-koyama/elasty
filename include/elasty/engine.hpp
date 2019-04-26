@@ -28,14 +28,14 @@ namespace elasty
         std::vector<std::shared_ptr<Constraint>> m_constraints;
         std::vector<std::shared_ptr<Constraint>> m_instant_constraints;
 
+        double m_dt = 1.0 / 60.0;
+        unsigned int m_num_iterations = 10;
+
     protected:
 
         void addConstraint(std::shared_ptr<Constraint> constraint);
         void addInstantConstraint(std::shared_ptr<Constraint> constraint);
         void projectConstraint(std::shared_ptr<Constraint> constraint);
-
-        double m_dt = 1.0 / 60.0;
-        unsigned int m_num_iterations = 10;
     };
 }
 
