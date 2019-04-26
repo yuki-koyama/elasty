@@ -37,6 +37,7 @@ A research-oriented elastic body simulator
 - Alembic <https://github.com/alembic/alembic> [BSD 3-Clause]
   - OpenEXR <https://github.com/openexr/openexr> [BSD 3-Clause]
 - Eigen <http://eigen.tuxfamily.org/> [MPL2]
+- tinyobjloader <https://github.com/syoyo/tinyobjloader> [MIT]
 
 ### Demos
 
