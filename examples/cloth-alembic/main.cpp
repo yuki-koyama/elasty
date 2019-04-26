@@ -15,7 +15,7 @@ public:
 
         // Instantiate a cloth object
         const double cloth_distance_stiffness = 0.95;
-        const double cloth_bending_stiffness = 0.05;
+        const double cloth_bending_stiffness = 0.03;
         const std::string cloth_obj_path = "./models/cloths/0.10.obj";
 #if 0 // Drape
         const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(0.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * elasty::pi(), Eigen::Vector3d::UnitX());
@@ -37,14 +37,18 @@ public:
                   std::back_inserter(m_constraints));
 
         // Pin two of the corners of the cloth
-        elasty::generateFixedPointConstraints(Eigen::Vector3d(+ 1.0, + 2.0, 0.0),
-                                              Eigen::Vector3d(+ 1.0, + 2.0, 0.0),
-                                              m_cloth_sim_object->m_particles,
-                                              m_constraints);
-        elasty::generateFixedPointConstraints(Eigen::Vector3d(- 1.0, + 2.0, 0.0),
-                                              Eigen::Vector3d(- 1.0, + 2.0, 0.0),
-                                              m_cloth_sim_object->m_particles,
-                                              m_constraints);
+        constexpr double range_radius = 0.1;
+        for (const auto& particle : m_particles)
+        {
+            if ((particle->x - Eigen::Vector3d(+ 1.0, 2.0, 0.0)).norm() < range_radius)
+            {
+                m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, particle->x));
+            }
+            if ((particle->x - Eigen::Vector3d(- 1.0, 2.0, 0.0)).norm() < range_radius)
+            {
+                m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, particle->x));
+            }
+        }
     }
 
     void setExternalForces() override
