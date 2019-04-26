@@ -2,6 +2,8 @@
 
 A research-oriented elastic body simulator
 
+![](./docs/cloth.gif)
+
 ## Algorithms
 
 ### Frameworks
@@ -30,7 +32,7 @@ A research-oriented elastic body simulator
 
 ## Dependencies
 
-### Core
+### Core Library
 
 - Alembic <https://github.com/alembic/alembic> [BSD 3-Clause]
   - OpenEXR <https://github.com/openexr/openexr> [BSD 3-Clause]
