@@ -24,6 +24,9 @@ namespace elasty
     /// }
     std::vector<float> packParticlePositions(const std::vector<std::shared_ptr<Particle>>& particles);
 
+    void setRandomVelocities(const std::vector<std::shared_ptr<Particle>>& particles,
+                             const double scale = 1.0);
+
     void generateFixedPointConstraints(const Eigen::Vector3d& search_position,
                                        const Eigen::Vector3d& fixed_position,
                                        const std::vector<std::shared_ptr<Particle>>& particles,

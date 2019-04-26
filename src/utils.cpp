@@ -18,6 +18,15 @@ std::vector<float> elasty::packParticlePositions(const std::vector<std::shared_p
     return verts;
 }
 
+void elasty::setRandomVelocities(const std::vector<std::shared_ptr<Particle>>& particles,
+                                 const double scale)
+{
+    for (const auto& particle: particles)
+    {
+        particle->v = scale * Eigen::Vector3d::Random();
+    }
+}
+
 void elasty::generateFixedPointConstraints(const Eigen::Vector3d& search_position,
                                            const Eigen::Vector3d& fixed_position,
                                            const std::vector<std::shared_ptr<Particle>>& particles,
