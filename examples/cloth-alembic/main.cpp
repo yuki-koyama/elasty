@@ -3,6 +3,7 @@
 #include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
 #include <elasty/utils.hpp>
+#include <timer.hpp>
 
 class SimpleEngine final : public elasty::Engine
 {
@@ -71,6 +72,7 @@ int main(int argc, char** argv)
 
     for (unsigned int frame = 0; frame < 180; ++ frame)
     {
+        timer::Timer t(std::to_string(frame));
         elasty::submitCurrentStatus(alembic_manager);
         engine.stepTime();
     }

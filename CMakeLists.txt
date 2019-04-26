@@ -27,6 +27,9 @@ set(USE_TESTS              OFF CACHE INTERNAL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/alembic)
 target_include_directories(Alembic PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/alembic/lib>)
 
+set(TIMER_BUILD_TEST OFF CACHE INTERNAL "" FORCE)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/timer)
+
 add_library(elasty STATIC ${sources} ${headers})
 target_include_directories(elasty PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(elasty PUBLIC Eigen3::Eigen)
@@ -37,7 +40,7 @@ if(ELASTY_EXAMPLES)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/bigger)
 
   add_executable(cloth-alembic ${CMAKE_CURRENT_SOURCE_DIR}/examples/cloth-alembic/main.cpp)
-  target_link_libraries(cloth-alembic elasty)
+  target_link_libraries(cloth-alembic elasty timer)
   add_custom_command(TARGET cloth-alembic POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/models $<TARGET_FILE_DIR:simple>/models)
 
   add_executable(simple ${CMAKE_CURRENT_SOURCE_DIR}/examples/simple/main.cpp)
