@@ -16,6 +16,9 @@
 #include <elasty/utils.hpp>
 #include <string-util.hpp>
 
+// #define CAPTURE_SCREEN
+// #define EXPORT_ALEMBIC
+
 namespace
 {
     inline glm::vec3 eigen2glm(const Eigen::Vector3d& eigen)
@@ -169,14 +172,18 @@ public:
 
         m_dynamic_mesh_primitive = std::make_unique<bigger::DynamicMeshPrimitive>(vertex_data, triangle_list);
 
+#ifdef EXPORT_ALEMBIC
         m_alembic_manager = elasty::createAlembicManager("./cloth.abc", m_cloth_sim_object, 1.0 / 60.0);
         elasty::submitCurrentStatus(m_alembic_manager);
+#endif
     }
 
     void update() override
     {
+#ifdef EXPORT_ALEMBIC
         assert(m_alembic_manager != nullptr);
         elasty::submitCurrentStatus(m_alembic_manager);
+#endif
     }
 
     void draw(const glm::mat4& parent_transform_matrix = glm::mat4(1.0f)) override
@@ -196,7 +203,9 @@ public:
 
 private:
 
+#ifdef EXPORT_ALEMBIC
     std::shared_ptr<elasty::AlembicManager> m_alembic_manager;
+#endif
 
     std::unique_ptr<bigger::DynamicMeshPrimitive> m_dynamic_mesh_primitive;
 
@@ -412,7 +421,7 @@ void SimpleApp::releaseSharedResources()
 int main(int argc, char** argv)
 {
     SimpleApp app;
-#if 0
+#ifdef CAPTURE_SCREEN
     app.m_capture_screen = true;
     return app.runApp(argc, argv, bgfx::RendererType::OpenGL);
 #else
