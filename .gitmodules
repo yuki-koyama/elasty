@@ -4,3 +4,6 @@
 [submodule "external/alembic"]
 	path = external/alembic
 	url = https://github.com/alembic/alembic.git
+[submodule "external/timer"]
+	path = external/timer
+	url = https://github.com/yuki-koyama/timer.git
