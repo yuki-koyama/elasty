@@ -19,6 +19,7 @@ A research-oriented elastic body simulator
 - [x] Environmental collision constraint
 - [x] Fixed-point constraint
 - [x] Isometric bending constraint
+- [ ] Long-range attachment constraint
 - [ ] Tetrahedron strain constraint
 - [ ] Triangle strain constraint
 - [ ] Volume conservation constraint
@@ -29,8 +30,14 @@ A research-oriented elastic body simulator
 
 ## Dependencies
 
+### Core
+
 - Alembic <https://github.com/alembic/alembic> [BSD 3-Clause]
   - OpenEXR <https://github.com/openexr/openexr> [BSD 3-Clause]
+- Eigen <http://eigen.tuxfamily.org/> [MPL2]
+
+### Demos
+
 - bigger <https://github.com/yuki-koyama/bigger> [MIT]
   - bigg <https://github.com/JoshuaBrookover/bigg> [Unlicense]
     - bgfx.cmake <https://github.com/JoshuaBrookover/bgfx.cmake> [CC0]
@@ -43,7 +50,7 @@ A research-oriented elastic body simulator
   - random-util <https://github.com/yuki-koyama/rand-util> [MIT]
   - string-util <https://github.com/yuki-koyama/string-util> [MIT]
   - tinyobjloader <https://github.com/syoyo/tinyobjloader> [MIT]
-- Eigen <http://eigen.tuxfamily.org/> [MPL2]
+- timer <https://github.com/yuki-koyama/timer> [MIT]
 
 ## Prerequisites
 
