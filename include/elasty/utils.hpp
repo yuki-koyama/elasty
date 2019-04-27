@@ -1,6 +1,7 @@
 #ifndef elasty_utils_hpp
 #define elasty_utils_hpp
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <Eigen/Core>
