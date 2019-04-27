@@ -11,15 +11,15 @@ dist: xenial
 
 addons:
   apt:
+    update: true
     packages:
-    - cmake
     - libeigen3-dev
     - libglu1-mesa-dev
     - openexr
     - xorg-dev
   homebrew:
+    update: true
     packages:
-    - cmake
     - eigen
     - openexr
 
