@@ -1,6 +1,8 @@
 #include <elasty/constraint.hpp>
 #include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
+#include <algorithm>
+#include <cstring>
 #include <Eigen/Geometry>
 
 namespace
@@ -23,6 +25,43 @@ namespace
         const double sin_theta = x.cross(y).norm();
         return cos_theta / sin_theta;
     }
+
+    template<int Num>
+    void projectPositions(const double C,
+                          const Eigen::Matrix<double, Num * 3, 1>& grad_C,
+                          const Eigen::Matrix<double, Num * 3, 1>& inv_M,
+                          const double stiffness,
+                          std::vector<std::shared_ptr<elasty::Particle>>& particles)
+    {
+        // Skip if the gradient is sufficiently small
+        if (grad_C.isApprox(Eigen::Matrix<double, Num * 3, 1>::Zero())) { return; }
+
+        // Calculate $s$
+        const double s = C / (grad_C.transpose() * inv_M.asDiagonal() * grad_C);
+
+        // Calculate $\Delta x$
+        const Eigen::Matrix<double, Num * 3, 1> delta_x = - s * inv_M.asDiagonal() * grad_C;
+        assert(!delta_x.hasNaN());
+
+        // Update predicted positions
+        for (unsigned int j = 0; j < Num; ++ j)
+        {
+            particles[j]->p += stiffness * delta_x.segment(3 * j, 3);
+        }
+    }
+
+    template<int Num>
+    Eigen::Matrix<double, Num * 3, 1> constructInverseMassMatrix(const std::vector<std::shared_ptr<elasty::Particle>>& particles)
+    {
+        Eigen::Matrix<double, Num * 3, 1> inv_M;
+        for (unsigned int j = 0; j < Num; ++ j)
+        {
+            inv_M(j * 3 + 0) = particles[j]->w;
+            inv_M(j * 3 + 1) = particles[j]->w;
+            inv_M(j * 3 + 2) = particles[j]->w;
+        }
+        return inv_M;
+    }
 }
 
 elasty::BendingConstraint::BendingConstraint(const std::shared_ptr<Particle> p_0,
@@ -34,6 +73,16 @@ elasty::BendingConstraint::BendingConstraint(const std::shared_ptr<Particle> p_0
 Constraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness),
 m_dihedral_angle(dihedral_angle)
 {
+}
+
+void elasty::BendingConstraint::projectParticles()
+{
+    const double C = calculateValue();
+
+    Eigen::Matrix<double, 12, 1> grad_C;
+    calculateGrad(grad_C.data());
+
+    projectPositions<4>(C, grad_C, m_inv_M, m_stiffness, m_particles);
 }
 
 double elasty::BendingConstraint::calculateValue()
@@ -60,7 +109,7 @@ double elasty::BendingConstraint::calculateValue()
     return current_dihedral_angle - m_dihedral_angle;
 }
 
-Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
+void elasty::BendingConstraint::calculateGrad(double* grad_C)
 {
     const Eigen::Vector3d& x_0 = m_particles[0]->p;
     const Eigen::Vector3d& x_1 = m_particles[1]->p;
@@ -80,8 +129,13 @@ Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
 
     const double d = n_0.dot(n_1);
 
+    // If the dihedral angle is sufficiently small, return zeros
     constexpr double epsilon = 1e-12;
-    if (std::abs(d) - 1.0 < epsilon) { return Eigen::VectorXd::Zero(3 * 4); }
+    if (std::abs(d) - 1.0 < epsilon)
+    {
+        std::fill(grad_C, grad_C + 12, 0.0);
+        return;
+    }
 
     const double common_coeff = - 1.0 / std::sqrt(1.0 - d * d);
 
@@ -106,15 +160,10 @@ Eigen::VectorXd elasty::BendingConstraint::calculateGrad()
     const Eigen::Vector3d grad_C_wrt_p_3 = common_coeff * calculate_gradient_of_normalized_cross_product_wrt_p_2(n_1, p_1, p_3).transpose() * n_0;
     const Eigen::Vector3d grad_C_wrt_p_0 = - grad_C_wrt_p_1 - grad_C_wrt_p_2 - grad_C_wrt_p_3;
 
-    Eigen::VectorXd grad_C = Eigen::VectorXd(3 * 4);
-    grad_C.segment<3>(3 * 0) = grad_C_wrt_p_0;
-    grad_C.segment<3>(3 * 1) = grad_C_wrt_p_1;
-    grad_C.segment<3>(3 * 2) = grad_C_wrt_p_2;
-    grad_C.segment<3>(3 * 3) = grad_C_wrt_p_3;
-
-    assert(!grad_C.hasNaN());
-
-    return grad_C;
+    std::memcpy(grad_C + (3 * 0), grad_C_wrt_p_0.data(), sizeof(double) * 3);
+    std::memcpy(grad_C + (3 * 1), grad_C_wrt_p_1.data(), sizeof(double) * 3);
+    std::memcpy(grad_C + (3 * 2), grad_C_wrt_p_2.data(), sizeof(double) * 3);
+    std::memcpy(grad_C + (3 * 3), grad_C_wrt_p_3.data(), sizeof(double) * 3);
 }
 
 elasty::DistanceConstraint::DistanceConstraint(const std::shared_ptr<Particle> p_0,
@@ -122,9 +171,20 @@ elasty::DistanceConstraint::DistanceConstraint(const std::shared_ptr<Particle> p
                                                const double stiffness,
                                                const double d) :
 Constraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1 }, stiffness),
+m_inv_M(constructInverseMassMatrix<2>(m_particles)),
 m_d(d)
 {
     assert(d >= 0.0);
+}
+
+void elasty::DistanceConstraint::projectParticles()
+{
+    const double C = calculateValue();
+
+    Eigen::Matrix<double, 6, 1> grad_C;
+    calculateGrad(grad_C.data());
+
+    projectPositions<2>(C, grad_C, m_inv_M, m_stiffness, m_particles);
 }
 
 double elasty::DistanceConstraint::calculateValue()
@@ -135,7 +195,7 @@ double elasty::DistanceConstraint::calculateValue()
     return (x_0 - x_1).norm() - m_d;
 }
 
-Eigen::VectorXd elasty::DistanceConstraint::calculateGrad()
+void elasty::DistanceConstraint::calculateGrad(double* grad_C)
 {
     const Eigen::Vector3d& x_0 = m_particles[0]->p;
     const Eigen::Vector3d& x_1 = m_particles[1]->p;
@@ -144,11 +204,12 @@ Eigen::VectorXd elasty::DistanceConstraint::calculateGrad()
 
     if (n.hasNaN()) { n = Eigen::Vector3d::Random(3).normalized(); }
 
-    Eigen::VectorXd grad_C = Eigen::VectorXd(3 * 2);
-    grad_C.segment<3>(0) = n;
-    grad_C.segment<3>(3) = - n;
-
-    return grad_C;
+    grad_C[0] = + n(0);
+    grad_C[1] = + n(1);
+    grad_C[2] = + n(2);
+    grad_C[3] = - n(0);
+    grad_C[4] = - n(1);
+    grad_C[5] = - n(2);
 }
 
 elasty::EnvironmentalCollisionConstraint::EnvironmentalCollisionConstraint(const std::shared_ptr<Particle> p_0,
@@ -156,9 +217,22 @@ elasty::EnvironmentalCollisionConstraint::EnvironmentalCollisionConstraint(const
                                                                            const Eigen::Vector3d& n,
                                                                            const double d) :
 Constraint(std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
+m_inv_M(constructInverseMassMatrix<1>(m_particles)),
 m_n(n),
 m_d(d)
 {
+}
+
+void elasty::EnvironmentalCollisionConstraint::projectParticles()
+{
+    const double C = calculateValue();
+
+    if (C >= 0.0) { return; }
+
+    Eigen::Vector3d grad_C;
+    calculateGrad(grad_C.data());
+
+    projectPositions<1>(C, grad_C, m_inv_M, m_stiffness, m_particles);
 }
 
 double elasty::EnvironmentalCollisionConstraint::calculateValue()
@@ -167,17 +241,28 @@ double elasty::EnvironmentalCollisionConstraint::calculateValue()
     return m_n.transpose() * x - m_d;
 }
 
-Eigen::VectorXd elasty::EnvironmentalCollisionConstraint::calculateGrad()
+void elasty::EnvironmentalCollisionConstraint::calculateGrad(double* grad_C)
 {
-    return m_n;
+    std::memcpy(grad_C, m_n.data(), sizeof(double) * 3);
 }
 
 elasty::FixedPointConstraint::FixedPointConstraint(const std::shared_ptr<Particle> p_0,
                                                    const double stiffness,
                                                    const Eigen::Vector3d& point) :
 Constraint(std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
+m_inv_M(constructInverseMassMatrix<1>(m_particles)),
 m_point(point)
 {
+}
+
+void elasty::FixedPointConstraint::projectParticles()
+{
+    const double C = calculateValue();
+
+    Eigen::Vector3d grad_C;
+    calculateGrad(grad_C.data());
+
+    projectPositions<1>(C, grad_C, m_inv_M, m_stiffness, m_particles);
 }
 
 double elasty::FixedPointConstraint::calculateValue()
@@ -186,14 +271,14 @@ double elasty::FixedPointConstraint::calculateValue()
     return (x - m_point).norm();
 }
 
-Eigen::VectorXd elasty::FixedPointConstraint::calculateGrad()
+void elasty::FixedPointConstraint::calculateGrad(double* grad_C)
 {
     const Eigen::Vector3d& x = m_particles[0]->p;
     const Eigen::Vector3d n = (x - m_point).normalized();
 
-    if (n.hasNaN()) { return Eigen::Vector3d::Zero(); }
+    if (n.hasNaN()) { std::fill(grad_C, grad_C + 3, 0.0); }
 
-    return n;
+    std::memcpy(grad_C, n.data(), sizeof(double) * 3);
 }
 
 elasty::IsometricBendingConstraint::IsometricBendingConstraint(const std::shared_ptr<Particle> p_0,
@@ -201,7 +286,8 @@ elasty::IsometricBendingConstraint::IsometricBendingConstraint(const std::shared
                                                                const std::shared_ptr<Particle> p_2,
                                                                const std::shared_ptr<Particle> p_3,
                                                                const double stiffness) :
-Constraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness)
+Constraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness),
+m_inv_M(constructInverseMassMatrix<4>(m_particles))
 {
     const Eigen::Vector3d& x_0 = p_0->x;
     const Eigen::Vector3d& x_1 = p_1->x;
@@ -227,6 +313,16 @@ Constraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffne
     m_Q = (3.0 / (A_0 + A_1)) * K * K.transpose();
 }
 
+void elasty::IsometricBendingConstraint::projectParticles()
+{
+    const double C = calculateValue();
+
+    Eigen::Matrix<double, 12, 1> grad_C;
+    calculateGrad(grad_C.data());
+
+    projectPositions<4>(C, grad_C, m_inv_M, m_stiffness, m_particles);
+}
+
 double elasty::IsometricBendingConstraint::calculateValue()
 {
     double sum = 0.0;
@@ -240,10 +336,8 @@ double elasty::IsometricBendingConstraint::calculateValue()
     return 0.5 * sum;
 }
 
-Eigen::VectorXd elasty::IsometricBendingConstraint::calculateGrad()
+void elasty::IsometricBendingConstraint::calculateGrad(double* grad_C)
 {
-    Eigen::VectorXd grad_C = Eigen::VectorXd(3 * 4);
-
     for (unsigned int i = 0; i < 4; ++ i)
     {
         Eigen::Vector3d sum = Eigen::Vector3d::Zero();
@@ -251,8 +345,6 @@ Eigen::VectorXd elasty::IsometricBendingConstraint::calculateGrad()
         {
             sum += m_Q(i, j) * m_particles[j]->p;
         }
-        grad_C.segment<3>(3 * i) = sum;
+        std::memcpy(grad_C + (3 * i), sum.data(), sizeof(double) * 3);
     }
-
-    return grad_C;
 }

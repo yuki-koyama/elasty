@@ -129,9 +129,9 @@ public:
 
 private:
 
-    const double cloth_distance_stiffness = 0.20;
+    const double cloth_distance_stiffness = 0.95;
     const double cloth_bending_stiffness = 0.05;
-    const std::string cloth_obj_path = "./models/cloths/0.01.obj";
+    const std::string cloth_obj_path = "./models/cloths/0.10.obj";
     const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * glm::pi<double>(), Eigen::Vector3d::UnitX());
 
     // Shared resources

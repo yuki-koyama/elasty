@@ -35,7 +35,6 @@ namespace elasty
 
         void addConstraint(std::shared_ptr<Constraint> constraint);
         void addInstantConstraint(std::shared_ptr<Constraint> constraint);
-        void projectConstraint(std::shared_ptr<Constraint> constraint);
     };
 }
 

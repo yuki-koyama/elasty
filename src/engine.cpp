@@ -25,12 +25,12 @@ void elasty::Engine::stepTime()
     {
         for (auto constraint : m_constraints)
         {
-            projectConstraint(constraint);
+            constraint->projectParticles();
         }
 
         for (auto constraint : m_instant_constraints)
         {
-            projectConstraint(constraint);
+            constraint->projectParticles();
         }
     }
 
@@ -56,45 +56,6 @@ void elasty::Engine::addConstraint(std::shared_ptr<Constraint> constraint)
 void elasty::Engine::addInstantConstraint(std::shared_ptr<Constraint> constraint)
 {
     m_instant_constraints.push_back(constraint);
-}
-
-void elasty::Engine::projectConstraint(std::shared_ptr<Constraint> constraint)
-{
-    // Calculate $C$
-    const double C = constraint->calculateValue();
-
-    // Skip if the constraint is unilateral and is satisfied
-    if (constraint->getType() == ConstraintType::Unilateral && C >= 0.0) { return; }
-
-    // Calculate $\Nabla C$
-    const Eigen::VectorXd grad_C = constraint->calculateGrad();
-
-    // Skip if the gradient is sufficiently small
-    if (grad_C.isApprox(Eigen::VectorXd::Zero(grad_C.size()))) { return; }
-
-    // Calculate $\mathbf{M}^{-1}$
-    const unsigned int n = constraint->m_particles.size();
-    std::vector<double> inverse_mass_raw(3 * n);
-    for (unsigned int j = 0; j < n; ++ j)
-    {
-        inverse_mass_raw[j * 3 + 0] = constraint->m_particles[j]->w;
-        inverse_mass_raw[j * 3 + 1] = constraint->m_particles[j]->w;
-        inverse_mass_raw[j * 3 + 2] = constraint->m_particles[j]->w;
-    }
-    const auto inverse_M_diagnal = Eigen::Map<Eigen::VectorXd>(inverse_mass_raw.data(), 3 * n);
-
-    // Calculate $s$
-    const double s = C / (grad_C.transpose() * inverse_M_diagnal.asDiagonal() * grad_C);
-
-    // Calculate $\Delta x$
-    const Eigen::VectorXd delta_x = - s * inverse_M_diagnal.asDiagonal() * grad_C;
-    assert(!delta_x.hasNaN());
-
-    // Update predicted positions
-    for (unsigned int j = 0; j < n; ++ j)
-    {
-        constraint->m_particles[j]->p += constraint->m_stiffness * delta_x.segment<3>(3 * j);
-    }
 }
 
 void elasty::Engine::clearScene()

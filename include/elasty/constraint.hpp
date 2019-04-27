@@ -15,20 +15,48 @@ namespace elasty
     {
     public:
 
-        Constraint(const std::vector<std::shared_ptr<Particle>>& indices,
+        Constraint(const std::vector<std::shared_ptr<Particle>>& particles,
                    const double stiffness) :
-        m_particles(indices),
-        m_stiffness(stiffness)
+        m_stiffness(stiffness),
+        m_particles(particles)
         {
         }
 
+        /// \brief Calculates the constraint function value C(x).
         virtual double calculateValue() = 0;
-        virtual Eigen::VectorXd calculateGrad() = 0;
+
+        /// \brief Calculate the derivative of the constraint function
+        /// grad C(x).
+        /// \details As constraints can have different vector sizes, it will
+        /// store the result to the passed raw buffer that should be allocated
+        /// in the caller, rather than returning a dynamically allocated
+        /// variable-length vector. This method does not check whether the
+        /// buffer is adequately allocated, or not.
+        virtual void calculateGrad(double* grad_C) = 0;
+
+        /// \brief Manipulate the associated particles by projecting them to the
+        /// constraint manifold.
+        /// \details This method should be called by the core engine. As this
+        /// method directly updates the predicted positions of the associated
+        /// particles, it is intended to be used in a Gauss-Seidel-style solver.
+        virtual void projectParticles() = 0;
+
+        /// \brief Return the constraint type (i.e., either unilateral or
+        /// bilateral).
         virtual ConstraintType getType() = 0;
 
-        const std::vector<std::shared_ptr<Particle>> m_particles;
-
+        /// \brief Stiffness of this constraint, which should be in [0, 1].
         double m_stiffness;
+
+    protected:
+
+        /// \brief Associated particles.
+        /// \details The number of particles is (in most cases) solely
+        /// determined in each constraint. For example, a distance constraint
+        /// need to have exactly two particles. Some special constraints
+        /// (e.g., shape-matching constraint) could have a variable number of
+        /// particles.
+        std::vector<std::shared_ptr<Particle>> m_particles;
     };
 
     class BendingConstraint final : public Constraint
@@ -43,11 +71,13 @@ namespace elasty
                           const double dihedral_angle);
 
         double calculateValue() override;
-        Eigen::VectorXd calculateGrad() override;
+        void calculateGrad(double* grad_C) override;
+        void projectParticles() override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }
 
     private:
 
+        const Eigen::Matrix<double, 12, 1> m_inv_M;
         const double m_dihedral_angle;
     };
 
@@ -61,11 +91,13 @@ namespace elasty
                            const double d);
         
         double calculateValue() override;
-        Eigen::VectorXd calculateGrad() override;
+        void calculateGrad(double* grad_C) override;
+        void projectParticles() override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }
 
     private:
 
+        const Eigen::Matrix<double, 6, 1> m_inv_M;
         const double m_d;
     };
 
@@ -79,11 +111,13 @@ namespace elasty
                                          const double d);
 
         double calculateValue() override;
-        Eigen::VectorXd calculateGrad() override;
+        void calculateGrad(double* grad_C) override;
+        void projectParticles() override;
         ConstraintType getType() override { return ConstraintType::Unilateral; }
 
     private:
 
+        const Eigen::Matrix<double, 3, 1> m_inv_M;
         const Eigen::Vector3d m_n;
         const double m_d;
     };
@@ -97,11 +131,13 @@ namespace elasty
                              const Eigen::Vector3d& point);
 
         double calculateValue() override;
-        Eigen::VectorXd calculateGrad() override;
+        void calculateGrad(double* grad_C) override;
+        void projectParticles() override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }
 
     private:
 
+        const Eigen::Matrix<double, 3, 1> m_inv_M;
         const Eigen::Vector3d m_point;
     };
 
@@ -116,11 +152,13 @@ namespace elasty
                                    const double stiffness);
 
         double calculateValue() override;
-        Eigen::VectorXd calculateGrad() override;
+        void calculateGrad(double* grad_C) override;
+        void projectParticles() override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }
 
     private:
 
+        const Eigen::Matrix<double, 12, 1> m_inv_M;
         Eigen::Matrix4d m_Q;
     };
 }
