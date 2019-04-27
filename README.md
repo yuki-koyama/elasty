@@ -1,5 +1,7 @@
 # elasty
 
+[![Build Status](https://travis-ci.com/yuki-koyama/elasty.svg?branch=master)](https://travis-ci.com/yuki-koyama/elasty)
+
 A research-oriented elastic body simulator
 
 ![](./docs/cloth.gif)

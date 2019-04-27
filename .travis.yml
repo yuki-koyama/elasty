@@ -1,0 +1,27 @@
+language: cpp
+
+matrix:
+  include:
+    - compiler: gcc
+      os: linux
+    - compiler: clang
+      os: osx
+
+dist: xenial
+
+addons:
+  apt:
+    packages:
+    - cmake
+    - libeigen3-dev
+    - libglu1-mesa-dev
+    - openexr
+    - xorg-dev
+  homebrew:
+    packages:
+    - cmake
+    - eigen
+    - openexr
+
+script:
+  - cmake -DELASTY_EXAMPLES=ON -DELASTY_TESTS=ON . && make && make test
