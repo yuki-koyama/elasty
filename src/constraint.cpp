@@ -1,5 +1,4 @@
 #include <elasty/constraint.hpp>
-#include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
 #include <algorithm>
 #include <cstring>
