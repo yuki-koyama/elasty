@@ -1,4 +1,3 @@
-#include <iostream>
 #include <elasty/constraint.hpp>
 #include <elasty/particle.hpp>
 
@@ -31,7 +30,9 @@ int main()
     const auto constraint = std::make_shared<elasty::BendingConstraint>(p_0, p_1, p_2, p_3, 1.0, dihedral_angle);
 
     const double value = constraint->calculateValue();
-    const Eigen::VectorXd grad = constraint->calculateGrad();
+
+    Eigen::Matrix<double, 12, 1> grad;
+    constraint->calculateGrad(grad.data());
 
     constexpr double epsilon = 1e-20;
     if (!(std::abs(value) < epsilon) || !(grad.norm() < epsilon))
