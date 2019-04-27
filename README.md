@@ -10,20 +10,21 @@ A research-oriented elastic body simulator
 
 ### Frameworks
 
-- [x] Position-based dynamics (PBD) [Muller et al. 2007]
-- [ ] Extended position-based dynamics (XPBD) [Macklin et al. 2016]
-- [ ] Projective dynamics [Bouaziz et al. 2014]
-- [ ] Quasi-Newton dynamics [Liu et al. 2017]
+- [x] Position-based dynamics (PBD) [Müller+07]
+- [ ] Extended position-based dynamics (XPBD) [Macklin+16]
+- [ ] Projective dynamics [Bouaziz+14]
+- [ ] Quasi-Newton dynamics [Liu+17]
 
 ### Constraints for PBD/XPBD
 
 - [ ] Area conservation constraint
-- [x] Bending constraint
-- [x] Distance constraint
+- [x] Bending constraint [Müller+07]
+- [x] Distance constraint [Müller+07]
 - [x] Environmental collision constraint
-- [x] Fixed-point constraint
-- [x] Isometric bending constraint
-- [ ] Long-range attachment constraint
+- [x] Fixed point constraint
+- [x] Isometric bending constraint [Bergou+06; Bender+14]
+- [ ] Long range attachments constraint [Kim+12]
+- [ ] Shape matching constraint [Müller+05]
 - [ ] Tetrahedron strain constraint
 - [ ] Triangle strain constraint
 - [ ] Volume conservation constraint
@@ -77,10 +78,19 @@ make
 
 MIT License
 
+## Contributing
+
+Issue reports and pull requests are highly welcomed.
+
 ## References
 
-- Jan Bender, Dan Koschier, Patrick Charrier, and Daniel Weber. 2014. Position-based simulation of continuous materials. Comput. Graph. 44 (2014), 1-10. DOI: http://dx.doi.org/10.1016/j.cag.2014.07.004
-- Jan Bender, Matthias Müller, and Miles Macklin. 2017. A survey on position based dynamics, 2017. In Proc. Eurographics '17 Tutorials, Article 6, 31 pages. DOI: https://doi.org/10.2312/egt.20171034
-- Miles Macklin, Matthias Müller, and Nuttapong Chentanez. 2016. XPBD: position-based simulation of compliant constrained dynamics. In Proc. MIG '16, 49-54. DOI: https://doi.org/10.1145/2994258.2994272
-- Matthias Müller, Bruno Heidelberger, Marcus Hennix, and John Ratcliff. 2007. Position based dynamics. J. Vis. Comun. Image Represent. 18, 2 (2007), 109-118. DOI=http://dx.doi.org/10.1016/j.jvcir.2007.01.005
+- __[Bender+14]__ Jan Bender, Dan Koschier, Patrick Charrier, and Daniel Weber. 2014. Position-based simulation of continuous materials. Comput. Graph. 44 (2014), 1-10. DOI: http://doi.org/10.1016/j.cag.2014.07.004
+- __[Bender+17]__ Jan Bender, Matthias Müller, and Miles Macklin. 2017. A survey on position based dynamics, 2017. In Proc. Eurographics '17 Tutorials, Article 6, 31 pages. DOI: https://doi.org/10.2312/egt.20171034
+- __[Bergou+06]__ (TODO)
+- __[Bouaziz+14]__ (TODO)
+- __[Kim+12]__ (TODO)
+- __[Liu+17]__ (TODO)
+- __[Macklin+16]__ Miles Macklin, Matthias Müller, and Nuttapong Chentanez. 2016. XPBD: position-based simulation of compliant constrained dynamics. In Proc. MIG '16, 49-54. DOI: https://doi.org/10.1145/2994258.2994272
+- __[Müller+05]__ (TODO)
+- __[Müller+07]__ Matthias Müller, Bruno Heidelberger, Marcus Hennix, and John Ratcliff. 2007. Position based dynamics. J. Vis. Comun. Image Represent. 18, 2 (2007), 109-118. DOI=http://doi.org/10.1016/j.jvcir.2007.01.005
 - (TODO)
