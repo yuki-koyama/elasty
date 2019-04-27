@@ -70,6 +70,8 @@ if(ELASTY_EXAMPLES)
   target_link_libraries(interactive-app bigger elasty)
   add_custom_command(TARGET interactive-app POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${BIGGER_SHADER_OUTPUT_DIR} $<TARGET_FILE_DIR:interactive-app>/shaders)
   add_custom_command(TARGET interactive-app POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/models $<TARGET_FILE_DIR:interactive-app>/models)
+else()
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/bigger/external/tinyobjloader)
 endif()
 
 # ------------------------------------------------------------------------------
