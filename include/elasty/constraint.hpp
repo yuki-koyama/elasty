@@ -77,7 +77,9 @@ namespace elasty
 
     private:
 
-        const Eigen::Matrix<double, 12, 1> m_inv_M;
+        static constexpr int k_num = 4;
+
+        const Eigen::Matrix<double, k_num * 3, 1> m_inv_M;
         const double m_dihedral_angle;
     };
 
@@ -97,7 +99,9 @@ namespace elasty
 
     private:
 
-        const Eigen::Matrix<double, 6, 1> m_inv_M;
+        static constexpr int k_num = 2;
+
+        const Eigen::Matrix<double, k_num * 3, 1> m_inv_M;
         const double m_d;
     };
 
@@ -117,7 +121,9 @@ namespace elasty
 
     private:
 
-        const Eigen::Matrix<double, 3, 1> m_inv_M;
+        static constexpr int k_num = 1;
+
+        const Eigen::Matrix<double, k_num * 3, 1> m_inv_M;
         const Eigen::Vector3d m_n;
         const double m_d;
     };
@@ -137,7 +143,9 @@ namespace elasty
 
     private:
 
-        const Eigen::Matrix<double, 3, 1> m_inv_M;
+        static constexpr int k_num = 1;
+
+        const Eigen::Matrix<double, k_num * 3, 1> m_inv_M;
         const Eigen::Vector3d m_point;
     };
 
@@ -158,7 +166,9 @@ namespace elasty
 
     private:
 
-        const Eigen::Matrix<double, 12, 1> m_inv_M;
+        static constexpr int k_num = 4;
+
+        const Eigen::Matrix<double, k_num * 3, 1> m_inv_M;
         Eigen::Matrix4d m_Q;
     };
 }

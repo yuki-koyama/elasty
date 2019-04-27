@@ -70,6 +70,7 @@ elasty::BendingConstraint::BendingConstraint(const std::shared_ptr<Particle> p_0
                                              const double stiffness,
                                              const double dihedral_angle) :
 Constraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness),
+m_inv_M(constructInverseMassMatrix<k_num>(m_particles)),
 m_dihedral_angle(dihedral_angle)
 {
 }
@@ -78,10 +79,10 @@ void elasty::BendingConstraint::projectParticles()
 {
     const double C = calculateValue();
 
-    Eigen::Matrix<double, 12, 1> grad_C;
+    Eigen::Matrix<double, k_num * 3, 1> grad_C;
     calculateGrad(grad_C.data());
 
-    projectPositions<4>(C, grad_C, m_inv_M, m_stiffness, m_particles);
+    projectPositions<k_num>(C, grad_C, m_inv_M, m_stiffness, m_particles);
 }
 
 double elasty::BendingConstraint::calculateValue()
@@ -170,7 +171,7 @@ elasty::DistanceConstraint::DistanceConstraint(const std::shared_ptr<Particle> p
                                                const double stiffness,
                                                const double d) :
 Constraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1 }, stiffness),
-m_inv_M(constructInverseMassMatrix<2>(m_particles)),
+m_inv_M(constructInverseMassMatrix<k_num>(m_particles)),
 m_d(d)
 {
     assert(d >= 0.0);
@@ -180,10 +181,10 @@ void elasty::DistanceConstraint::projectParticles()
 {
     const double C = calculateValue();
 
-    Eigen::Matrix<double, 6, 1> grad_C;
+    Eigen::Matrix<double, k_num * 3, 1> grad_C;
     calculateGrad(grad_C.data());
 
-    projectPositions<2>(C, grad_C, m_inv_M, m_stiffness, m_particles);
+    projectPositions<k_num>(C, grad_C, m_inv_M, m_stiffness, m_particles);
 }
 
 double elasty::DistanceConstraint::calculateValue()
@@ -216,7 +217,7 @@ elasty::EnvironmentalCollisionConstraint::EnvironmentalCollisionConstraint(const
                                                                            const Eigen::Vector3d& n,
                                                                            const double d) :
 Constraint(std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
-m_inv_M(constructInverseMassMatrix<1>(m_particles)),
+m_inv_M(constructInverseMassMatrix<k_num>(m_particles)),
 m_n(n),
 m_d(d)
 {
@@ -228,10 +229,10 @@ void elasty::EnvironmentalCollisionConstraint::projectParticles()
 
     if (C >= 0.0) { return; }
 
-    Eigen::Vector3d grad_C;
+    Eigen::Matrix<double, k_num * 3, 1> grad_C;
     calculateGrad(grad_C.data());
 
-    projectPositions<1>(C, grad_C, m_inv_M, m_stiffness, m_particles);
+    projectPositions<k_num>(C, grad_C, m_inv_M, m_stiffness, m_particles);
 }
 
 double elasty::EnvironmentalCollisionConstraint::calculateValue()
@@ -249,7 +250,7 @@ elasty::FixedPointConstraint::FixedPointConstraint(const std::shared_ptr<Particl
                                                    const double stiffness,
                                                    const Eigen::Vector3d& point) :
 Constraint(std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
-m_inv_M(constructInverseMassMatrix<1>(m_particles)),
+m_inv_M(constructInverseMassMatrix<k_num>(m_particles)),
 m_point(point)
 {
 }
@@ -258,10 +259,10 @@ void elasty::FixedPointConstraint::projectParticles()
 {
     const double C = calculateValue();
 
-    Eigen::Vector3d grad_C;
+    Eigen::Matrix<double, k_num * 3, 1> grad_C;
     calculateGrad(grad_C.data());
 
-    projectPositions<1>(C, grad_C, m_inv_M, m_stiffness, m_particles);
+    projectPositions<k_num>(C, grad_C, m_inv_M, m_stiffness, m_particles);
 }
 
 double elasty::FixedPointConstraint::calculateValue()
@@ -286,7 +287,7 @@ elasty::IsometricBendingConstraint::IsometricBendingConstraint(const std::shared
                                                                const std::shared_ptr<Particle> p_3,
                                                                const double stiffness) :
 Constraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness),
-m_inv_M(constructInverseMassMatrix<4>(m_particles))
+m_inv_M(constructInverseMassMatrix<k_num>(m_particles))
 {
     const Eigen::Vector3d& x_0 = p_0->x;
     const Eigen::Vector3d& x_1 = p_1->x;
@@ -316,10 +317,10 @@ void elasty::IsometricBendingConstraint::projectParticles()
 {
     const double C = calculateValue();
 
-    Eigen::Matrix<double, 12, 1> grad_C;
+    Eigen::Matrix<double, k_num * 3, 1> grad_C;
     calculateGrad(grad_C.data());
 
-    projectPositions<4>(C, grad_C, m_inv_M, m_stiffness, m_particles);
+    projectPositions<k_num>(C, grad_C, m_inv_M, m_stiffness, m_particles);
 }
 
 double elasty::IsometricBendingConstraint::calculateValue()
