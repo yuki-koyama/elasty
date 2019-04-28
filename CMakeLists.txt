@@ -11,10 +11,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(Eigen3 REQUIRED)
 if((NOT TARGET Eigen3::Eigen) AND (DEFINED EIGEN3_INCLUDE_DIR))
-	# Eigen 3.0--3.3 do not provide the target named Eigen3::Eigen
-	add_library(AliasEigen3 INTERFACE)
-	target_include_directories(AliasEigen3 INTERFACE ${EIGEN3_INCLUDE_DIR})
-	add_library(Eigen3::Eigen ALIAS AliasEigen3)
+  # Eigen 3.0--3.2 do not provide the target named Eigen3::Eigen
+  add_library(AliasEigen3 INTERFACE)
+  target_include_directories(AliasEigen3 INTERFACE ${EIGEN3_INCLUDE_DIR})
+  add_library(Eigen3::Eigen ALIAS AliasEigen3)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -70,6 +70,7 @@ if(ELASTY_EXAMPLES)
   add_custom_command(TARGET interactive-app POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${BIGGER_SHADER_OUTPUT_DIR} $<TARGET_FILE_DIR:interactive-app>/shaders)
   add_custom_command(TARGET interactive-app POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/models $<TARGET_FILE_DIR:interactive-app>/models)
 else()
+  # Both bigger and elasty depend on tinyobjloader; when bigger is not added, it is necessary to add tinyobjloader explicitly
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/bigger/external/tinyobjloader)
 endif()
 
