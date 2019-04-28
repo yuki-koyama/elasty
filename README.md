@@ -14,6 +14,7 @@ A research-oriented elastic body simulator
 - [ ] Extended position-based dynamics (XPBD) [Macklin+16]
 - [ ] Projective dynamics [Bouaziz+14]
 - [ ] Quasi-Newton dynamics [Liu+17]
+- [ ] ...
 
 ### Constraints for PBD/XPBD
 
@@ -28,6 +29,7 @@ A research-oriented elastic body simulator
 - [ ] Tetrahedron strain constraint
 - [ ] Triangle strain constraint
 - [ ] Volume conservation constraint
+- [ ] ...
 
 ## Additional Features
 
@@ -91,6 +93,6 @@ Issue reports and pull requests are highly welcomed.
 - __[Kim+12]__ (TODO)
 - __[Liu+17]__ (TODO)
 - __[Macklin+16]__ Miles Macklin, Matthias Müller, and Nuttapong Chentanez. 2016. XPBD: position-based simulation of compliant constrained dynamics. In Proc. MIG '16, 49-54. DOI: https://doi.org/10.1145/2994258.2994272
-- __[Müller+05]__ (TODO)
+- __[Müller+05]__ Matthias Müller, Bruno Heidelberger, Matthias Teschner, and Markus Gross. 2005. Meshless deformations based on shape matching. ACM Trans. Graph. 24, 3 (2005), 471-478. DOI: https://doi.org/10.1145/1073204.1073216
 - __[Müller+07]__ Matthias Müller, Bruno Heidelberger, Marcus Hennix, and John Ratcliff. 2007. Position based dynamics. J. Vis. Comun. Image Represent. 18, 2 (2007), 109-118. DOI=http://doi.org/10.1016/j.jvcir.2007.01.005
 - (TODO)
