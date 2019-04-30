@@ -63,8 +63,14 @@ A research-oriented elastic body simulator
 
 ## Prerequisites
 
+macOS:
 ```bash
 brew install eigen openexr
+```
+
+Ubuntu 16.04:
+```bash
+apt install libeigen3-dev openexr
 ```
 
 ## Build
