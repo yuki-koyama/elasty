@@ -39,6 +39,18 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path,
         m_triangle_list(i, 2) = shape.mesh.indices[i * 3 + 2].vertex_index;
     }
 
+    // TODO: Check if it has UVs
+    m_uv_list.resize(shape.mesh.indices.size() / 3, 2 * 3);
+    for (unsigned int i = 0; i < shape.mesh.indices.size() / 3; ++ i)
+    {
+        m_uv_list(i, 2 * 0 + 0) = attrib.texcoords[2 * shape.mesh.indices[i * 3 + 0].texcoord_index + 0];
+        m_uv_list(i, 2 * 0 + 1) = attrib.texcoords[2 * shape.mesh.indices[i * 3 + 0].texcoord_index + 1];
+        m_uv_list(i, 2 * 1 + 0) = attrib.texcoords[2 * shape.mesh.indices[i * 3 + 1].texcoord_index + 0];
+        m_uv_list(i, 2 * 1 + 1) = attrib.texcoords[2 * shape.mesh.indices[i * 3 + 1].texcoord_index + 1];
+        m_uv_list(i, 2 * 2 + 0) = attrib.texcoords[2 * shape.mesh.indices[i * 3 + 2].texcoord_index + 0];
+        m_uv_list(i, 2 * 2 + 1) = attrib.texcoords[2 * shape.mesh.indices[i * 3 + 2].texcoord_index + 1];
+    }
+
     std::map<unsigned int, std::shared_ptr<Particle>> map_from_obj_vertex_index_to_particle;
     for (unsigned int i = 0; i < attrib.vertices.size() / 3; ++ i)
     {

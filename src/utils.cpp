@@ -86,9 +86,11 @@ public:
             const size_t num_counts = m_cloth_sim_object->m_triangle_list.rows();
             const std::vector<int32_t> counts(num_counts, 3);
 
+            // TODO: Check if it has UVs
             const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) verts.data(), num_verts),
                                                  Int32ArraySample(indices.data(), num_indices),
-                                                 Int32ArraySample(counts.data(), num_counts));
+                                                 Int32ArraySample(counts.data(), num_counts),
+                                                 OV2fGeomParam::Sample(V2fArraySample((const V2f*) m_cloth_sim_object->m_uv_list.data(), num_indices), kFacevaryingScope));
             m_mesh_obj.getSchema().set(sample);
             m_is_first = false;
         }
