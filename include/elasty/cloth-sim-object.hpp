@@ -30,6 +30,8 @@ namespace elasty
 
         TriangleList m_triangle_list;
         UvList m_uv_list;
+
+        bool hasUv() const { return m_uv_list.size() != 0; }
     };
 }
 
