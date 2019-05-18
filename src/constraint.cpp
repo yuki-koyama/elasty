@@ -118,6 +118,29 @@ void elasty::BendingConstraint::calculateGrad(double* grad_C)
     std::memcpy(grad_C + (3 * 3), grad_C_wrt_p_3.data(), sizeof(double) * 3);
 }
 
+elasty::ContinuumTriangleConstraint::ContinuumTriangleConstraint(const std::shared_ptr<Particle> p_0,
+                                                                 const std::shared_ptr<Particle> p_1,
+                                                                 const std::shared_ptr<Particle> p_2,
+                                                                 const double stiffness,
+                                                                 const double youngs_modulus,
+                                                                 const double poisson_ratio) :
+FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2 }, stiffness),
+m_youngs_modulus(youngs_modulus),
+m_poisson_ratio(poisson_ratio)
+{
+    // TODO
+}
+
+double elasty::ContinuumTriangleConstraint::calculateValue()
+{
+    // TODO
+}
+
+void elasty::ContinuumTriangleConstraint::calculateGrad(double* grad_C)
+{
+    // TODO
+}
+
 elasty::DistanceConstraint::DistanceConstraint(const std::shared_ptr<Particle> p_0,
                                                const std::shared_ptr<Particle> p_1,
                                                const double stiffness,
