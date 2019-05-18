@@ -58,6 +58,7 @@ public:
             last_particle = particle;
         }
 
+        // Pin the tip of the rod
         addConstraint(std::make_shared<elasty::FixedPointConstraint>(last_particle, 1.0, last_particle->x));
 
         // Register the cloth object
@@ -69,14 +70,18 @@ public:
                   std::back_inserter(m_constraints));
 
         // Pin two of the corners of the cloth
-        elasty::generateFixedPointConstraints(Eigen::Vector3d(+ 1.0 + 1.0, + 2.0, 0.0),
-                                              Eigen::Vector3d(+ 1.0 + 1.0, 3.0, 0.0),
-                                              m_cloth_sim_object->m_particles,
-                                              m_constraints);
-        elasty::generateFixedPointConstraints(Eigen::Vector3d(- 1.0 + 1.0, + 2.0, 0.0),
-                                              Eigen::Vector3d(- 1.0 + 1.0, 3.0, 0.0),
-                                              m_cloth_sim_object->m_particles,
-                                              m_constraints);
+        constexpr double range_radius = 0.1;
+        for (const auto& particle : m_particles)
+        {
+            if ((particle->x - Eigen::Vector3d(+ 1.0 + 1.0, 2.0, 0.0)).norm() < range_radius)
+            {
+                m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
+            }
+            if ((particle->x - Eigen::Vector3d(- 1.0 + 1.0, 2.0, 0.0)).norm() < range_radius)
+            {
+                m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
+            }
+        }
     }
 
     void setExternalForces() override
