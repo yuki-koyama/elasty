@@ -26,7 +26,8 @@ public:
                                                                       cloth_distance_stiffness,
                                                                       cloth_bending_stiffness,
                                                                       cloth_import_transform,
-                                                                      elasty::ClothSimObject::Strategy::IsometricBending);
+                                                                      elasty::ClothSimObject::InPlaneStrategy::Both,
+                                                                      elasty::ClothSimObject::OutOfPlaneStrategy::IsometricBending);
 
         // Register the cloth object
         std::copy(m_cloth_sim_object->m_particles.begin(),

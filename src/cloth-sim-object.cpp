@@ -9,7 +9,8 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path,
                                        const double distance_stiffness,
                                        const double bending_stiffness,
                                        const Eigen::Affine3d& transform,
-                                       const Strategy strategy)
+                                       const InPlaneStrategy in_plane_strategy,
+                                       const OutOfPlaneStrategy out_of_plane_strategy)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -80,11 +81,17 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path,
         const auto p_1 = map_from_obj_vertex_index_to_particle[shape.mesh.indices[i * 3 + 1].vertex_index];
         const auto p_2 = map_from_obj_vertex_index_to_particle[shape.mesh.indices[i * 3 + 2].vertex_index];
 
-        m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_0, p_1, distance_stiffness, (p_0->x - p_1->x).norm()));
-        m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_0, p_2, distance_stiffness, (p_0->x - p_2->x).norm()));
-        m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_1, p_2, distance_stiffness, (p_1->x - p_2->x).norm()));
+        if (in_plane_strategy == InPlaneStrategy::EdgeDistance || in_plane_strategy == InPlaneStrategy::Both)
+        {
+            m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_0, p_1, distance_stiffness, (p_0->x - p_1->x).norm()));
+            m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_0, p_2, distance_stiffness, (p_0->x - p_2->x).norm()));
+            m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_1, p_2, distance_stiffness, (p_1->x - p_2->x).norm()));
+        }
 
-        m_constraints.push_back(std::make_shared<elasty::ContinuumTriangleConstraint>(p_0, p_1, p_2, distance_stiffness, 1000.0, 0.10));
+        if (in_plane_strategy == InPlaneStrategy::ContinuumTriangle || in_plane_strategy == InPlaneStrategy::Both)
+        {
+            m_constraints.push_back(std::make_shared<elasty::ContinuumTriangleConstraint>(p_0, p_1, p_2, distance_stiffness, 1000.0, 0.10));
+        }
     }
 
     using vertex_t = unsigned int;
@@ -152,9 +159,9 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path,
         const triangle_t another_vertex_0 = obtain_another_vertex(triangles[0], edge);
         const triangle_t another_vertex_1 = obtain_another_vertex(triangles[1], edge);
 
-        switch (strategy)
+        switch (out_of_plane_strategy)
         {
-            case Strategy::Bending:
+            case OutOfPlaneStrategy::Bending:
             {
                 const auto p_0 = map_from_obj_vertex_index_to_particle[edge.first];
                 const auto p_1 = map_from_obj_vertex_index_to_particle[edge.second];
@@ -185,7 +192,7 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path,
 
                 break;
             }
-            case Strategy::IsometricBending:
+            case OutOfPlaneStrategy::IsometricBending:
             {
                 const auto p_0 = map_from_obj_vertex_index_to_particle[edge.first];
                 const auto p_1 = map_from_obj_vertex_index_to_particle[edge.second];
@@ -196,7 +203,7 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path,
 
                 break;
             }
-            case Strategy::Cross:
+            case OutOfPlaneStrategy::Cross:
             {
                 const auto p_2 = map_from_obj_vertex_index_to_particle[another_vertex_0];
                 const auto p_3 = map_from_obj_vertex_index_to_particle[another_vertex_1];

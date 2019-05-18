@@ -392,7 +392,10 @@ void SimpleApp::updateApp()
             m_engine->clearScene();
 
             // Init
-            m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(cloth_obj_path, cloth_distance_stiffness, cloth_bending_stiffness, cloth_import_transform);
+            m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(cloth_obj_path,
+                                                                                    cloth_distance_stiffness,
+                                                                                    cloth_bending_stiffness,
+                                                                                    cloth_import_transform);
             m_engine->initializeScene();
 
             // Re-register

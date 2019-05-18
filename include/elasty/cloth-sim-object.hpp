@@ -12,7 +12,14 @@ namespace elasty
     {
     public:
 
-        enum class Strategy
+        enum class InPlaneStrategy
+        {
+            EdgeDistance,
+            ContinuumTriangle,
+            Both,
+        };
+
+        enum class OutOfPlaneStrategy
         {
             Bending,
             IsometricBending,
@@ -26,7 +33,8 @@ namespace elasty
                        const double distance_stiffness = 0.90,
                        const double bending_stiffness = 0.50,
                        const Eigen::Affine3d& transform = Eigen::Affine3d::Identity(),
-                       const Strategy strategy = Strategy::IsometricBending);
+                       const InPlaneStrategy in_plane_strategy = InPlaneStrategy::Both,
+                       const OutOfPlaneStrategy out_of_plane_strategy = OutOfPlaneStrategy::IsometricBending);
 
         TriangleList m_triangle_list;
         UvList m_uv_list;
