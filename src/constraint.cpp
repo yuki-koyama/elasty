@@ -200,7 +200,21 @@ void elasty::ContinuumTriangleConstraint::calculateGrad(double* grad_C)
 #endif
 
     // Calculate the Green strain tensor
-    const Eigen::Matrix2d S = 0.5 * (F.transpose() * F - Eigen::Matrix2d::Identity());
+    const Eigen::Matrix2d epsilon = 0.5 * (F.transpose() * F - Eigen::Matrix2d::Identity());
+
+    // Calculate the strain tensor based on the Saint Venant–Kirchhoff model
+    const Eigen::Matrix2d S = m_first_lame * epsilon.trace() * Eigen::Matrix2d::Identity() + 2.0 * m_second_lame * epsilon;
+
+    // Calculate the first Piola-Kirchhoff stress tensor
+    const Eigen::Matrix<double, 3, 2> P = F * S;
+
+    // Calculate the gradient of the constraint
+    const Eigen::Matrix<double, 3, 2> grad_12 = m_rest_area * P * m_rest_D_inv;
+    const Eigen::Vector3d grad_0 = - grad_12.col(0) - grad_12.col(1);
+
+    // Copy the results
+    std::memcpy(grad_C + 0, grad_0.data(), sizeof(double) * 3);
+    std::memcpy(grad_C + 3, grad_12.data(), sizeof(double) * 6);
 }
 
 elasty::DistanceConstraint::DistanceConstraint(const std::shared_ptr<Particle> p_0,
