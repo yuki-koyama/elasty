@@ -125,8 +125,8 @@ elasty::ContinuumTriangleConstraint::ContinuumTriangleConstraint(const std::shar
                                                                  const double youngs_modulus,
                                                                  const double poisson_ratio) :
 FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2 }, stiffness),
-m_youngs_modulus(youngs_modulus),
-m_poisson_ratio(poisson_ratio)
+m_first_lame(youngs_modulus * poisson_ratio / ((1.0 + poisson_ratio) * (1.0 - 2.0 * poisson_ratio))),
+m_second_lame(youngs_modulus / (2.0 * (1.0 + poisson_ratio)))
 {
     const Eigen::Vector3d& x_0 = m_particles[0]->p;
     const Eigen::Vector3d& x_1 = m_particles[1]->p;

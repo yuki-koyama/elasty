@@ -162,8 +162,8 @@ namespace elasty
 
     private:
 
-        const double m_youngs_modulus;
-        const double m_poisson_ratio;
+        const double m_first_lame;
+        const double m_second_lame;
 
         double m_rest_area;
         Eigen::Matrix2d m_rest_D_inv;
