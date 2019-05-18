@@ -163,7 +163,6 @@ double elasty::ContinuumTriangleConstraint::calculateValue()
     const Eigen::Vector3d& x_1 = m_particles[1]->p;
     const Eigen::Vector3d& x_2 = m_particles[2]->p;
 
-#if 1
     // Calculate the shape matrix
     Eigen::Matrix<double, 3, 2> D;
     D.col(0) = x_1 - x_0;
@@ -171,27 +170,6 @@ double elasty::ContinuumTriangleConstraint::calculateValue()
 
     // Calculate the deformation gradient
     const Eigen::Matrix<double, 3, 2> F = D * m_rest_D_inv;
-#else
-    // Calculate the two axes for defining material coordinates
-    const Eigen::Vector3d r_1 = x_1 - x_0;
-    const Eigen::Vector3d r_2 = x_2 - x_0;
-    const Eigen::Vector3d cross = r_1.cross(r_2);
-    const Eigen::Vector3d axis_1 = r_1.normalized();
-    const Eigen::Vector3d axis_2 = cross.cross(axis_1).normalized();
-
-    // Calculate the rest positions in the material coordinates
-    const Eigen::Vector2d mat_x_0(axis_1.dot(x_0), axis_2.dot(x_0));
-    const Eigen::Vector2d mat_x_1(axis_1.dot(x_1), axis_2.dot(x_1));
-    const Eigen::Vector2d mat_x_2(axis_1.dot(x_2), axis_2.dot(x_2));
-
-    // Calculate the shape matrix
-    Eigen::Matrix2d D;
-    D.col(0) = mat_x_1 - mat_x_0;
-    D.col(1) = mat_x_2 - mat_x_0;
-
-    // Calculate the deformation gradient
-    const Eigen::Matrix2d F = D * m_rest_D_inv;
-#endif
 
     // Calculate the Green strain tensor
     const Eigen::Matrix2d epsilon = 0.5 * (F.transpose() * F - Eigen::Matrix2d::Identity());
@@ -212,7 +190,6 @@ void elasty::ContinuumTriangleConstraint::calculateGrad(double* grad_C)
     const Eigen::Vector3d& x_1 = m_particles[1]->p;
     const Eigen::Vector3d& x_2 = m_particles[2]->p;
 
-#if 1
     // Calculate the shape matrix
     Eigen::Matrix<double, 3, 2> D;
     D.col(0) = x_1 - x_0;
@@ -220,27 +197,6 @@ void elasty::ContinuumTriangleConstraint::calculateGrad(double* grad_C)
 
     // Calculate the deformation gradient
     const Eigen::Matrix<double, 3, 2> F = D * m_rest_D_inv;
-#else
-    // Calculate the two axes for defining material coordinates
-    const Eigen::Vector3d r_1 = x_1 - x_0;
-    const Eigen::Vector3d r_2 = x_2 - x_0;
-    const Eigen::Vector3d cross = r_1.cross(r_2);
-    const Eigen::Vector3d axis_1 = r_1.normalized();
-    const Eigen::Vector3d axis_2 = cross.cross(axis_1).normalized();
-
-    // Calculate the rest positions in the material coordinates
-    const Eigen::Vector2d mat_x_0(axis_1.dot(x_0), axis_2.dot(x_0));
-    const Eigen::Vector2d mat_x_1(axis_1.dot(x_1), axis_2.dot(x_1));
-    const Eigen::Vector2d mat_x_2(axis_1.dot(x_2), axis_2.dot(x_2));
-
-    // Calculate the shape matrix
-    Eigen::Matrix2d D;
-    D.col(0) = mat_x_1 - mat_x_0;
-    D.col(1) = mat_x_2 - mat_x_0;
-
-    // Calculate the deformation gradient
-    const Eigen::Matrix2d F = D * m_rest_D_inv;
-#endif
 
     // Calculate the Green strain tensor
     const Eigen::Matrix2d epsilon = 0.5 * (F.transpose() * F - Eigen::Matrix2d::Identity());
@@ -252,7 +208,7 @@ void elasty::ContinuumTriangleConstraint::calculateGrad(double* grad_C)
     const Eigen::Matrix<double, 3, 2> P = F * S;
 
     // Calculate the gradient of the constraint
-    const Eigen::Matrix<double, 3, 2> grad_12 = m_rest_area * P * m_rest_D_inv;
+    const Eigen::Matrix<double, 3, 2> grad_12 = m_rest_area * P * m_rest_D_inv.transpose();
     const Eigen::Vector3d grad_0 = - grad_12.col(0) - grad_12.col(1);
 
     // Copy the results
