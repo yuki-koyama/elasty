@@ -30,8 +30,8 @@ namespace elasty
         using UvList = Eigen::Matrix<float, Eigen::Dynamic, 2 * 3, Eigen::RowMajor>;
 
         ClothSimObject(const std::string& obj_path,
-                       const double distance_stiffness = 0.90,
-                       const double bending_stiffness = 0.50,
+                       const double in_plane_stiffness = 0.90,
+                       const double out_of_plane_stiffness = 0.50,
                        const Eigen::Affine3d& transform = Eigen::Affine3d::Identity(),
                        const InPlaneStrategy in_plane_strategy = InPlaneStrategy::Both,
                        const OutOfPlaneStrategy out_of_plane_strategy = OutOfPlaneStrategy::IsometricBending);
