@@ -128,9 +128,9 @@ FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2 }, stif
 m_first_lame(youngs_modulus * poisson_ratio / ((1.0 + poisson_ratio) * (1.0 - 2.0 * poisson_ratio))),
 m_second_lame(youngs_modulus / (2.0 * (1.0 + poisson_ratio)))
 {
-    const Eigen::Vector3d& x_0 = m_particles[0]->p;
-    const Eigen::Vector3d& x_1 = m_particles[1]->p;
-    const Eigen::Vector3d& x_2 = m_particles[2]->p;
+    const Eigen::Vector3d& x_0 = m_particles[0]->x;
+    const Eigen::Vector3d& x_1 = m_particles[1]->x;
+    const Eigen::Vector3d& x_2 = m_particles[2]->x;
 
     // Calculate the two axes for defining material coordinates
     const Eigen::Vector3d r_1 = x_1 - x_0;
@@ -160,11 +160,47 @@ m_second_lame(youngs_modulus / (2.0 * (1.0 + poisson_ratio)))
 double elasty::ContinuumTriangleConstraint::calculateValue()
 {
     // TODO
+    exit(1);
 }
 
 void elasty::ContinuumTriangleConstraint::calculateGrad(double* grad_C)
 {
-    // TODO
+    const Eigen::Vector3d& x_0 = m_particles[0]->p;
+    const Eigen::Vector3d& x_1 = m_particles[1]->p;
+    const Eigen::Vector3d& x_2 = m_particles[2]->p;
+
+#if 1
+    // Calculate the shape matrix
+    Eigen::Matrix<double, 3, 2> D;
+    D.col(0) = x_1 - x_0;
+    D.col(1) = x_2 - x_0;
+
+    // Calculate the deformation gradient
+    const Eigen::Matrix<double, 3, 2> F = D * m_rest_D_inv;
+#else
+    // Calculate the two axes for defining material coordinates
+    const Eigen::Vector3d r_1 = x_1 - x_0;
+    const Eigen::Vector3d r_2 = x_2 - x_0;
+    const Eigen::Vector3d cross = r_1.cross(r_2);
+    const Eigen::Vector3d axis_1 = r_1.normalized();
+    const Eigen::Vector3d axis_2 = cross.cross(axis_1).normalized();
+
+    // Calculate the rest positions in the material coordinates
+    const Eigen::Vector2d mat_x_0(axis_1.dot(x_0), axis_2.dot(x_0));
+    const Eigen::Vector2d mat_x_1(axis_1.dot(x_1), axis_2.dot(x_1));
+    const Eigen::Vector2d mat_x_2(axis_1.dot(x_2), axis_2.dot(x_2));
+
+    // Calculate the shape matrix
+    Eigen::Matrix2d D;
+    D.col(0) = mat_x_1 - mat_x_0;
+    D.col(1) = mat_x_2 - mat_x_0;
+
+    // Calculate the deformation gradient
+    const Eigen::Matrix2d F = D * m_rest_D_inv;
+#endif
+
+    // Calculate the Green strain tensor
+    const Eigen::Matrix2d S = 0.5 * (F.transpose() * F - Eigen::Matrix2d::Identity());
 }
 
 elasty::DistanceConstraint::DistanceConstraint(const std::shared_ptr<Particle> p_0,
