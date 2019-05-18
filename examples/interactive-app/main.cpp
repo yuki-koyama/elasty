@@ -58,6 +58,7 @@ public:
             last_particle = particle;
         }
 
+        // Pin the tip of the rod
         addConstraint(std::make_shared<elasty::FixedPointConstraint>(last_particle, 1.0, last_particle->x));
 
         // Register the cloth object
@@ -69,14 +70,18 @@ public:
                   std::back_inserter(m_constraints));
 
         // Pin two of the corners of the cloth
-        elasty::generateFixedPointConstraints(Eigen::Vector3d(+ 1.0 + 1.0, + 2.0, 0.0),
-                                              Eigen::Vector3d(+ 1.0 + 1.0, 3.0, 0.0),
-                                              m_cloth_sim_object->m_particles,
-                                              m_constraints);
-        elasty::generateFixedPointConstraints(Eigen::Vector3d(- 1.0 + 1.0, + 2.0, 0.0),
-                                              Eigen::Vector3d(- 1.0 + 1.0, 3.0, 0.0),
-                                              m_cloth_sim_object->m_particles,
-                                              m_constraints);
+        constexpr double range_radius = 0.1;
+        for (const auto& particle : m_particles)
+        {
+            if ((particle->x - Eigen::Vector3d(+ 1.0 + 1.0, 2.0, 0.0)).norm() < range_radius)
+            {
+                m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
+            }
+            if ((particle->x - Eigen::Vector3d(- 1.0 + 1.0, 2.0, 0.0)).norm() < range_radius)
+            {
+                m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
+            }
+        }
     }
 
     void setExternalForces() override
@@ -129,10 +134,10 @@ public:
 
 private:
 
-    const double cloth_distance_stiffness = 0.95;
-    const double cloth_bending_stiffness = 0.05;
-    const std::string cloth_obj_path = "./models/cloths/0.10.obj";
-    const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * glm::pi<double>(), Eigen::Vector3d::UnitX());
+    const double m_cloth_in_plane_stiffness = 0.95;
+    const double m_cloth_out_of_plane_stiffness = 0.05;
+    const std::string m_cloth_obj_path = "./models/cloths/0.10.obj";
+    const Eigen::Affine3d m_cloth_import_transform = Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * glm::pi<double>(), Eigen::Vector3d::UnitX());
 
     // Shared resources
     std::shared_ptr<bigger::BlinnPhongMaterial> m_default_material;
@@ -347,7 +352,10 @@ void SimpleApp::initialize(int argc, char** argv)
     m_plane_primitive = std::make_shared<bigger::PlanePrimitive>();
 
     m_engine = std::make_unique<SimpleEngine>();
-    m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(cloth_obj_path, cloth_distance_stiffness, cloth_bending_stiffness, cloth_import_transform);
+    m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(m_cloth_obj_path,
+                                                                            m_cloth_in_plane_stiffness,
+                                                                            m_cloth_out_of_plane_stiffness,
+                                                                            m_cloth_import_transform);
     m_engine->initializeScene();
 
     addSceneObject(std::make_shared<ParticlesObject>(m_engine, m_sphere_primitive, m_default_material));
@@ -387,7 +395,10 @@ void SimpleApp::updateApp()
             m_engine->clearScene();
 
             // Init
-            m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(cloth_obj_path, cloth_distance_stiffness, cloth_bending_stiffness, cloth_import_transform);
+            m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(m_cloth_obj_path,
+                                                                                    m_cloth_in_plane_stiffness,
+                                                                                    m_cloth_out_of_plane_stiffness,
+                                                                                    m_cloth_import_transform);
             m_engine->initializeScene();
 
             // Re-register

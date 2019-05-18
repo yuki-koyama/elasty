@@ -21,7 +21,7 @@ A research-oriented elastic body simulator
 - [ ] Area conservation constraint [Müller+14]
 - [x] Bending constraint [Müller+07]
 - [ ] Continuum-tetrahedron constraint [Bender+14]
-- [ ] Continuum-triangle constraint [Bender+14]
+- [x] Continuum-triangle constraint [Bender+14]
 - [x] Distance constraint [Müller+07]
 - [x] Environmental collision constraint
 - [ ] Example-based shape matching constraint [Koyama+12]
