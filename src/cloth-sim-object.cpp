@@ -83,6 +83,8 @@ elasty::ClothSimObject::ClothSimObject(const std::string& obj_path,
         m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_0, p_1, distance_stiffness, (p_0->x - p_1->x).norm()));
         m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_0, p_2, distance_stiffness, (p_0->x - p_2->x).norm()));
         m_constraints.push_back(std::make_shared<elasty::DistanceConstraint>(p_1, p_2, distance_stiffness, (p_1->x - p_2->x).norm()));
+
+        m_constraints.push_back(std::make_shared<elasty::ContinuumTriangleConstraint>(p_0, p_1, p_2, distance_stiffness, 1000.0, 0.10));
     }
 
     using vertex_t = unsigned int;
