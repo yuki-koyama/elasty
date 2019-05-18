@@ -18,8 +18,10 @@ A research-oriented elastic body simulator
 
 ### Constraints for PBD/XPBD
 
-- [ ] Area conservation constraint
+- [ ] Area conservation constraint [Müller+14]
 - [x] Bending constraint [Müller+07]
+- [ ] Continuum-tetrahedron constraint [Bender+14]
+- [ ] Continuum-triangle constraint [Bender+14]
 - [x] Distance constraint [Müller+07]
 - [x] Environmental collision constraint
 - [ ] Example-based shape matching constraint [Koyama+12]
@@ -27,9 +29,9 @@ A research-oriented elastic body simulator
 - [x] Isometric bending constraint [Bergou+06; Bender+14]
 - [ ] Long range attachments constraint [Kim+12]
 - [ ] Shape matching constraint [Müller+05]
-- [ ] Tetrahedron strain constraint
-- [ ] Triangle strain constraint
-- [ ] Volume conservation constraint
+- [ ] Tetrahedron strain constraint [Müller+14]
+- [ ] Triangle strain constraint [Müller+14]
+- [ ] Volume conservation constraint [Müller+14]
 - [ ] ...
 
 ## Additional Features
