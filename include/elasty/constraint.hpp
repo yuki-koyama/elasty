@@ -164,6 +164,9 @@ namespace elasty
 
         const double m_youngs_modulus;
         const double m_poisson_ratio;
+
+        double m_rest_area;
+        Eigen::Matrix2d m_rest_D_inv;
     };
 
     class DistanceConstraint final : public FixedNumConstraint<2>
@@ -174,7 +177,7 @@ namespace elasty
                            const std::shared_ptr<Particle> p_1,
                            const double stiffness,
                            const double d);
-        
+
         double calculateValue() override;
         void calculateGrad(double* grad_C) override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }

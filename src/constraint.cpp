@@ -128,7 +128,33 @@ FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2 }, stif
 m_youngs_modulus(youngs_modulus),
 m_poisson_ratio(poisson_ratio)
 {
-    // TODO
+    const Eigen::Vector3d& x_0 = m_particles[0]->p;
+    const Eigen::Vector3d& x_1 = m_particles[1]->p;
+    const Eigen::Vector3d& x_2 = m_particles[2]->p;
+
+    // Calculate the two axes for defining material coordinates
+    const Eigen::Vector3d r_1 = x_1 - x_0;
+    const Eigen::Vector3d r_2 = x_2 - x_0;
+    const Eigen::Vector3d cross = r_1.cross(r_2);
+    const Eigen::Vector3d axis_1 = r_1.normalized();
+    const Eigen::Vector3d axis_2 = cross.cross(axis_1).normalized();
+
+    // Calculate the rest positions in the material coordinates
+    const Eigen::Vector2d mat_x_0(axis_1.dot(x_0), axis_2.dot(x_0));
+    const Eigen::Vector2d mat_x_1(axis_1.dot(x_1), axis_2.dot(x_1));
+    const Eigen::Vector2d mat_x_2(axis_1.dot(x_2), axis_2.dot(x_2));
+
+    // Calculate the rest shape matrix
+    Eigen::Matrix2d rest_D;
+    rest_D.col(0) = mat_x_1 - mat_x_0;
+    rest_D.col(1) = mat_x_2 - mat_x_0;
+
+    // Calculate the inverse of the rest shape matrix
+    assert(rest_D.determinant() > 0.0);
+    m_rest_D_inv = rest_D.inverse();
+
+    // Calculate the area of the rest configuration
+    m_rest_area = 0.5 * cross.norm();
 }
 
 double elasty::ContinuumTriangleConstraint::calculateValue()
