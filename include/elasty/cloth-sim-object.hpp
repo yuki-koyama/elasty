@@ -20,6 +20,7 @@ namespace elasty
         };
 
         using TriangleList = Eigen::Matrix<int32_t, Eigen::Dynamic, 3, Eigen::RowMajor>;
+        using UvList = Eigen::Matrix<float, Eigen::Dynamic, 2 * 3, Eigen::RowMajor>;
 
         ClothSimObject(const std::string& obj_path,
                        const double distance_stiffness = 0.90,
@@ -28,6 +29,9 @@ namespace elasty
                        const Strategy strategy = Strategy::IsometricBending);
 
         TriangleList m_triangle_list;
+        UvList m_uv_list;
+
+        bool hasUv() const { return m_uv_list.size() != 0; }
     };
 }
 
