@@ -145,6 +145,27 @@ namespace elasty
         const double m_dihedral_angle;
     };
 
+    class ContinuumTriangleConstraint final : public FixedNumConstraint<3>
+    {
+    public:
+
+        ContinuumTriangleConstraint(const std::shared_ptr<Particle> p_0,
+                                    const std::shared_ptr<Particle> p_1,
+                                    const std::shared_ptr<Particle> p_2,
+                                    const double stiffness,
+                                    const double youngs_modulus,
+                                    const double poisson_ratio);
+
+        double calculateValue() override;
+        void calculateGrad(double* grad_C) override;
+        ConstraintType getType() override { return ConstraintType::Bilateral; }
+
+    private:
+
+        const double m_youngs_modulus;
+        const double m_poisson_ratio;
+    };
+
     class DistanceConstraint final : public FixedNumConstraint<2>
     {
     public:
