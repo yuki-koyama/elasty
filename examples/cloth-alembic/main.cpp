@@ -14,8 +14,8 @@ public:
         m_num_iterations = 40;
 
         // Instantiate a cloth object
-        const double cloth_distance_stiffness = 0.95;
-        const double cloth_bending_stiffness = 0.03;
+        const double cloth_in_plane_stiffness = 0.95;
+        const double cloth_out_of_plane_stiffness = 0.03;
         const std::string cloth_obj_path = "./models/cloths/0.20.obj";
 #if 0 // Drape
         const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(0.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * elasty::pi(), Eigen::Vector3d::UnitX());
@@ -23,8 +23,8 @@ public:
         const Eigen::Affine3d cloth_import_transform = Eigen::Affine3d(Eigen::Translation3d(0.0, 2.0, 1.0));
 #endif
         m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(cloth_obj_path,
-                                                                      cloth_distance_stiffness,
-                                                                      cloth_bending_stiffness,
+                                                                      cloth_in_plane_stiffness,
+                                                                      cloth_out_of_plane_stiffness,
                                                                       cloth_import_transform,
                                                                       elasty::ClothSimObject::InPlaneStrategy::Both,
                                                                       elasty::ClothSimObject::OutOfPlaneStrategy::IsometricBending);
@@ -62,7 +62,27 @@ public:
         }
     }
 
-    void generateCollisionConstraints() override {}
+    void generateCollisionConstraints() override
+    {
+#if 0
+        // Collision with a sphere
+        const Eigen::Vector3d center(0.0, 1.0, - 0.3);
+        constexpr double tolerance = 0.05;
+        constexpr double radius = 0.60 + tolerance;
+        constexpr double stiffness = 0.20;
+        for (auto particle : m_particles)
+        {
+            const Eigen::Vector3d direction = particle->x - center;
+            if (direction.norm() < radius)
+            {
+                const Eigen::Vector3d normal = direction.normalized();
+                const double distance = center.transpose() * normal + radius;
+                m_instant_constraints.push_back(std::make_shared<elasty::EnvironmentalCollisionConstraint>(particle, stiffness, normal, distance));
+            }
+        }
+#endif
+    }
+
     void updateVelocities() override {}
 
     std::shared_ptr<elasty::ClothSimObject> m_cloth_sim_object;
