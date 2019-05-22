@@ -1,39 +1,44 @@
-#include <elasty/constraint.hpp>
-#include <elasty/particle.hpp>
+#include <Eigen/Geometry>
 #include <algorithm>
 #include <cstring>
-#include <Eigen/Geometry>
+#include <elasty/constraint.hpp>
+#include <elasty/particle.hpp>
 
 namespace
 {
-    inline Eigen::Matrix3d convert_vector_to_cross_operator(const Eigen::Vector3d& vec)
+    inline Eigen::Matrix3d
+    convert_vector_to_cross_operator(const Eigen::Vector3d& vec)
     {
         Eigen::Matrix3d mat = Eigen::Matrix3d::Zero();
-        mat(0, 1) = + vec(2);
-        mat(0, 2) = - vec(1);
-        mat(1, 0) = - vec(2);
-        mat(1, 2) = + vec(0);
-        mat(2, 0) = + vec(1);
-        mat(2, 1) = - vec(0);
+        mat(0, 1)           = +vec(2);
+        mat(0, 2)           = -vec(1);
+        mat(1, 0)           = -vec(2);
+        mat(1, 2)           = +vec(0);
+        mat(2, 0)           = +vec(1);
+        mat(2, 1)           = -vec(0);
         return mat;
     };
 
-    inline double calculateCotTheta(const Eigen::Vector3d& x, const Eigen::Vector3d& y)
+    inline double calculateCotTheta(const Eigen::Vector3d& x,
+                                    const Eigen::Vector3d& y)
     {
         const double cos_theta = x.dot(y);
         const double sin_theta = x.cross(y).norm();
         return cos_theta / sin_theta;
     }
-}
+} // namespace
 
-elasty::BendingConstraint::BendingConstraint(const std::shared_ptr<Particle> p_0,
-                                             const std::shared_ptr<Particle> p_1,
-                                             const std::shared_ptr<Particle> p_2,
-                                             const std::shared_ptr<Particle> p_3,
-                                             const double stiffness,
-                                             const double dihedral_angle) :
-FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness),
-m_dihedral_angle(dihedral_angle)
+elasty::BendingConstraint::BendingConstraint(
+    const std::shared_ptr<Particle> p_0,
+    const std::shared_ptr<Particle> p_1,
+    const std::shared_ptr<Particle> p_2,
+    const std::shared_ptr<Particle> p_3,
+    const double                    stiffness,
+    const double                    dihedral_angle)
+    : FixedNumConstraint(
+          std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2, p_3},
+          stiffness),
+      m_dihedral_angle(dihedral_angle)
 {
 }
 
@@ -54,7 +59,8 @@ double elasty::BendingConstraint::calculateValue()
     assert(!n_0.hasNaN());
     assert(!n_1.hasNaN());
 
-    const double current_dihedral_angle = std::acos(std::min(+ 1.0, std::max(- 1.0, n_0.dot(n_1))));
+    const double current_dihedral_angle =
+        std::acos(std::min(+1.0, std::max(-1.0, n_0.dot(n_1))));
 
     assert(!std::isnan(current_dihedral_angle));
 
@@ -89,28 +95,46 @@ void elasty::BendingConstraint::calculateGrad(double* grad_C)
         return;
     }
 
-    const double common_coeff = - 1.0 / std::sqrt(1.0 - d * d);
+    const double common_coeff = -1.0 / std::sqrt(1.0 - d * d);
 
-    auto calculate_gradient_of_normalized_cross_product_wrt_p_1 = [](const Eigen::Vector3d& p_1,
-                                                                     const Eigen::Vector3d& p_2,
-                                                                     const Eigen::Vector3d& n)
-    -> Eigen::Matrix3d
-    {
-        return + (1.0 / p_1.cross(p_2).norm()) * (- convert_vector_to_cross_operator(p_2) + n * (n.cross(p_2)).transpose());
+    auto calculate_gradient_of_normalized_cross_product_wrt_p_1 =
+        [](const Eigen::Vector3d& p_1,
+           const Eigen::Vector3d& p_2,
+           const Eigen::Vector3d& n) -> Eigen::Matrix3d {
+        return +(1.0 / p_1.cross(p_2).norm()) *
+               (-convert_vector_to_cross_operator(p_2) +
+                n * (n.cross(p_2)).transpose());
     };
 
-    auto calculate_gradient_of_normalized_cross_product_wrt_p_2 = [](const Eigen::Vector3d& p_1,
-                                                                     const Eigen::Vector3d& p_2,
-                                                                     const Eigen::Vector3d& n)
-    -> Eigen::Matrix3d
-    {
-        return - (1.0 / p_1.cross(p_2).norm()) * (- convert_vector_to_cross_operator(p_1) + n * (n.cross(p_1)).transpose());
+    auto calculate_gradient_of_normalized_cross_product_wrt_p_2 =
+        [](const Eigen::Vector3d& p_1,
+           const Eigen::Vector3d& p_2,
+           const Eigen::Vector3d& n) -> Eigen::Matrix3d {
+        return -(1.0 / p_1.cross(p_2).norm()) *
+               (-convert_vector_to_cross_operator(p_1) +
+                n * (n.cross(p_1)).transpose());
     };
 
-    const Eigen::Vector3d grad_C_wrt_p_1 = common_coeff * (calculate_gradient_of_normalized_cross_product_wrt_p_1(n_0, p_1, p_2).transpose() * n_1 + calculate_gradient_of_normalized_cross_product_wrt_p_1(n_1, p_1, p_3).transpose() * n_0);
-    const Eigen::Vector3d grad_C_wrt_p_2 = common_coeff * calculate_gradient_of_normalized_cross_product_wrt_p_2(n_0, p_1, p_2).transpose() * n_1;
-    const Eigen::Vector3d grad_C_wrt_p_3 = common_coeff * calculate_gradient_of_normalized_cross_product_wrt_p_2(n_1, p_1, p_3).transpose() * n_0;
-    const Eigen::Vector3d grad_C_wrt_p_0 = - grad_C_wrt_p_1 - grad_C_wrt_p_2 - grad_C_wrt_p_3;
+    const Eigen::Vector3d grad_C_wrt_p_1 =
+        common_coeff *
+        (calculate_gradient_of_normalized_cross_product_wrt_p_1(n_0, p_1, p_2)
+                 .transpose() *
+             n_1 +
+         calculate_gradient_of_normalized_cross_product_wrt_p_1(n_1, p_1, p_3)
+                 .transpose() *
+             n_0);
+    const Eigen::Vector3d grad_C_wrt_p_2 =
+        common_coeff *
+        calculate_gradient_of_normalized_cross_product_wrt_p_2(n_0, p_1, p_2)
+            .transpose() *
+        n_1;
+    const Eigen::Vector3d grad_C_wrt_p_3 =
+        common_coeff *
+        calculate_gradient_of_normalized_cross_product_wrt_p_2(n_1, p_1, p_3)
+            .transpose() *
+        n_0;
+    const Eigen::Vector3d grad_C_wrt_p_0 =
+        -grad_C_wrt_p_1 - grad_C_wrt_p_2 - grad_C_wrt_p_3;
 
     std::memcpy(grad_C + (3 * 0), grad_C_wrt_p_0.data(), sizeof(double) * 3);
     std::memcpy(grad_C + (3 * 1), grad_C_wrt_p_1.data(), sizeof(double) * 3);
@@ -118,24 +142,27 @@ void elasty::BendingConstraint::calculateGrad(double* grad_C)
     std::memcpy(grad_C + (3 * 3), grad_C_wrt_p_3.data(), sizeof(double) * 3);
 }
 
-elasty::ContinuumTriangleConstraint::ContinuumTriangleConstraint(const std::shared_ptr<Particle> p_0,
-                                                                 const std::shared_ptr<Particle> p_1,
-                                                                 const std::shared_ptr<Particle> p_2,
-                                                                 const double stiffness,
-                                                                 const double youngs_modulus,
-                                                                 const double poisson_ratio) :
-FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2 }, stiffness),
-m_first_lame(youngs_modulus * poisson_ratio / ((1.0 + poisson_ratio) * (1.0 - 2.0 * poisson_ratio))),
-m_second_lame(youngs_modulus / (2.0 * (1.0 + poisson_ratio)))
+elasty::ContinuumTriangleConstraint::ContinuumTriangleConstraint(
+    const std::shared_ptr<Particle> p_0,
+    const std::shared_ptr<Particle> p_1,
+    const std::shared_ptr<Particle> p_2,
+    const double                    stiffness,
+    const double                    youngs_modulus,
+    const double                    poisson_ratio)
+    : FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2},
+                         stiffness),
+      m_first_lame(youngs_modulus * poisson_ratio /
+                   ((1.0 + poisson_ratio) * (1.0 - 2.0 * poisson_ratio))),
+      m_second_lame(youngs_modulus / (2.0 * (1.0 + poisson_ratio)))
 {
     const Eigen::Vector3d& x_0 = m_particles[0]->x;
     const Eigen::Vector3d& x_1 = m_particles[1]->x;
     const Eigen::Vector3d& x_2 = m_particles[2]->x;
 
     // Calculate the two axes for defining material coordinates
-    const Eigen::Vector3d r_1 = x_1 - x_0;
-    const Eigen::Vector3d r_2 = x_2 - x_0;
-    const Eigen::Vector3d cross = r_1.cross(r_2);
+    const Eigen::Vector3d r_1    = x_1 - x_0;
+    const Eigen::Vector3d r_2    = x_2 - x_0;
+    const Eigen::Vector3d cross  = r_1.cross(r_2);
     const Eigen::Vector3d axis_1 = r_1.normalized();
     const Eigen::Vector3d axis_2 = cross.cross(axis_1).normalized();
 
@@ -172,10 +199,13 @@ double elasty::ContinuumTriangleConstraint::calculateValue()
     const Eigen::Matrix<double, 3, 2> F = D * m_rest_D_inv;
 
     // Calculate the Green strain tensor
-    const Eigen::Matrix2d epsilon = 0.5 * (F.transpose() * F - Eigen::Matrix2d::Identity());
+    const Eigen::Matrix2d epsilon =
+        0.5 * (F.transpose() * F - Eigen::Matrix2d::Identity());
 
     // Calculate the strain tensor based on the Saint Venant–Kirchhoff model
-    const Eigen::Matrix2d S = m_first_lame * epsilon.trace() * Eigen::Matrix2d::Identity() + 2.0 * m_second_lame * epsilon;
+    const Eigen::Matrix2d S =
+        m_first_lame * epsilon.trace() * Eigen::Matrix2d::Identity() +
+        2.0 * m_second_lame * epsilon;
 
     // Calculate the strain energy density
     const double psi = 0.5 * (epsilon.transpose() * S).trace();
@@ -199,29 +229,35 @@ void elasty::ContinuumTriangleConstraint::calculateGrad(double* grad_C)
     const Eigen::Matrix<double, 3, 2> F = D * m_rest_D_inv;
 
     // Calculate the Green strain tensor
-    const Eigen::Matrix2d epsilon = 0.5 * (F.transpose() * F - Eigen::Matrix2d::Identity());
+    const Eigen::Matrix2d epsilon =
+        0.5 * (F.transpose() * F - Eigen::Matrix2d::Identity());
 
     // Calculate the strain tensor based on the Saint Venant–Kirchhoff model
-    const Eigen::Matrix2d S = m_first_lame * epsilon.trace() * Eigen::Matrix2d::Identity() + 2.0 * m_second_lame * epsilon;
+    const Eigen::Matrix2d S =
+        m_first_lame * epsilon.trace() * Eigen::Matrix2d::Identity() +
+        2.0 * m_second_lame * epsilon;
 
     // Calculate the first Piola-Kirchhoff stress tensor
     const Eigen::Matrix<double, 3, 2> P = F * S;
 
     // Calculate the gradient of the constraint
-    const Eigen::Matrix<double, 3, 2> grad_12 = m_rest_area * P * m_rest_D_inv.transpose();
-    const Eigen::Vector3d grad_0 = - grad_12.col(0) - grad_12.col(1);
+    const Eigen::Matrix<double, 3, 2> grad_12 =
+        m_rest_area * P * m_rest_D_inv.transpose();
+    const Eigen::Vector3d grad_0 = -grad_12.col(0) - grad_12.col(1);
 
     // Copy the results
     std::memcpy(grad_C + 0, grad_0.data(), sizeof(double) * 3);
     std::memcpy(grad_C + 3, grad_12.data(), sizeof(double) * 6);
 }
 
-elasty::DistanceConstraint::DistanceConstraint(const std::shared_ptr<Particle> p_0,
-                                               const std::shared_ptr<Particle> p_1,
-                                               const double stiffness,
-                                               const double d) :
-FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1 }, stiffness),
-m_d(d)
+elasty::DistanceConstraint::DistanceConstraint(
+    const std::shared_ptr<Particle> p_0,
+    const std::shared_ptr<Particle> p_1,
+    const double                    stiffness,
+    const double                    d)
+    : FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1},
+                         stiffness),
+      m_d(d)
 {
     assert(d >= 0.0);
 }
@@ -241,23 +277,27 @@ void elasty::DistanceConstraint::calculateGrad(double* grad_C)
 
     Eigen::Vector3d n = (x_0 - x_1).normalized();
 
-    if (n.hasNaN()) { n = Eigen::Vector3d::Random(3).normalized(); }
+    if (n.hasNaN())
+    {
+        n = Eigen::Vector3d::Random(3).normalized();
+    }
 
-    grad_C[0] = + n(0);
-    grad_C[1] = + n(1);
-    grad_C[2] = + n(2);
-    grad_C[3] = - n(0);
-    grad_C[4] = - n(1);
-    grad_C[5] = - n(2);
+    grad_C[0] = +n(0);
+    grad_C[1] = +n(1);
+    grad_C[2] = +n(2);
+    grad_C[3] = -n(0);
+    grad_C[4] = -n(1);
+    grad_C[5] = -n(2);
 }
 
-elasty::EnvironmentalCollisionConstraint::EnvironmentalCollisionConstraint(const std::shared_ptr<Particle> p_0,
-                                                                           const double stiffness,
-                                                                           const Eigen::Vector3d& n,
-                                                                           const double d) :
-FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
-m_n(n),
-m_d(d)
+elasty::EnvironmentalCollisionConstraint::EnvironmentalCollisionConstraint(
+    const std::shared_ptr<Particle> p_0,
+    const double                    stiffness,
+    const Eigen::Vector3d&          n,
+    const double                    d)
+    : FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{p_0},
+                         stiffness),
+      m_n(n), m_d(d)
 {
 }
 
@@ -272,11 +312,13 @@ void elasty::EnvironmentalCollisionConstraint::calculateGrad(double* grad_C)
     std::memcpy(grad_C, m_n.data(), sizeof(double) * 3);
 }
 
-elasty::FixedPointConstraint::FixedPointConstraint(const std::shared_ptr<Particle> p_0,
-                                                   const double stiffness,
-                                                   const Eigen::Vector3d& point) :
-FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0 }, stiffness),
-m_point(point)
+elasty::FixedPointConstraint::FixedPointConstraint(
+    const std::shared_ptr<Particle> p_0,
+    const double                    stiffness,
+    const Eigen::Vector3d&          point)
+    : FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{p_0},
+                         stiffness),
+      m_point(point)
 {
 }
 
@@ -289,19 +331,24 @@ double elasty::FixedPointConstraint::calculateValue()
 void elasty::FixedPointConstraint::calculateGrad(double* grad_C)
 {
     const Eigen::Vector3d& x = m_particles[0]->p;
-    const Eigen::Vector3d n = (x - m_point).normalized();
+    const Eigen::Vector3d  n = (x - m_point).normalized();
 
-    if (n.hasNaN()) { std::fill(grad_C, grad_C + 3, 0.0); }
+    if (n.hasNaN())
+    {
+        std::fill(grad_C, grad_C + 3, 0.0);
+    }
 
     std::memcpy(grad_C, n.data(), sizeof(double) * 3);
 }
 
-elasty::IsometricBendingConstraint::IsometricBendingConstraint(const std::shared_ptr<Particle> p_0,
-                                                               const std::shared_ptr<Particle> p_1,
-                                                               const std::shared_ptr<Particle> p_2,
-                                                               const std::shared_ptr<Particle> p_3,
-                                                               const double stiffness) :
-FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 }, stiffness)
+elasty::IsometricBendingConstraint::IsometricBendingConstraint(
+    const std::shared_ptr<Particle> p_0,
+    const std::shared_ptr<Particle> p_1,
+    const std::shared_ptr<Particle> p_2,
+    const std::shared_ptr<Particle> p_3,
+    const double                    stiffness)
+    : FixedNumConstraint(
+          std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2, p_3}, stiffness)
 {
     const Eigen::Vector3d& x_0 = p_0->x;
     const Eigen::Vector3d& x_1 = p_1->x;
@@ -314,12 +361,13 @@ FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 },
     const Eigen::Vector3d e3 = x_3 - x_0;
     const Eigen::Vector3d e4 = x_1 - x_3;
 
-    const double cot_01 = calculateCotTheta(e0, - e1);
-    const double cot_02 = calculateCotTheta(e0, - e2);
+    const double cot_01 = calculateCotTheta(e0, -e1);
+    const double cot_02 = calculateCotTheta(e0, -e2);
     const double cot_03 = calculateCotTheta(e0, e3);
     const double cot_04 = calculateCotTheta(e0, e4);
 
-    const Eigen::Vector4d K = Eigen::Vector4d(cot_01 + cot_04, cot_02 + cot_03, - cot_01 - cot_02, - cot_03 - cot_04);
+    const Eigen::Vector4d K = Eigen::Vector4d(
+        cot_01 + cot_04, cot_02 + cot_03, -cot_01 - cot_02, -cot_03 - cot_04);
 
     const double A_0 = 0.5 * e0.cross(e1).norm();
     const double A_1 = 0.5 * e0.cross(e3).norm();
@@ -330,11 +378,12 @@ FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{ p_0, p_1, p_2, p_3 },
 double elasty::IsometricBendingConstraint::calculateValue()
 {
     double sum = 0.0;
-    for (unsigned int i = 0; i < 4; ++ i)
+    for (unsigned int i = 0; i < 4; ++i)
     {
-        for (unsigned int j = 0; j < 4; ++ j)
+        for (unsigned int j = 0; j < 4; ++j)
         {
-            sum += m_Q(i, j) * double(m_particles[i]->p.transpose() * m_particles[j]->p);
+            sum += m_Q(i, j) *
+                   double(m_particles[i]->p.transpose() * m_particles[j]->p);
         }
     }
     return 0.5 * sum;
@@ -342,10 +391,10 @@ double elasty::IsometricBendingConstraint::calculateValue()
 
 void elasty::IsometricBendingConstraint::calculateGrad(double* grad_C)
 {
-    for (unsigned int i = 0; i < 4; ++ i)
+    for (unsigned int i = 0; i < 4; ++i)
     {
         Eigen::Vector3d sum = Eigen::Vector3d::Zero();
-        for (unsigned int j = 0; j < 4; ++ j)
+        for (unsigned int j = 0; j < 4; ++j)
         {
             sum += m_Q(i, j) * m_particles[j]->p;
         }

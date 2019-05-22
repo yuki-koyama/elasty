@@ -1,5 +1,5 @@
-#include <elasty/engine.hpp>
 #include <elasty/constraint.hpp>
+#include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
 
 void elasty::Engine::stepTime()
@@ -21,7 +21,7 @@ void elasty::Engine::stepTime()
     generateCollisionConstraints();
 
     // Solve constraints
-    for (unsigned int i = 0; i < m_num_iterations; ++ i)
+    for (unsigned int i = 0; i < m_num_iterations; ++i)
     {
         for (auto constraint : m_constraints)
         {
@@ -53,7 +53,8 @@ void elasty::Engine::addConstraint(std::shared_ptr<Constraint> constraint)
     m_constraints.push_back(constraint);
 }
 
-void elasty::Engine::addInstantConstraint(std::shared_ptr<Constraint> constraint)
+void elasty::Engine::addInstantConstraint(
+    std::shared_ptr<Constraint> constraint)
 {
     m_instant_constraints.push_back(constraint);
 }

@@ -1,31 +1,33 @@
 #ifndef constraint_hpp
 #define constraint_hpp
 
+#include <Eigen/Core>
 #include <elasty/particle.hpp>
 #include <memory>
 #include <vector>
-#include <Eigen/Core>
 
 namespace elasty
 {
-    enum class ConstraintType { Bilateral, Unilateral };
+    enum class ConstraintType
+    {
+        Bilateral,
+        Unilateral
+    };
 
     class Constraint
     {
     public:
-
         Constraint(const std::vector<std::shared_ptr<Particle>>& particles,
-                   const double stiffness) :
-        m_stiffness(stiffness),
-        m_particles(particles)
+                   const double                                  stiffness)
+            : m_stiffness(stiffness), m_particles(particles)
         {
         }
 
         /// \brief Calculates the constraint function value C(x).
         virtual double calculateValue() = 0;
 
-        /// \brief Calculate the derivative of the constraint function
-        /// grad C(x).
+        /// \brief Calculate the derivative of the constraint function grad
+        /// C(x).
         /// \details As constraints can have different vector sizes, it will
         /// store the result to the passed raw buffer that should be allocated
         /// in the caller, rather than returning a dynamically allocated
@@ -48,7 +50,6 @@ namespace elasty
         double m_stiffness;
 
     protected:
-
         /// \brief Associated particles.
         /// \details The number of particles is (in most cases) solely
         /// determined in each constraint. For example, a distance constraint
@@ -58,20 +59,19 @@ namespace elasty
         std::vector<std::shared_ptr<Particle>> m_particles;
     };
 
-    template <int Num>
-    class FixedNumConstraint : public Constraint
+    template <int Num> class FixedNumConstraint : public Constraint
     {
     public:
-
-        FixedNumConstraint(const std::vector<std::shared_ptr<Particle>>& particles,
-                           const double stiffness) :
-        Constraint(particles, stiffness),
-        m_inv_M(constructInverseMassMatrix(m_particles))
+        FixedNumConstraint(
+            const std::vector<std::shared_ptr<Particle>>& particles,
+            const double                                  stiffness)
+            : Constraint(particles, stiffness),
+              m_inv_M(constructInverseMassMatrix(m_particles))
         {
         }
 
-        virtual double calculateValue() = 0;
-        virtual void calculateGrad(double* grad_C) = 0;
+        virtual double calculateValue()              = 0;
+        virtual void   calculateGrad(double* grad_C) = 0;
 
         void projectParticles() final
         {
@@ -79,30 +79,37 @@ namespace elasty
             const double C = calculateValue();
 
             // Skip if it is a unilateral constraint and is satisfied
-            if (getType() == ConstraintType::Unilateral && C >= 0.0) { return; }
+            if (getType() == ConstraintType::Unilateral && C >= 0.0)
+            {
+                return;
+            }
 
             // Calculate the derivative of the constraint function
             const Eigen::Matrix<double, Num * 3, 1> grad_C = calculateGrad();
 
             // Skip if the gradient is sufficiently small
-            if (grad_C.isApprox(Eigen::Matrix<double, Num * 3, 1>::Zero())) { return; }
+            if (grad_C.isApprox(Eigen::Matrix<double, Num * 3, 1>::Zero()))
+            {
+                return;
+            }
 
             // Calculate s
-            const double s = C / (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C);
+            const double s =
+                C / (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C);
 
             // Calculate \Delta x
-            const Eigen::Matrix<double, Num * 3, 1> delta_x = - s * m_inv_M.asDiagonal() * grad_C;
+            const Eigen::Matrix<double, Num * 3, 1> delta_x =
+                -s * m_inv_M.asDiagonal() * grad_C;
             assert(!delta_x.hasNaN());
 
             // Update predicted positions
-            for (unsigned int j = 0; j < Num; ++ j)
+            for (unsigned int j = 0; j < Num; ++j)
             {
                 m_particles[j]->p += m_stiffness * delta_x.segment(3 * j, 3);
             }
         }
 
     private:
-
         const Eigen::Matrix<double, Num * 3, 1> m_inv_M;
 
         Eigen::Matrix<double, Num * 3, 1> calculateGrad()
@@ -112,10 +119,11 @@ namespace elasty
             return grad_C;
         }
 
-        static Eigen::Matrix<double, Num * 3, 1> constructInverseMassMatrix(const std::vector<std::shared_ptr<elasty::Particle>>& particles)
+        static Eigen::Matrix<double, Num * 3, 1> constructInverseMassMatrix(
+            const std::vector<std::shared_ptr<elasty::Particle>>& particles)
         {
             Eigen::Matrix<double, Num * 3, 1> inv_M;
-            for (unsigned int j = 0; j < Num; ++ j)
+            for (unsigned int j = 0; j < Num; ++j)
             {
                 inv_M(j * 3 + 0) = particles[j]->w;
                 inv_M(j * 3 + 1) = particles[j]->w;
@@ -128,119 +136,107 @@ namespace elasty
     class BendingConstraint final : public FixedNumConstraint<4>
     {
     public:
-
         BendingConstraint(const std::shared_ptr<Particle> p_0,
                           const std::shared_ptr<Particle> p_1,
                           const std::shared_ptr<Particle> p_2,
                           const std::shared_ptr<Particle> p_3,
-                          const double stiffness,
-                          const double dihedral_angle);
+                          const double                    stiffness,
+                          const double                    dihedral_angle);
 
-        double calculateValue() override;
-        void calculateGrad(double* grad_C) override;
+        double         calculateValue() override;
+        void           calculateGrad(double* grad_C) override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }
 
     private:
-
         const double m_dihedral_angle;
     };
 
     class ContinuumTriangleConstraint final : public FixedNumConstraint<3>
     {
     public:
-
         ContinuumTriangleConstraint(const std::shared_ptr<Particle> p_0,
                                     const std::shared_ptr<Particle> p_1,
                                     const std::shared_ptr<Particle> p_2,
-                                    const double stiffness,
+                                    const double                    stiffness,
                                     const double youngs_modulus,
                                     const double poisson_ratio);
 
-        double calculateValue() override;
-        void calculateGrad(double* grad_C) override;
+        double         calculateValue() override;
+        void           calculateGrad(double* grad_C) override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }
 
     private:
-
         const double m_first_lame;
         const double m_second_lame;
 
-        double m_rest_area;
+        double          m_rest_area;
         Eigen::Matrix2d m_rest_D_inv;
     };
 
     class DistanceConstraint final : public FixedNumConstraint<2>
     {
     public:
-
         DistanceConstraint(const std::shared_ptr<Particle> p_0,
                            const std::shared_ptr<Particle> p_1,
-                           const double stiffness,
-                           const double d);
+                           const double                    stiffness,
+                           const double                    d);
 
-        double calculateValue() override;
-        void calculateGrad(double* grad_C) override;
+        double         calculateValue() override;
+        void           calculateGrad(double* grad_C) override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }
 
     private:
-
         const double m_d;
     };
 
     class EnvironmentalCollisionConstraint final : public FixedNumConstraint<1>
     {
     public:
-
         EnvironmentalCollisionConstraint(const std::shared_ptr<Particle> p_0,
-                                         const double stiffness,
+                                         const double           stiffness,
                                          const Eigen::Vector3d& n,
-                                         const double d);
+                                         const double           d);
 
-        double calculateValue() override;
-        void calculateGrad(double* grad_C) override;
+        double         calculateValue() override;
+        void           calculateGrad(double* grad_C) override;
         ConstraintType getType() override { return ConstraintType::Unilateral; }
 
     private:
-
         const Eigen::Vector3d m_n;
-        const double m_d;
+        const double          m_d;
     };
 
     class FixedPointConstraint final : public FixedNumConstraint<1>
     {
     public:
-
         FixedPointConstraint(const std::shared_ptr<Particle> p_0,
-                             const double stiffness,
-                             const Eigen::Vector3d& point);
+                             const double                    stiffness,
+                             const Eigen::Vector3d&          point);
 
-        double calculateValue() override;
-        void calculateGrad(double* grad_C) override;
+        double         calculateValue() override;
+        void           calculateGrad(double* grad_C) override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }
 
     private:
-
         const Eigen::Vector3d m_point;
     };
 
     class IsometricBendingConstraint final : public FixedNumConstraint<4>
     {
     public:
-
         IsometricBendingConstraint(const std::shared_ptr<Particle> p_0,
                                    const std::shared_ptr<Particle> p_1,
                                    const std::shared_ptr<Particle> p_2,
                                    const std::shared_ptr<Particle> p_3,
-                                   const double stiffness);
+                                   const double                    stiffness);
 
-        double calculateValue() override;
-        void calculateGrad(double* grad_C) override;
+        double         calculateValue() override;
+        void           calculateGrad(double* grad_C) override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }
 
     private:
-
         Eigen::Matrix4d m_Q;
     };
-}
+} // namespace elasty
 
 #endif /* constraint_hpp */

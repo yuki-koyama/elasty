@@ -87,3 +87,19 @@ if(ELASTY_TESTS)
 
   add_test(NAME test-bending-constraint COMMAND $<TARGET_FILE:test-bending-constraint>)
 endif()
+
+# ------------------------------------------------------------------------------
+# Format codes
+# ------------------------------------------------------------------------------
+
+find_program(CLANG_FORMAT clang-format)
+if(CLANG_FORMAT)
+  set(format_target_sources
+    ${headers}
+    ${sources}
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/cloth-alembic/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/interactive-app/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/test-bending-constraint.cpp
+  )
+  add_custom_target(elasty-format COMMAND ${CLANG_FORMAT} -i ${format_target_sources} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif()

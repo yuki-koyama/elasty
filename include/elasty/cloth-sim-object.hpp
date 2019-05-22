@@ -1,17 +1,16 @@
 #ifndef cloth_sim_object_hpp
 #define cloth_sim_object_hpp
 
-#include <elasty/sim-object.hpp>
-#include <string>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <elasty/sim-object.hpp>
+#include <string>
 
 namespace elasty
 {
     class ClothSimObject : public SimObject
     {
     public:
-
         enum class InPlaneStrategy
         {
             EdgeDistance,
@@ -26,21 +25,25 @@ namespace elasty
             Cross,
         };
 
-        using TriangleList = Eigen::Matrix<int32_t, Eigen::Dynamic, 3, Eigen::RowMajor>;
-        using UvList = Eigen::Matrix<float, Eigen::Dynamic, 2 * 3, Eigen::RowMajor>;
+        using TriangleList =
+            Eigen::Matrix<int32_t, Eigen::Dynamic, 3, Eigen::RowMajor>;
+        using UvList =
+            Eigen::Matrix<float, Eigen::Dynamic, 2 * 3, Eigen::RowMajor>;
 
-        ClothSimObject(const std::string& obj_path,
-                       const double in_plane_stiffness = 0.90,
-                       const double out_of_plane_stiffness = 0.50,
-                       const Eigen::Affine3d& transform = Eigen::Affine3d::Identity(),
-                       const InPlaneStrategy in_plane_strategy = InPlaneStrategy::Both,
-                       const OutOfPlaneStrategy out_of_plane_strategy = OutOfPlaneStrategy::IsometricBending);
+        ClothSimObject(
+            const std::string&       obj_path,
+            const double             in_plane_stiffness     = 0.90,
+            const double             out_of_plane_stiffness = 0.50,
+            const Eigen::Affine3d&   transform = Eigen::Affine3d::Identity(),
+            const InPlaneStrategy    in_plane_strategy = InPlaneStrategy::Both,
+            const OutOfPlaneStrategy out_of_plane_strategy =
+                OutOfPlaneStrategy::IsometricBending);
 
         TriangleList m_triangle_list;
-        UvList m_uv_list;
+        UvList       m_uv_list;
 
         bool hasUv() const { return m_uv_list.size() != 0; }
     };
-}
+} // namespace elasty
 
 #endif /* cloth_sim_object_hpp */
