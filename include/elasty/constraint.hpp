@@ -133,6 +133,44 @@ namespace elasty
         }
     };
 
+    class VariableNumConstraint : public Constraint
+    {
+    public:
+        VariableNumConstraint(
+            const std::vector<std::shared_ptr<Particle>>& particles,
+            const double                                  stiffness)
+            : Constraint(particles, stiffness),
+              m_inv_M(constructInverseMassMatrix(m_particles))
+        {
+        }
+
+        virtual double calculateValue()              = 0;
+        virtual void   calculateGrad(double* grad_C) = 0;
+
+    private:
+        const Eigen::VectorXd m_inv_M;
+
+        Eigen::VectorXd calculateGrad()
+        {
+            Eigen::VectorXd grad_C(m_particles.size() * 3);
+            calculateGrad(grad_C.data());
+            return grad_C;
+        }
+
+        static Eigen::VectorXd constructInverseMassMatrix(
+            const std::vector<std::shared_ptr<elasty::Particle>>& particles)
+        {
+            Eigen::VectorXd inv_M(particles.size() * 3);
+            for (unsigned int j = 0; j < particles.size(); ++j)
+            {
+                inv_M(j * 3 + 0) = particles[j]->w;
+                inv_M(j * 3 + 1) = particles[j]->w;
+                inv_M(j * 3 + 2) = particles[j]->w;
+            }
+            return inv_M;
+        }
+    };
+
     class BendingConstraint final : public FixedNumConstraint<4>
     {
     public:
