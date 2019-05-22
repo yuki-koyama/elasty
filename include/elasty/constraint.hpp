@@ -310,6 +310,18 @@ namespace elasty
     private:
         Eigen::Matrix4d m_Q;
     };
+
+    class ShapeMatchingConstraint final : public VariableNumConstraint
+    {
+    public:
+        ShapeMatchingConstraint(
+            const std::vector<std::shared_ptr<Particle>>& particles,
+            const double                                  stiffness);
+
+        double         calculateValue() override;
+        void           calculateGrad(double* grad_C) override;
+        ConstraintType getType() override { return ConstraintType::Bilateral; }
+    };
 } // namespace elasty
 
 #endif /* constraint_hpp */

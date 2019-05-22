@@ -401,3 +401,13 @@ void elasty::IsometricBendingConstraint::calculateGrad(double* grad_C)
         std::memcpy(grad_C + (3 * i), sum.data(), sizeof(double) * 3);
     }
 }
+
+double elasty::ShapeMatchingConstraint::calculateValue()
+{
+    // TODO
+}
+
+void elasty::ShapeMatchingConstraint::calculateGrad(double* grad_C)
+{
+    // TODO
+}
