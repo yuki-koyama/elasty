@@ -147,6 +147,41 @@ namespace elasty
         virtual double calculateValue()              = 0;
         virtual void   calculateGrad(double* grad_C) = 0;
 
+        void projectParticles() final
+        {
+            // Calculate the constraint function value
+            const double C = calculateValue();
+
+            // Skip if it is a unilateral constraint and is satisfied
+            if (getType() == ConstraintType::Unilateral && C >= 0.0)
+            {
+                return;
+            }
+
+            // Calculate the derivative of the constraint function
+            const Eigen::VectorXd grad_C = calculateGrad();
+
+            // Skip if the gradient is sufficiently small
+            if (grad_C.isApprox(Eigen::VectorXd::Zero(grad_C.size())))
+            {
+                return;
+            }
+
+            // Calculate s
+            const double s =
+                C / (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C);
+
+            // Calculate \Delta x
+            const Eigen::VectorXd delta_x = -s * m_inv_M.asDiagonal() * grad_C;
+            assert(!delta_x.hasNaN());
+
+            // Update predicted positions
+            for (unsigned int j = 0; j < m_particles.size(); ++j)
+            {
+                m_particles[j]->p += m_stiffness * delta_x.segment(3 * j, 3);
+            }
+        }
+
     private:
         const Eigen::VectorXd m_inv_M;
 
