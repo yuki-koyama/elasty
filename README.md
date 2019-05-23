@@ -28,7 +28,7 @@ A research-oriented elastic body simulator
 - [x] Fixed point constraint
 - [x] Isometric bending constraint [Bergou+06; Bender+14]
 - [ ] Long range attachments constraint [Kim+12]
-- [ ] Shape matching constraint [Müller+05]
+- [x] Shape matching constraint [Müller+05]
 - [ ] Tetrahedron strain constraint [Müller+14]
 - [ ] Triangle strain constraint [Müller+14]
 - [ ] Volume conservation constraint [Müller+14]
