@@ -147,7 +147,7 @@ namespace elasty
         virtual double calculateValue()              = 0;
         virtual void   calculateGrad(double* grad_C) = 0;
 
-        void projectParticles() final
+        virtual void projectParticles()
         {
             // Calculate the constraint function value
             const double C = calculateValue();
@@ -320,7 +320,12 @@ namespace elasty
 
         double         calculateValue() override;
         void           calculateGrad(double* grad_C) override;
+        void           projectParticles() override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }
+
+    private:
+        double                       m_total_mass;
+        std::vector<Eigen::Vector3d> m_q;
     };
 } // namespace elasty
 
