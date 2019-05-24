@@ -133,6 +133,79 @@ namespace elasty
         }
     };
 
+    class VariableNumConstraint : public Constraint
+    {
+    public:
+        VariableNumConstraint(
+            const std::vector<std::shared_ptr<Particle>>& particles,
+            const double                                  stiffness)
+            : Constraint(particles, stiffness),
+              m_inv_M(constructInverseMassMatrix(m_particles))
+        {
+        }
+
+        virtual double calculateValue()              = 0;
+        virtual void   calculateGrad(double* grad_C) = 0;
+
+        virtual void projectParticles()
+        {
+            // Calculate the constraint function value
+            const double C = calculateValue();
+
+            // Skip if it is a unilateral constraint and is satisfied
+            if (getType() == ConstraintType::Unilateral && C >= 0.0)
+            {
+                return;
+            }
+
+            // Calculate the derivative of the constraint function
+            const Eigen::VectorXd grad_C = calculateGrad();
+
+            // Skip if the gradient is sufficiently small
+            if (grad_C.isApprox(Eigen::VectorXd::Zero(grad_C.size())))
+            {
+                return;
+            }
+
+            // Calculate s
+            const double s =
+                C / (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C);
+
+            // Calculate \Delta x
+            const Eigen::VectorXd delta_x = -s * m_inv_M.asDiagonal() * grad_C;
+            assert(!delta_x.hasNaN());
+
+            // Update predicted positions
+            for (unsigned int j = 0; j < m_particles.size(); ++j)
+            {
+                m_particles[j]->p += m_stiffness * delta_x.segment(3 * j, 3);
+            }
+        }
+
+    private:
+        const Eigen::VectorXd m_inv_M;
+
+        Eigen::VectorXd calculateGrad()
+        {
+            Eigen::VectorXd grad_C(m_particles.size() * 3);
+            calculateGrad(grad_C.data());
+            return grad_C;
+        }
+
+        static Eigen::VectorXd constructInverseMassMatrix(
+            const std::vector<std::shared_ptr<elasty::Particle>>& particles)
+        {
+            Eigen::VectorXd inv_M(particles.size() * 3);
+            for (unsigned int j = 0; j < particles.size(); ++j)
+            {
+                inv_M(j * 3 + 0) = particles[j]->w;
+                inv_M(j * 3 + 1) = particles[j]->w;
+                inv_M(j * 3 + 2) = particles[j]->w;
+            }
+            return inv_M;
+        }
+    };
+
     class BendingConstraint final : public FixedNumConstraint<4>
     {
     public:
@@ -236,6 +309,23 @@ namespace elasty
 
     private:
         Eigen::Matrix4d m_Q;
+    };
+
+    class ShapeMatchingConstraint final : public VariableNumConstraint
+    {
+    public:
+        ShapeMatchingConstraint(
+            const std::vector<std::shared_ptr<Particle>>& particles,
+            const double                                  stiffness);
+
+        double         calculateValue() override;
+        void           calculateGrad(double* grad_C) override;
+        void           projectParticles() override;
+        ConstraintType getType() override { return ConstraintType::Bilateral; }
+
+    private:
+        double                       m_total_mass;
+        std::vector<Eigen::Vector3d> m_q;
     };
 } // namespace elasty
 

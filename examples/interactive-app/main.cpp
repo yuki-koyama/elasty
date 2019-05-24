@@ -33,7 +33,7 @@ public:
     void initializeScene() override
     {
         // Rod
-        constexpr unsigned int num_particles = 20;
+        constexpr unsigned int num_particles = 30;
         constexpr double       total_length  = 2.0;
         constexpr double       segment_length =
             total_length / double(num_particles - 1);
@@ -95,6 +95,34 @@ public:
                         particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
             }
         }
+
+        // Create a solid blob object
+        constexpr double shape_matching_stiffness     = 0.2;
+        constexpr double shape_matching_total_mass    = 5.0;
+        constexpr int    shape_matching_num_particles = 1000;
+
+        std::vector<std::shared_ptr<elasty::Particle>> shape_matching_particles;
+        for (int i = 0; i < shape_matching_num_particles; ++i)
+        {
+            const double          size     = 0.4;
+            const Eigen::Vector3d rand_vec = Eigen::Vector3d::Random();
+            const Eigen::Vector3d offset   = Eigen::Vector3d(0.0, 5.0, -2.0);
+
+            const Eigen::Vector3d x =
+                size * (rand_vec / rand_vec.lpNorm<Eigen::Infinity>()) + offset;
+            const Eigen::Vector3d v = Eigen::Vector3d::Random();
+            const double          m =
+                shape_matching_total_mass / shape_matching_num_particles;
+
+            auto particle = std::make_shared<elasty::Particle>(x, v, m);
+
+            shape_matching_particles.push_back(particle);
+            m_particles.push_back(particle);
+        }
+        auto shape_matching_constaint =
+            std::make_shared<elasty::ShapeMatchingConstraint>(
+                shape_matching_particles, shape_matching_stiffness);
+        m_constraints.push_back(shape_matching_constaint);
     }
 
     void setExternalForces() override
@@ -124,7 +152,7 @@ public:
     {
         for (auto particle : m_particles)
         {
-            particle->v *= 0.999;
+            particle->v *= 0.995;
         }
     }
 

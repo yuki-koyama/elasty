@@ -1,3 +1,4 @@
+#include <Eigen/Eigenvalues>
 #include <Eigen/Geometry>
 #include <algorithm>
 #include <cstring>
@@ -399,5 +400,74 @@ void elasty::IsometricBendingConstraint::calculateGrad(double* grad_C)
             sum += m_Q(i, j) * m_particles[j]->p;
         }
         std::memcpy(grad_C + (3 * i), sum.data(), sizeof(double) * 3);
+    }
+}
+
+elasty::ShapeMatchingConstraint::ShapeMatchingConstraint(
+    const std::vector<std::shared_ptr<Particle>>& particles,
+    const double                                  stiffness)
+    : VariableNumConstraint(particles, stiffness)
+{
+    // Calculate the initial center of mass and the total mass
+    Eigen::Vector3d x_0_cm = Eigen::Vector3d::Zero();
+    m_total_mass           = 0.0;
+    for (int i = 0; i < m_particles.size(); ++i)
+    {
+        m_total_mass += m_particles[i]->m;
+        x_0_cm += m_particles[i]->m * m_particles[i]->p;
+    }
+    x_0_cm /= m_total_mass;
+
+    // Calculate q
+    m_q.resize(m_particles.size());
+    for (int i = 0; i < m_particles.size(); ++i)
+    {
+        m_q[i] = m_particles[i]->x - x_0_cm;
+    }
+}
+
+double elasty::ShapeMatchingConstraint::calculateValue()
+{
+    throw std::runtime_error("ShapeMatchingConstraint does not directly "
+                             "provide its cost value or the gradient.");
+}
+
+void elasty::ShapeMatchingConstraint::calculateGrad(double* grad_C)
+{
+    throw std::runtime_error("ShapeMatchingConstraint does not directly "
+                             "provide its cost value or the gradient.");
+}
+
+void elasty::ShapeMatchingConstraint::projectParticles()
+{
+    // Calculate the current center of mass
+    Eigen::Vector3d x_cm = Eigen::Vector3d::Zero();
+    for (int i = 0; i < m_particles.size(); ++i)
+    {
+        x_cm += m_particles[i]->m * m_particles[i]->p;
+    }
+    x_cm /= m_total_mass;
+
+    // Calculate A_pq
+    Eigen::Matrix3d A_pq = Eigen::Matrix3d::Zero();
+    for (int i = 0; i < m_particles.size(); ++i)
+    {
+        A_pq +=
+            m_particles[i]->m * (m_particles[i]->p - x_cm) * m_q[i].transpose();
+    }
+
+    // Calculate the rotation matrix
+    const Eigen::Matrix3d ATA = A_pq.transpose() * A_pq;
+    const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigen_solver(ATA);
+    const Eigen::Matrix3d S_inv = eigen_solver.operatorInverseSqrt();
+    const Eigen::Matrix3d R     = A_pq * S_inv;
+    assert(R.determinant() > 0);
+
+    // Calculate the goal position and move the particles
+    for (int i = 0; i < m_particles.size(); ++i)
+    {
+        const Eigen::Vector3d g = R * m_q[i] + x_cm;
+        m_particles[i]->p =
+            m_stiffness * g + (1.0 - m_stiffness) * m_particles[i]->p;
     }
 }
