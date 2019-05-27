@@ -34,13 +34,15 @@ void elasty::generateFixedPointConstraints(
     const std::vector<std::shared_ptr<Particle>>& particles,
     std::vector<std::shared_ptr<Constraint>>&     constraints)
 {
+    constexpr double dummy_dt = 1.0 / 60.0;
+
     for (const auto& particle : particles)
     {
         if (particle->x.isApprox(search_position))
         {
             constraints.push_back(
                 std::make_shared<elasty::FixedPointConstraint>(
-                    particle, 1.0, fixed_position));
+                    particle, 1.0, 0.0, dummy_dt, fixed_position));
         }
     }
 }

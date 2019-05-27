@@ -32,8 +32,11 @@ namespace elasty
 
         ClothSimObject(
             const std::string&       obj_path,
-            const double             in_plane_stiffness     = 0.90,
-            const double             out_of_plane_stiffness = 0.50,
+            const double             in_plane_stiffness      = 1.000, ///< PBD
+            const double             in_plane_compliance     = 0.001, ///< XPBD
+            const double             out_of_plane_stiffness  = 0.100, ///< PBD
+            const double             out_of_plane_compliance = 0.010, ///< XPBD
+            const double             dt        = 1.0 / 60.0,          ///< XPBD
             const Eigen::Affine3d&   transform = Eigen::Affine3d::Identity(),
             const InPlaneStrategy    in_plane_strategy = InPlaneStrategy::Both,
             const OutOfPlaneStrategy out_of_plane_strategy =
