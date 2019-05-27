@@ -14,12 +14,19 @@ namespace elasty
         Unilateral
     };
 
+    enum class AlgorithmType
+    {
+        Pbd,
+        Xpbd
+    };
+
     class Constraint
     {
     public:
         Constraint(const std::vector<std::shared_ptr<Particle>>& particles,
-                   const double                                  stiffness)
-            : m_stiffness(stiffness), m_particles(particles)
+                   const double stiffness_or_compliance)
+            : m_stiffness(stiffness_or_compliance),
+              m_compliance(stiffness_or_compliance), m_particles(particles)
         {
         }
 
@@ -40,7 +47,8 @@ namespace elasty
         /// \details This method should be called by the core engine. As this
         /// method directly updates the predicted positions of the associated
         /// particles, it is intended to be used in a Gauss-Seidel-style solver.
-        virtual void projectParticles() = 0;
+        virtual void
+        projectParticles(const AlgorithmType type = AlgorithmType::Pbd) = 0;
 
         /// \brief Return the constraint type (i.e., either unilateral or
         /// bilateral).
@@ -83,7 +91,8 @@ namespace elasty
         virtual double calculateValue()              = 0;
         virtual void   calculateGrad(double* grad_C) = 0;
 
-        void projectParticles() final
+        void
+        projectParticles(const AlgorithmType type = AlgorithmType::Pbd) final
         {
             // Calculate the constraint function value
             const double C = calculateValue();
@@ -157,7 +166,8 @@ namespace elasty
         virtual double calculateValue()              = 0;
         virtual void   calculateGrad(double* grad_C) = 0;
 
-        virtual void projectParticles()
+        virtual void
+        projectParticles(const AlgorithmType type = AlgorithmType::Pbd)
         {
             // Calculate the constraint function value
             const double C = calculateValue();
@@ -330,8 +340,14 @@ namespace elasty
 
         double         calculateValue() override;
         void           calculateGrad(double* grad_C) override;
-        void           projectParticles() override;
         ConstraintType getType() override { return ConstraintType::Bilateral; }
+
+        /// \details Unlike other PBD constraints, ShapeMatchingConstraint does
+        /// not offer a closed-form constraint function, but does offer a
+        /// particle projection procedure directly. Thus, this class needs to
+        /// override the particle projection method.
+        void projectParticles(
+            const AlgorithmType type = AlgorithmType::Pbd) override;
 
     private:
         double                       m_total_mass;

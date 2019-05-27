@@ -438,8 +438,11 @@ void elasty::ShapeMatchingConstraint::calculateGrad(double* grad_C)
                              "provide its cost value or the gradient.");
 }
 
-void elasty::ShapeMatchingConstraint::projectParticles()
+void elasty::ShapeMatchingConstraint::projectParticles(const AlgorithmType type)
 {
+    assert(type == AlgorithmType::Pbd &&
+           "ShapeMatching Constraint does not support XPBD.");
+
     // Calculate the current center of mass
     Eigen::Vector3d x_cm = Eigen::Vector3d::Zero();
     for (int i = 0; i < m_particles.size(); ++i)
