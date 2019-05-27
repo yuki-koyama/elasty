@@ -24,9 +24,12 @@ namespace elasty
     {
     public:
         Constraint(const std::vector<std::shared_ptr<Particle>>& particles,
-                   const double stiffness_or_compliance)
-            : m_stiffness(stiffness_or_compliance),
-              m_compliance(stiffness_or_compliance), m_particles(particles)
+                   const double stiffness,  ///< for PBD
+                   const double compliance, ///< for XPBD
+                   const double dt          ///< for XPBD
+                   )
+            : m_stiffness(stiffness), m_lagrange_multiplier(0.0),
+              m_compliance(compliance), m_dt(dt), m_particles(particles)
         {
         }
 
@@ -67,6 +70,9 @@ namespace elasty
         /// collision constraints).
         double m_compliance;
 
+        /// \brief Time step, used in XPBD only.
+        double m_dt;
+
     protected:
         /// \brief Associated particles.
         /// \details The number of particles is (in most cases) solely
@@ -82,8 +88,11 @@ namespace elasty
     public:
         FixedNumConstraint(
             const std::vector<std::shared_ptr<Particle>>& particles,
-            const double                                  stiffness)
-            : Constraint(particles, stiffness),
+            const double stiffness,  ///< for PBD
+            const double compliance, ///< for XPBD
+            const double dt          ///< for XPBD
+            )
+            : Constraint(particles, stiffness, compliance, dt),
               m_inv_M(constructInverseMassMatrix(m_particles))
         {
         }
@@ -112,19 +121,54 @@ namespace elasty
                 return;
             }
 
-            // Calculate s
-            const double s =
-                C / (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C);
-
-            // Calculate \Delta x
-            const Eigen::Matrix<double, Num * 3, 1> delta_x =
-                -s * m_inv_M.asDiagonal() * grad_C;
-            assert(!delta_x.hasNaN());
-
-            // Update predicted positions
-            for (unsigned int j = 0; j < Num; ++j)
+            switch (type)
             {
-                m_particles[j]->p += m_stiffness * delta_x.segment(3 * j, 3);
+            case AlgorithmType::Pbd:
+            {
+                // Calculate s
+                const double s =
+                    -C / (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C);
+
+                // Calculate \Delta x
+                const Eigen::Matrix<double, Num * 3, 1> delta_x =
+                    m_stiffness * s * m_inv_M.asDiagonal() * grad_C;
+                assert(!delta_x.hasNaN());
+
+                // Update predicted positions
+                for (unsigned int j = 0; j < Num; ++j)
+                {
+                    m_particles[j]->p += delta_x.segment(3 * j, 3);
+                }
+
+                break;
+            }
+            case AlgorithmType::Xpbd:
+            {
+                // Calculate time-scaled compliance
+                const double alpha_tilde = m_compliance / (m_dt * m_dt);
+
+                // Calculate \Delta lagrange multiplier
+                const double delta_lagrange_multiplier =
+                    (-C - alpha_tilde * m_lagrange_multiplier) /
+                    (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C +
+                     alpha_tilde);
+
+                // Calculate \Delta x
+                const Eigen::Matrix<double, Num * 3, 1> delta_x =
+                    delta_lagrange_multiplier * m_inv_M.asDiagonal() * grad_C;
+                assert(!delta_x.hasNaN());
+
+                // Update predicted positions
+                for (unsigned int j = 0; j < Num; ++j)
+                {
+                    m_particles[j]->p += delta_x.segment(3 * j, 3);
+                }
+
+                // Update the lagrange multiplier
+                m_lagrange_multiplier += delta_lagrange_multiplier;
+
+                break;
+            }
             }
         }
 
@@ -157,8 +201,11 @@ namespace elasty
     public:
         VariableNumConstraint(
             const std::vector<std::shared_ptr<Particle>>& particles,
-            const double                                  stiffness)
-            : Constraint(particles, stiffness),
+            const double stiffness,  ///< for PBD
+            const double compliance, ///< for XPBD
+            const double dt          ///< for XPBD
+            )
+            : Constraint(particles, stiffness, compliance, dt),
               m_inv_M(constructInverseMassMatrix(m_particles))
         {
         }
@@ -187,18 +234,54 @@ namespace elasty
                 return;
             }
 
-            // Calculate s
-            const double s =
-                C / (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C);
-
-            // Calculate \Delta x
-            const Eigen::VectorXd delta_x = -s * m_inv_M.asDiagonal() * grad_C;
-            assert(!delta_x.hasNaN());
-
-            // Update predicted positions
-            for (unsigned int j = 0; j < m_particles.size(); ++j)
+            switch (type)
             {
-                m_particles[j]->p += m_stiffness * delta_x.segment(3 * j, 3);
+            case AlgorithmType::Pbd:
+            {
+                // Calculate s
+                const double s =
+                    -C / (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C);
+
+                // Calculate \Delta x
+                const Eigen::VectorXd delta_x =
+                    m_stiffness * s * m_inv_M.asDiagonal() * grad_C;
+                assert(!delta_x.hasNaN());
+
+                // Update predicted positions
+                for (unsigned int j = 0; j < m_particles.size(); ++j)
+                {
+                    m_particles[j]->p += delta_x.segment(3 * j, 3);
+                }
+
+                break;
+            }
+            case AlgorithmType::Xpbd:
+            {
+                // Calculate time-scaled compliance
+                const double alpha_tilde = m_compliance / (m_dt * m_dt);
+
+                // Calculate \Delta lagrange multiplier
+                const double delta_lagrange_multiplier =
+                    (-C - alpha_tilde * m_lagrange_multiplier) /
+                    (grad_C.transpose() * m_inv_M.asDiagonal() * grad_C +
+                     alpha_tilde);
+
+                // Calculate \Delta x
+                const Eigen::VectorXd delta_x =
+                    delta_lagrange_multiplier * m_inv_M.asDiagonal() * grad_C;
+                assert(!delta_x.hasNaN());
+
+                // Update predicted positions
+                for (unsigned int j = 0; j < m_particles.size(); ++j)
+                {
+                    m_particles[j]->p += delta_x.segment(3 * j, 3);
+                }
+
+                // Update the lagrange multiplier
+                m_lagrange_multiplier += delta_lagrange_multiplier;
+
+                break;
+            }
             }
         }
 
@@ -233,8 +316,10 @@ namespace elasty
                           const std::shared_ptr<Particle> p_1,
                           const std::shared_ptr<Particle> p_2,
                           const std::shared_ptr<Particle> p_3,
-                          const double                    stiffness,
-                          const double                    dihedral_angle);
+                          const double stiffness,  ///< for PBD
+                          const double compliance, ///< for XPBD
+                          const double dt,         ///< for XPBD
+                          const double dihedral_angle);
 
         double         calculateValue() override;
         void           calculateGrad(double* grad_C) override;
@@ -250,7 +335,9 @@ namespace elasty
         ContinuumTriangleConstraint(const std::shared_ptr<Particle> p_0,
                                     const std::shared_ptr<Particle> p_1,
                                     const std::shared_ptr<Particle> p_2,
-                                    const double                    stiffness,
+                                    const double stiffness,  ///< for PBD
+                                    const double compliance, ///< for XPBD
+                                    const double dt,         ///< for XPBD
                                     const double youngs_modulus,
                                     const double poisson_ratio);
 
@@ -271,8 +358,10 @@ namespace elasty
     public:
         DistanceConstraint(const std::shared_ptr<Particle> p_0,
                            const std::shared_ptr<Particle> p_1,
-                           const double                    stiffness,
-                           const double                    d);
+                           const double stiffness,  ///< for PBD
+                           const double compliance, ///< for XPBD
+                           const double dt,         ///< for XPBD
+                           const double d);
 
         double         calculateValue() override;
         void           calculateGrad(double* grad_C) override;
@@ -286,7 +375,9 @@ namespace elasty
     {
     public:
         EnvironmentalCollisionConstraint(const std::shared_ptr<Particle> p_0,
-                                         const double           stiffness,
+                                         const double stiffness,  ///< for PBD
+                                         const double compliance, ///< for XPBD
+                                         const double dt,         ///< for XPBD
                                          const Eigen::Vector3d& n,
                                          const double           d);
 
@@ -303,8 +394,10 @@ namespace elasty
     {
     public:
         FixedPointConstraint(const std::shared_ptr<Particle> p_0,
-                             const double                    stiffness,
-                             const Eigen::Vector3d&          point);
+                             const double           stiffness,  ///< for PBD
+                             const double           compliance, ///< for XPBD
+                             const double           dt,         ///< for XPBD
+                             const Eigen::Vector3d& point);
 
         double         calculateValue() override;
         void           calculateGrad(double* grad_C) override;
@@ -321,7 +414,10 @@ namespace elasty
                                    const std::shared_ptr<Particle> p_1,
                                    const std::shared_ptr<Particle> p_2,
                                    const std::shared_ptr<Particle> p_3,
-                                   const double                    stiffness);
+                                   const double stiffness,  ///< for PBD
+                                   const double compliance, ///< for XPBD
+                                   const double dt          ///< for XPBD
+        );
 
         double         calculateValue() override;
         void           calculateGrad(double* grad_C) override;
@@ -336,7 +432,10 @@ namespace elasty
     public:
         ShapeMatchingConstraint(
             const std::vector<std::shared_ptr<Particle>>& particles,
-            const double                                  stiffness);
+            const double stiffness,  ///< for PBD
+            const double compliance, ///< for XPBD
+            const double dt          ///< for XPBD
+        );
 
         double         calculateValue() override;
         void           calculateGrad(double* grad_C) override;
