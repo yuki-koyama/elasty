@@ -10,12 +10,14 @@ class SimpleEngine final : public elasty::Engine
 public:
     void initializeScene() override
     {
-        m_num_iterations = 40;
+        m_num_iterations = 50;
 
         // Instantiate a cloth object
-        const double      cloth_in_plane_stiffness     = 0.95;
-        const double      cloth_out_of_plane_stiffness = 0.03;
-        const std::string cloth_obj_path = "./models/cloths/0.20.obj";
+        constexpr double  cloth_in_plane_stiffness      = 1.00;
+        constexpr double  cloth_out_of_plane_stiffness  = 0.10;
+        constexpr double  cloth_in_plane_compliance     = 0.10;
+        constexpr double  cloth_out_of_plane_compliance = 1.00;
+        const std::string cloth_obj_path = "./models/cloths/0.05.obj";
 #if 0 // Drape
         const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(0.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * elasty::pi(), Eigen::Vector3d::UnitX());
 #else // Fall
@@ -25,10 +27,13 @@ public:
         m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(
             cloth_obj_path,
             cloth_in_plane_stiffness,
+            cloth_in_plane_compliance,
             cloth_out_of_plane_stiffness,
+            cloth_out_of_plane_compliance,
+            m_dt,
             cloth_import_transform,
             elasty::ClothSimObject::InPlaneStrategy::Both,
-            elasty::ClothSimObject::OutOfPlaneStrategy::IsometricBending);
+            elasty::ClothSimObject::OutOfPlaneStrategy::Bending);
 
         // Register the cloth object
         std::copy(m_cloth_sim_object->m_particles.begin(),
@@ -47,14 +52,14 @@ public:
             {
                 m_constraints.push_back(
                     std::make_shared<elasty::FixedPointConstraint>(
-                        particle, 1.0, particle->x));
+                        particle, 1.0, 0.0, m_dt, particle->x));
             }
             if ((particle->x - Eigen::Vector3d(-1.0, 2.0, 0.0)).norm() <
                 range_radius)
             {
                 m_constraints.push_back(
                     std::make_shared<elasty::FixedPointConstraint>(
-                        particle, 1.0, particle->x));
+                        particle, 1.0, 0.0, m_dt, particle->x));
             }
         }
     }
@@ -71,20 +76,28 @@ public:
 
     void generateCollisionConstraints() override
     {
-#if 0
+#if 1
         // Collision with a sphere
-        const Eigen::Vector3d center(0.0, 1.0, - 0.3);
-        constexpr double tolerance = 0.05;
-        constexpr double radius = 0.60 + tolerance;
-        constexpr double stiffness = 0.20;
+        const Eigen::Vector3d center(0.0, 1.0, 0.0);
+        constexpr double      tolerance  = 0.05;
+        constexpr double      radius     = 0.50 + 0.02;
+        constexpr double      stiffness  = 1.00;
+        constexpr double      compliance = 0.00;
         for (auto particle : m_particles)
         {
             const Eigen::Vector3d direction = particle->x - center;
-            if (direction.norm() < radius)
+            if (direction.norm() < radius + tolerance)
             {
                 const Eigen::Vector3d normal = direction.normalized();
                 const double distance = center.transpose() * normal + radius;
-                m_instant_constraints.push_back(std::make_shared<elasty::EnvironmentalCollisionConstraint>(particle, stiffness, normal, distance));
+                m_instant_constraints.push_back(
+                    std::make_shared<elasty::EnvironmentalCollisionConstraint>(
+                        particle,
+                        stiffness,
+                        compliance,
+                        m_dt,
+                        normal,
+                        distance));
             }
         }
 #endif
