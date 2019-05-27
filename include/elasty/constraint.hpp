@@ -47,7 +47,17 @@ namespace elasty
         virtual ConstraintType getType() = 0;
 
         /// \brief Stiffness of this constraint, which should be in [0, 1].
+        /// \details This value will not be used in XPBD; instead, the
+        /// compliance value will be used.
         double m_stiffness;
+
+        /// \brief Lagrange multipler for this constraint, used in XPBD only.
+        double m_lagrange_multiplier;
+
+        /// \brief Compliance (inverse stiffness), used in XPBD only.
+        /// \details Should be set to zero if the constraint is hard (e.g.,
+        /// collision constraints).
+        double m_compliance;
 
     protected:
         /// \brief Associated particles.
