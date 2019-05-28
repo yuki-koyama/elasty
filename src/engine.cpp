@@ -20,7 +20,7 @@ void elasty::Engine::stepTime()
     // Generate collision constraints
     generateCollisionConstraints();
 
-    // Reset lagrange multipliers (only for XPBD)
+    // Reset Lagrange multipliers (only for XPBD)
     for (auto constraint : m_constraints)
     {
         constraint->m_lagrange_multiplier = 0.0;
@@ -36,7 +36,7 @@ void elasty::Engine::stepTime()
 
         for (auto constraint : m_instant_constraints)
         {
-            //            constraint->projectParticles(AlgorithmType::Xpbd);
+            constraint->projectParticles(AlgorithmType::Xpbd);
         }
     }
 
