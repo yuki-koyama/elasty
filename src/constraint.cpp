@@ -23,9 +23,9 @@ namespace
     inline double calculateCotTheta(const Eigen::Vector3d& x,
                                     const Eigen::Vector3d& y)
     {
-        const double cos_theta = x.dot(y);
-        const double sin_theta = x.cross(y).norm();
-        return cos_theta / sin_theta;
+        const double scaled_cos_theta = x.dot(y);
+        const double scaled_sin_theta = x.cross(y).norm();
+        return scaled_cos_theta / scaled_sin_theta;
     }
 } // namespace
 
