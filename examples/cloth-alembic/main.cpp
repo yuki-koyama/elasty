@@ -5,6 +5,8 @@
 #include <elasty/utils.hpp>
 #include <timer.hpp>
 
+// #define SPHERE_COLLISION
+
 class SimpleEngine final : public elasty::Engine
 {
 public:
@@ -84,7 +86,7 @@ public:
 
     void generateCollisionConstraints() override
     {
-#if 1
+#if defined(SPHERE_COLLISION)
         // Collision with a sphere
         const Eigen::Vector3d center(0.0, 1.0, 0.0);
         constexpr double      tolerance  = 0.05;
