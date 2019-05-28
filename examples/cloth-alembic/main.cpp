@@ -13,13 +13,15 @@ public:
         m_num_iterations = 50;
 
         // Instantiate a cloth object
-        constexpr double  cloth_in_plane_stiffness      = 1.00;
-        constexpr double  cloth_out_of_plane_stiffness  = 0.10;
-        constexpr double  cloth_in_plane_compliance     = 0.10;
-        constexpr double  cloth_out_of_plane_compliance = 1.00;
-        const std::string cloth_obj_path = "./models/cloths/0.05.obj";
+        constexpr double  cloth_in_plane_stiffness      = 1.000; ///< PBD
+        constexpr double  cloth_out_of_plane_stiffness  = 0.100; ///< PBD
+        constexpr double  cloth_in_plane_compliance     = 1.000; ///< XPBD
+        constexpr double  cloth_out_of_plane_compliance = 10.00; ///< XPBD
+        const std::string cloth_obj_path = "./models/cloths/0.10.obj";
 #if 0 // Drape
-        const Eigen::Affine3d cloth_import_transform = Eigen::Translation3d(0.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * elasty::pi(), Eigen::Vector3d::UnitX());
+        const Eigen::Affine3d cloth_import_transform =
+            Eigen::Translation3d(0.0, 1.0, 0.0) *
+            Eigen::AngleAxisd(0.5 * elasty::pi(), Eigen::Vector3d::UnitX());
 #else // Fall
         const Eigen::Affine3d cloth_import_transform =
             Eigen::Affine3d(Eigen::Translation3d(0.0, 2.0, 1.0));
@@ -32,7 +34,7 @@ public:
             cloth_out_of_plane_compliance,
             m_dt,
             cloth_import_transform,
-            elasty::ClothSimObject::InPlaneStrategy::Both,
+            elasty::ClothSimObject::InPlaneStrategy::ContinuumTriangle,
             elasty::ClothSimObject::OutOfPlaneStrategy::Bending);
 
         // Register the cloth object
@@ -42,6 +44,12 @@ public:
         std::copy(m_cloth_sim_object->m_constraints.begin(),
                   m_cloth_sim_object->m_constraints.end(),
                   std::back_inserter(m_constraints));
+
+        // Add small perturb
+        for (const auto& particle : m_particles)
+        {
+            particle->v = 1e-03 * Eigen::Vector3d::Random();
+        }
 
         // Pin two of the corners of the cloth
         constexpr double range_radius = 0.1;
