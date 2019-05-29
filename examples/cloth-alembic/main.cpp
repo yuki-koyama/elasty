@@ -16,19 +16,26 @@ public:
         m_num_iterations = 50;
 
         // Instantiate a cloth object
+        constexpr bool    cloth_falling_setting         = true;
         constexpr double  cloth_in_plane_stiffness      = 1.000; ///< PBD
         constexpr double  cloth_out_of_plane_stiffness  = 0.100; ///< PBD
         constexpr double  cloth_in_plane_compliance     = 1.000; ///< XPBD
         constexpr double  cloth_out_of_plane_compliance = 10.00; ///< XPBD
         const std::string cloth_obj_path = "./models/cloths/0.10.obj";
-#if 0 // Drape
-        const Eigen::Affine3d cloth_import_transform =
-            Eigen::Translation3d(0.0, 1.0, 0.0) *
-            Eigen::AngleAxisd(0.5 * elasty::pi(), Eigen::Vector3d::UnitX());
-#else // Fall
-        const Eigen::Affine3d cloth_import_transform =
-            Eigen::Affine3d(Eigen::Translation3d(0.0, 2.0, 1.0));
-#endif
+
+        const Eigen::Affine3d cloth_import_transform = []() {
+            if constexpr (cloth_falling_setting)
+            {
+                return Eigen::Affine3d(Eigen::Translation3d(0.0, 2.0, 1.0));
+            }
+            else
+            {
+                return Eigen::Translation3d(0.0, 1.0, 0.0) *
+                       Eigen::AngleAxisd(0.5 * elasty::pi(),
+                                         Eigen::Vector3d::UnitX());
+            }
+        }();
+
         m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(
             cloth_obj_path,
             cloth_in_plane_stiffness,
@@ -145,6 +152,7 @@ public:
 
     int m_count = 0;
 };
+
 int main(int argc, char** argv)
 {
     SimpleEngine engine;
