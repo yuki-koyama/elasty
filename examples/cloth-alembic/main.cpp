@@ -6,6 +6,7 @@
 #include <timer.hpp>
 
 // #define SPHERE_COLLISION
+#define MOVING_SPHERE_COLLISION
 
 class SimpleEngine final : public elasty::Engine
 {
@@ -110,14 +111,40 @@ public:
                         distance));
             }
         }
+#elif defined(MOVING_SPHERE_COLLISION)
+        // Collision with a moving sphere
+        const Eigen::Vector3d center(
+            0.0, 1.0, std::max(0.0, (double(m_count) - 100.0) * 0.01));
+        constexpr double tolerance  = 0.05;
+        constexpr double radius     = 0.50 + 0.02;
+        constexpr double stiffness  = 1.00;
+        constexpr double compliance = 0.00;
+        for (auto particle : m_particles)
+        {
+            const Eigen::Vector3d direction = particle->x - center;
+            if (direction.norm() < radius + tolerance)
+            {
+                const Eigen::Vector3d normal = direction.normalized();
+                const double distance = center.transpose() * normal + radius;
+                m_instant_constraints.push_back(
+                    std::make_shared<elasty::EnvironmentalCollisionConstraint>(
+                        particle,
+                        stiffness,
+                        compliance,
+                        m_dt,
+                        normal,
+                        distance));
+            }
+        }
 #endif
     }
 
     void updateVelocities() override {}
 
     std::shared_ptr<elasty::ClothSimObject> m_cloth_sim_object;
-};
 
+    int m_count = 0;
+};
 int main(int argc, char** argv)
 {
     SimpleEngine engine;
@@ -130,6 +157,8 @@ int main(int argc, char** argv)
     {
         timer::Timer t(std::to_string(frame));
         elasty::submitCurrentStatus(alembic_manager);
+
+        engine.m_count = frame;
         engine.stepTime();
     }
 
