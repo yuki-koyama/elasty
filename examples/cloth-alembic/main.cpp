@@ -18,8 +18,8 @@ public:
         // Instantiate a cloth object
         constexpr bool    cloth_falling_setting         = true;
         constexpr double  cloth_in_plane_stiffness      = 1.000; ///< PBD
-        constexpr double  cloth_out_of_plane_stiffness  = 0.100; ///< PBD
         constexpr double  cloth_in_plane_compliance     = 1.000; ///< XPBD
+        constexpr double  cloth_out_of_plane_stiffness  = 0.100; ///< PBD
         constexpr double  cloth_out_of_plane_compliance = 10.00; ///< XPBD
         const std::string cloth_obj_path = "./models/cloths/0.10.obj";
 
