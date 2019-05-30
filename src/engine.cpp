@@ -31,12 +31,12 @@ void elasty::Engine::stepTime()
     {
         for (auto constraint : m_constraints)
         {
-            constraint->projectParticles(AlgorithmType::Xpbd);
+            constraint->projectParticles(AlgorithmType::Pbd);
         }
 
         for (auto constraint : m_instant_constraints)
         {
-            constraint->projectParticles(AlgorithmType::Xpbd);
+            constraint->projectParticles(AlgorithmType::Pbd);
         }
     }
 
