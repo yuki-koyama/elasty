@@ -8,6 +8,8 @@
 // #define SPHERE_COLLISION
 #define MOVING_SPHERE_COLLISION
 
+#define CLOTH_FALL
+
 class SimpleEngine final : public elasty::Engine
 {
 public:
@@ -23,18 +25,13 @@ public:
         constexpr double  cloth_out_of_plane_compliance = 10.00; ///< XPBD
         const std::string cloth_obj_path = "./models/cloths/0.10.obj";
 
-        const Eigen::Affine3d cloth_import_transform = []() {
-            if constexpr (cloth_falling_setting)
-            {
-                return Eigen::Affine3d(Eigen::Translation3d(0.0, 2.0, 1.0));
-            }
-            else
-            {
-                return Eigen::Translation3d(0.0, 1.0, 0.0) *
-                       Eigen::AngleAxisd(0.5 * elasty::pi(),
-                                         Eigen::Vector3d::UnitX());
-            }
-        }();
+        const Eigen::Affine3d cloth_import_transform =
+#if defined(CLOTH_FALL)
+            Eigen::Affine3d(Eigen::Translation3d(0.0, 2.0, 1.0));
+#else
+            Eigen::Translation3d(0.0, 1.0, 0.0) *
+            Eigen::AngleAxisd(0.5 * elasty::pi(), Eigen::Vector3d::UnitX());
+#endif
 
         m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(
             cloth_obj_path,
