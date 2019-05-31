@@ -54,7 +54,7 @@ public:
             if (last_particle != nullptr)
             {
                 addConstraint(std::make_shared<elasty::DistanceConstraint>(
-                    last_particle, particle, 0.5, segment_length));
+                    last_particle, particle, 0.5, 0.0, m_dt, segment_length));
             }
 
             last_particle = particle;
@@ -62,7 +62,7 @@ public:
 
         // Pin the tip of the rod
         addConstraint(std::make_shared<elasty::FixedPointConstraint>(
-            last_particle, 1.0, last_particle->x));
+            last_particle, 1.0, 0.0, m_dt, last_particle->x));
 
         // Register the cloth object
         std::copy(m_cloth_sim_object->m_particles.begin(),
@@ -83,6 +83,8 @@ public:
                     std::make_shared<elasty::FixedPointConstraint>(
                         particle,
                         1.0,
+                        0.0,
+                        m_dt,
                         particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
             }
             if ((particle->x - Eigen::Vector3d(-1.0 + 1.0, 2.0, 0.0)).norm() <
@@ -92,6 +94,8 @@ public:
                     std::make_shared<elasty::FixedPointConstraint>(
                         particle,
                         1.0,
+                        0.0,
+                        m_dt,
                         particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
             }
         }
@@ -121,7 +125,7 @@ public:
         }
         auto shape_matching_constaint =
             std::make_shared<elasty::ShapeMatchingConstraint>(
-                shape_matching_particles, shape_matching_stiffness);
+                shape_matching_particles, shape_matching_stiffness, 0.0, m_dt);
         m_constraints.push_back(shape_matching_constaint);
     }
 
@@ -143,7 +147,12 @@ public:
             {
                 addInstantConstraint(
                     std::make_shared<elasty::EnvironmentalCollisionConstraint>(
-                        particle, 1.0, Eigen::Vector3d(0.0, 1.0, 0.0), 0.0));
+                        particle,
+                        1.0,
+                        0.0,
+                        m_dt,
+                        Eigen::Vector3d(0.0, 1.0, 0.0),
+                        0.0));
             }
         }
     }
@@ -175,8 +184,10 @@ public:
     bool m_capture_screen;
 
 private:
-    const double          m_cloth_in_plane_stiffness     = 0.95;
-    const double          m_cloth_out_of_plane_stiffness = 0.05;
+    const double          m_cloth_in_plane_stiffness      = 0.95;
+    const double          m_cloth_in_plane_compliance     = 1.00;
+    const double          m_cloth_out_of_plane_stiffness  = 0.05;
+    const double          m_cloth_out_of_plane_compliance = 10.0;
     const std::string     m_cloth_obj_path = "./models/cloths/0.10.obj";
     const Eigen::Affine3d m_cloth_import_transform =
         Eigen::Translation3d(1.0, 1.0, 0.0) *
@@ -399,12 +410,15 @@ void SimpleApp::initialize(int argc, char** argv)
     m_sphere_primitive = std::make_shared<bigger::SpherePrimitive>();
     m_plane_primitive  = std::make_shared<bigger::PlanePrimitive>();
 
-    m_engine = std::make_unique<SimpleEngine>();
-    m_engine->m_cloth_sim_object =
-        std::make_shared<elasty::ClothSimObject>(m_cloth_obj_path,
-                                                 m_cloth_in_plane_stiffness,
-                                                 m_cloth_out_of_plane_stiffness,
-                                                 m_cloth_import_transform);
+    m_engine                     = std::make_unique<SimpleEngine>();
+    m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(
+        m_cloth_obj_path,
+        m_cloth_in_plane_stiffness,
+        m_cloth_in_plane_compliance,
+        m_cloth_out_of_plane_stiffness,
+        m_cloth_out_of_plane_compliance,
+        m_engine->m_dt,
+        m_cloth_import_transform);
     m_engine->initializeScene();
 
     addSceneObject(std::make_shared<ParticlesObject>(
@@ -456,7 +470,10 @@ void SimpleApp::updateApp()
                 std::make_shared<elasty::ClothSimObject>(
                     m_cloth_obj_path,
                     m_cloth_in_plane_stiffness,
+                    m_cloth_in_plane_compliance,
                     m_cloth_out_of_plane_stiffness,
+                    m_cloth_out_of_plane_compliance,
+                    m_engine->m_dt,
                     m_cloth_import_transform);
             m_engine->initializeScene();
 

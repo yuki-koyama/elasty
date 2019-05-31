@@ -8,7 +8,10 @@
 elasty::ClothSimObject::ClothSimObject(
     const std::string&       obj_path,
     const double             in_plane_stiffness,
+    const double             in_plane_compliance,
     const double             out_of_plane_stiffness,
+    const double             out_of_plane_compliance,
+    const double             dt,
     const Eigen::Affine3d&   transform,
     const InPlaneStrategy    in_plane_strategy,
     const OutOfPlaneStrategy out_of_plane_strategy)
@@ -116,13 +119,28 @@ elasty::ClothSimObject::ClothSimObject(
         {
             m_constraints.push_back(
                 std::make_shared<elasty::DistanceConstraint>(
-                    p_0, p_1, in_plane_stiffness, (p_0->x - p_1->x).norm()));
+                    p_0,
+                    p_1,
+                    in_plane_stiffness,
+                    in_plane_compliance,
+                    dt,
+                    (p_0->x - p_1->x).norm()));
             m_constraints.push_back(
                 std::make_shared<elasty::DistanceConstraint>(
-                    p_0, p_2, in_plane_stiffness, (p_0->x - p_2->x).norm()));
+                    p_0,
+                    p_2,
+                    in_plane_stiffness,
+                    in_plane_compliance,
+                    dt,
+                    (p_0->x - p_2->x).norm()));
             m_constraints.push_back(
                 std::make_shared<elasty::DistanceConstraint>(
-                    p_1, p_2, in_plane_stiffness, (p_1->x - p_2->x).norm()));
+                    p_1,
+                    p_2,
+                    in_plane_stiffness,
+                    in_plane_compliance,
+                    dt,
+                    (p_1->x - p_2->x).norm()));
         }
 
         if (in_plane_strategy == InPlaneStrategy::ContinuumTriangle ||
@@ -130,7 +148,14 @@ elasty::ClothSimObject::ClothSimObject(
         {
             m_constraints.push_back(
                 std::make_shared<elasty::ContinuumTriangleConstraint>(
-                    p_0, p_1, p_2, in_plane_stiffness, 1000.0, 0.10));
+                    p_0,
+                    p_1,
+                    p_2,
+                    in_plane_stiffness,
+                    in_plane_compliance,
+                    dt,
+                    1000.0,
+                    0.10));
         }
     }
 
@@ -242,7 +267,14 @@ elasty::ClothSimObject::ClothSimObject(
             assert(!std::isnan(dihedral_angle));
 
             m_constraints.push_back(std::make_shared<elasty::BendingConstraint>(
-                p_0, p_1, p_2, p_3, out_of_plane_stiffness, dihedral_angle));
+                p_0,
+                p_1,
+                p_2,
+                p_3,
+                out_of_plane_stiffness,
+                out_of_plane_compliance,
+                dt,
+                dihedral_angle));
 
             break;
         }
@@ -257,7 +289,13 @@ elasty::ClothSimObject::ClothSimObject(
 
             m_constraints.push_back(
                 std::make_shared<elasty::IsometricBendingConstraint>(
-                    p_0, p_1, p_2, p_3, out_of_plane_stiffness));
+                    p_0,
+                    p_1,
+                    p_2,
+                    p_3,
+                    out_of_plane_stiffness,
+                    out_of_plane_compliance,
+                    dt));
 
             break;
         }
@@ -273,7 +311,12 @@ elasty::ClothSimObject::ClothSimObject(
 
             m_constraints.push_back(
                 std::make_shared<elasty::DistanceConstraint>(
-                    p_2, p_3, out_of_plane_stiffness, (x_2 - x_3).norm()));
+                    p_2,
+                    p_3,
+                    out_of_plane_stiffness,
+                    out_of_plane_compliance,
+                    dt,
+                    (x_2 - x_3).norm()));
 
             break;
         }
