@@ -98,10 +98,10 @@ Issue reports and pull requests are highly welcomed.
 - __[Bender+14]__ Jan Bender, Dan Koschier, Patrick Charrier, and Daniel Weber. 2014. Position-based simulation of continuous materials. Comput. Graph. 44 (2014), 1-10. DOI: http://doi.org/10.1016/j.cag.2014.07.004
 - __[Bender+17]__ Jan Bender, Matthias Müller, and Miles Macklin. 2017. A survey on position based dynamics, 2017. In Proc. Eurographics '17 Tutorials, Article 6, 31 pages. DOI: https://doi.org/10.2312/egt.20171034
 - __[Bergou+06]__ (TODO)
-- __[Bouaziz+14]__ Sofien Bouaziz, Sebastian Martin, Tiantian Liu, Ladislav Kavan, and Mark Pauly. 2014. Projective dynamics: fusing constraint projections for fast simulation. ACM Trans. Graph. 33, 4, Article 154 (2014), 11 pages. DOI: https://doi.org/10.1145/2601097.2601116
+- __[Bouaziz+14]__ Sofien Bouaziz, Sebastian Martin, Tiantian Liu, Ladislav Kavan, and Mark Pauly. 2014. Projective dynamics: fusing constraint projections for fast simulation. ACM Trans. Graph. 33, 4 (2014), 154:1--154:11. DOI: https://doi.org/10.1145/2601097.2601116
 - __[Kim+12]__ (TODO)
 - __[Koyama+12]__ Yuki Koyama, Kenshi Takayama, Nobuyuki Umetani, and Takeo Igarashi. 2012. Real-time example-based elastic deformation. In Proc. SCA '12, 19-24. DOI: https://doi.org/10.2312/SCA/SCA12/019-024
-- __[Liu+17]__ (TODO)
+- __[Liu+17]__ Tiantian Liu, Sofien Bouaziz, and Ladislav Kavan. 2017. Quasi-Newton methods for real-time simulation of hyperelastic materials. ACM Trans. Graph. 36, 3 (2017), 23:1--23:16. DOI: https://doi.org/10.1145/2990496
 - __[Macklin+16]__ Miles Macklin, Matthias Müller, and Nuttapong Chentanez. 2016. XPBD: position-based simulation of compliant constrained dynamics. In Proc. MIG '16, 49-54. DOI: https://doi.org/10.1145/2994258.2994272
 - __[Müller+05]__ Matthias Müller, Bruno Heidelberger, Matthias Teschner, and Markus Gross. 2005. Meshless deformations based on shape matching. ACM Trans. Graph. 24, 3 (2005), 471-478. DOI: https://doi.org/10.1145/1073204.1073216
 - __[Müller+07]__ Matthias Müller, Bruno Heidelberger, Marcus Hennix, and John Ratcliff. 2007. Position based dynamics. J. Vis. Comun. Image Represent. 18, 2 (2007), 109-118. DOI: https://doi.org/10.1016/j.jvcir.2007.01.005
