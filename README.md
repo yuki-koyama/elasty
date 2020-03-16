@@ -1,6 +1,7 @@
 # elasty
 
 [![Build Status](https://travis-ci.com/yuki-koyama/elasty.svg?branch=master)](https://travis-ci.com/yuki-koyama/elasty)
+![License](https://img.shields.io/github/license/yuki-koyama/elasty)
 
 A research-oriented elastic body simulator
 
