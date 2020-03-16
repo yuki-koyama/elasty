@@ -13,6 +13,7 @@ A research-oriented elastic body simulator
 
 - [x] Position-based dynamics (PBD) [Müller+07]
 - [x] Extended position-based dynamics (XPBD) [Macklin+16]
+- [ ] Small-steps XPBD [Macklin+19]
 - [ ] Projective dynamics [Bouaziz+14]
 - [ ] Quasi-Newton dynamics [Liu+17]
 - [ ] ...
@@ -104,6 +105,7 @@ Issue reports and pull requests are highly welcomed.
 - __[Koyama+12]__ Yuki Koyama, Kenshi Takayama, Nobuyuki Umetani, and Takeo Igarashi. 2012. Real-time example-based elastic deformation. In Proc. SCA '12, 19-24. DOI: https://doi.org/10.2312/SCA/SCA12/019-024
 - __[Liu+17]__ Tiantian Liu, Sofien Bouaziz, and Ladislav Kavan. 2017. Quasi-Newton methods for real-time simulation of hyperelastic materials. ACM Trans. Graph. 36, 3 (2017), 23:1--23:16. DOI: https://doi.org/10.1145/2990496
 - __[Macklin+16]__ Miles Macklin, Matthias Müller, and Nuttapong Chentanez. 2016. XPBD: position-based simulation of compliant constrained dynamics. In Proc. MIG '16, 49-54. DOI: https://doi.org/10.1145/2994258.2994272
+- __[Macklin+19]__ Miles Macklin, Kier Storey, Michelle Lu, Pierre Terdiman, Nuttapong Chentanez, Stefan Jeschke, and Matthias Müller. 2019. Small steps in physics simulation. In Proc. SCA '19, 2:1–2:7. DOI: https://doi.org/10.1145/3309486.3340247
 - __[Müller+05]__ Matthias Müller, Bruno Heidelberger, Matthias Teschner, and Markus Gross. 2005. Meshless deformations based on shape matching. ACM Trans. Graph. 24, 3 (2005), 471-478. DOI: https://doi.org/10.1145/1073204.1073216
 - __[Müller+07]__ Matthias Müller, Bruno Heidelberger, Marcus Hennix, and John Ratcliff. 2007. Position based dynamics. J. Vis. Comun. Image Represent. 18, 2 (2007), 109-118. DOI: https://doi.org/10.1016/j.jvcir.2007.01.005
 - __[Umetani+14]__ Nobuyuki Umetani, Ryan Schmidt, and Jos Stam. 2014. Position-based elastic rods. In Proc. SCA '14, 21-30. DOI: https://doi.org/10.2312/sca.20141119
