@@ -18,7 +18,6 @@ public:
         m_num_iterations = 50;
 
         // Instantiate a cloth object
-        constexpr bool    cloth_falling_setting         = true;
         constexpr double  cloth_in_plane_stiffness      = 1.000; ///< PBD
         constexpr double  cloth_in_plane_compliance     = 1.000; ///< XPBD
         constexpr double  cloth_out_of_plane_stiffness  = 0.100; ///< PBD
