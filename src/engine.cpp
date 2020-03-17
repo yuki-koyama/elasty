@@ -59,8 +59,7 @@ void elasty::Engine::addConstraint(std::shared_ptr<Constraint> constraint)
     m_constraints.push_back(constraint);
 }
 
-void elasty::Engine::addInstantConstraint(
-    std::shared_ptr<Constraint> constraint)
+void elasty::Engine::addInstantConstraint(std::shared_ptr<Constraint> constraint)
 {
     m_instant_constraints.push_back(constraint);
 }

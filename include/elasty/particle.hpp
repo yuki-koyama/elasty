@@ -7,9 +7,7 @@ namespace elasty
 {
     struct Particle
     {
-        Particle(const Eigen::Vector3d& x,
-                 const Eigen::Vector3d& v,
-                 const double           m)
+        Particle(const Eigen::Vector3d& x, const Eigen::Vector3d& v, const double m)
             : x(x), v(v), p(x), f(Eigen::Vector3d::Zero()), m(m), w(1.0 / m)
         {
         }
