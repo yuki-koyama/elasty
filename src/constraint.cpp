@@ -396,14 +396,12 @@ elasty::ShapeMatchingConstraint::ShapeMatchingConstraint(const std::vector<std::
 
 double elasty::ShapeMatchingConstraint::calculateValue()
 {
-    throw std::runtime_error("ShapeMatchingConstraint does not directly "
-                             "provide its cost value or the gradient.");
+    throw std::runtime_error("ShapeMatchingConstraint does not directly provide its cost value or the gradient.");
 }
 
 void elasty::ShapeMatchingConstraint::calculateGrad(double* grad_C)
 {
-    throw std::runtime_error("ShapeMatchingConstraint does not directly "
-                             "provide its cost value or the gradient.");
+    throw std::runtime_error("ShapeMatchingConstraint does not directly provide its cost value or the gradient.");
 }
 
 void elasty::ShapeMatchingConstraint::projectParticles(const AlgorithmType type)
