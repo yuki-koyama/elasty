@@ -14,7 +14,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: install-build-dependencies
-      run: sudo apt-get -y install libeigen3-dev openexr libglu1-mesa-dev xorg-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install libeigen3-dev openexr libglu1-mesa-dev xorg-dev
     - name: submodule
       run: git submodule update --init --recursive
     - name: cmake
