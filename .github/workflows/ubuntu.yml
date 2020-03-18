@@ -16,7 +16,8 @@ jobs:
     - name: install-build-dependencies
       run: |
         sudo apt-get -y install libeigen3-dev libglu1-mesa-dev xorg-dev
-        curl -L https://github.com/AcademySoftwareFoundation/openexr/tarball/v2.3.0 | tar xv
+        curl -L https://github.com/AcademySoftwareFoundation/openexr/tarball/v2.3.0
+        tar -xv AcademySoftwareFoundation-openexr-0ac2ea3.tar.gz
         mkdir build-openexr
         cd build-openexr
         cmake ../AcademySoftwareFoundation-openexr-0ac2ea3
