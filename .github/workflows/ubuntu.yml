@@ -1,0 +1,25 @@
+name: Ubuntu
+
+on: [push]
+
+jobs:
+  build-test:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, ubuntu-18.04]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: install-build-dependencies
+      run: sudo apt-get -y install libeigen3-dev openexr libglu1-mesa-dev xorg-dev
+    - name: submodule
+      run: git submodule update --init --recursive
+    - name: cmake
+      run: cmake -DELASTY_EXAMPLES=ON -DELASTY_TESTS=ON .
+    - name: make
+      run: make
+    - name: ctest
+      run: ctest

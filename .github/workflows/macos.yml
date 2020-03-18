@@ -1,0 +1,21 @@
+name: macOS
+
+on: [push]
+
+jobs:
+  build-test:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: install-build-dependencies
+      run: brew install eigen openexr
+    - name: submodule
+      run: git submodule update --init --recursive
+    - name: cmake
+      run: cmake -DELASTY_EXAMPLES=ON -DELASTY_TESTS=ON .
+    - name: make
+      run: make
+    - name: ctest
+      run: ctest
