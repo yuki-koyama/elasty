@@ -2,7 +2,7 @@
 #include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
 
-void elasty::Engine::stepTime()
+void elasty::AbstractEngine::stepTime()
 {
     // Apply external forces
     setExternalForces();
@@ -54,17 +54,17 @@ void elasty::Engine::stepTime()
     m_instant_constraints.clear();
 }
 
-void elasty::Engine::addConstraint(std::shared_ptr<AbstractConstraint> constraint)
+void elasty::AbstractEngine::addConstraint(std::shared_ptr<AbstractConstraint> constraint)
 {
     m_constraints.push_back(constraint);
 }
 
-void elasty::Engine::addInstantConstraint(std::shared_ptr<AbstractConstraint> constraint)
+void elasty::AbstractEngine::addInstantConstraint(std::shared_ptr<AbstractConstraint> constraint)
 {
     m_instant_constraints.push_back(constraint);
 }
 
-void elasty::Engine::clearScene()
+void elasty::AbstractEngine::clearScene()
 {
     m_particles.clear();
     m_constraints.clear();

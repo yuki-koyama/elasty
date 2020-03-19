@@ -9,7 +9,7 @@ namespace elasty
     class AbstractConstraint;
     struct Particle;
 
-    class Engine
+    class AbstractEngine
     {
     public:
         void stepTime();

@@ -24,7 +24,7 @@ namespace
     inline glm::vec3 eigen2glm(const Eigen::Vector3d& eigen) { return glm::vec3(eigen.x(), eigen.y(), eigen.z()); }
 } // namespace
 
-class SimpleEngine final : public elasty::Engine
+class SimpleEngine final : public elasty::AbstractEngine
 {
 public:
     void initializeScene() override

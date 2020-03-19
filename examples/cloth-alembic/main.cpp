@@ -10,7 +10,7 @@
 
 #define CLOTH_FALL
 
-class SimpleEngine final : public elasty::Engine
+class SimpleEngine final : public elasty::AbstractEngine
 {
 public:
     void initializeScene() override
