@@ -7,13 +7,13 @@
 namespace elasty
 {
     struct Particle;
-    class Constraint;
+    class AbstractConstraint;
 
     class SimObject
     {
     public:
-        std::vector<std::shared_ptr<Particle>>   m_particles;
-        std::vector<std::shared_ptr<Constraint>> m_constraints;
+        std::vector<std::shared_ptr<Particle>>           m_particles;
+        std::vector<std::shared_ptr<AbstractConstraint>> m_constraints;
     };
 } // namespace elasty
 

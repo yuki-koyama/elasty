@@ -54,12 +54,12 @@ void elasty::Engine::stepTime()
     m_instant_constraints.clear();
 }
 
-void elasty::Engine::addConstraint(std::shared_ptr<Constraint> constraint)
+void elasty::Engine::addConstraint(std::shared_ptr<AbstractConstraint> constraint)
 {
     m_constraints.push_back(constraint);
 }
 
-void elasty::Engine::addInstantConstraint(std::shared_ptr<Constraint> constraint)
+void elasty::Engine::addInstantConstraint(std::shared_ptr<AbstractConstraint> constraint)
 {
     m_instant_constraints.push_back(constraint);
 }

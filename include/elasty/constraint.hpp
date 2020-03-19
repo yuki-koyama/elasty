@@ -20,14 +20,14 @@ namespace elasty
         Xpbd
     };
 
-    class Constraint
+    class AbstractConstraint
     {
     public:
-        Constraint(const std::vector<std::shared_ptr<Particle>>& particles,
-                   const double                                  stiffness,  ///< for PBD
-                   const double                                  compliance, ///< for XPBD
-                   const double                                  dt          ///< for XPBD
-                   )
+        AbstractConstraint(const std::vector<std::shared_ptr<Particle>>& particles,
+                           const double                                  stiffness,  ///< for PBD
+                           const double                                  compliance, ///< for XPBD
+                           const double                                  dt          ///< for XPBD
+                           )
             : m_stiffness(stiffness),
               m_lagrange_multiplier(0.0),
               m_compliance(compliance),
@@ -80,15 +80,15 @@ namespace elasty
         std::vector<std::shared_ptr<Particle>> m_particles;
     };
 
-    template <int Num> class FixedNumConstraint : public Constraint
+    template <int Num> class FixedNumAbstractConstraint : public AbstractConstraint
     {
     public:
-        FixedNumConstraint(const std::vector<std::shared_ptr<Particle>>& particles,
-                           const double                                  stiffness,  ///< for PBD
-                           const double                                  compliance, ///< for XPBD
-                           const double                                  dt          ///< for XPBD
-                           )
-            : Constraint(particles, stiffness, compliance, dt), m_inv_M(constructInverseMassMatrix(m_particles))
+        FixedNumAbstractConstraint(const std::vector<std::shared_ptr<Particle>>& particles,
+                                   const double                                  stiffness,  ///< for PBD
+                                   const double                                  compliance, ///< for XPBD
+                                   const double                                  dt          ///< for XPBD
+                                   )
+            : AbstractConstraint(particles, stiffness, compliance, dt), m_inv_M(constructInverseMassMatrix(m_particles))
         {
         }
 
@@ -192,7 +192,7 @@ namespace elasty
         }
     };
 
-    class VariableNumConstraint : public Constraint
+    class VariableNumConstraint : public AbstractConstraint
     {
     public:
         VariableNumConstraint(const std::vector<std::shared_ptr<Particle>>& particles,
@@ -200,7 +200,7 @@ namespace elasty
                               const double                                  compliance, ///< for XPBD
                               const double                                  dt          ///< for XPBD
                               )
-            : Constraint(particles, stiffness, compliance, dt), m_inv_M(constructInverseMassMatrix(m_particles))
+            : AbstractConstraint(particles, stiffness, compliance, dt), m_inv_M(constructInverseMassMatrix(m_particles))
         {
         }
 
@@ -303,7 +303,7 @@ namespace elasty
         }
     };
 
-    class BendingConstraint final : public FixedNumConstraint<4>
+    class BendingConstraint final : public FixedNumAbstractConstraint<4>
     {
     public:
         BendingConstraint(const std::shared_ptr<Particle> p_0,
@@ -323,7 +323,7 @@ namespace elasty
         const double m_dihedral_angle;
     };
 
-    class ContinuumTriangleConstraint final : public FixedNumConstraint<3>
+    class ContinuumTriangleConstraint final : public FixedNumAbstractConstraint<3>
     {
     public:
         ContinuumTriangleConstraint(const std::shared_ptr<Particle> p_0,
@@ -347,7 +347,7 @@ namespace elasty
         Eigen::Matrix2d m_rest_D_inv;
     };
 
-    class DistanceConstraint final : public FixedNumConstraint<2>
+    class DistanceConstraint final : public FixedNumAbstractConstraint<2>
     {
     public:
         DistanceConstraint(const std::shared_ptr<Particle> p_0,
@@ -365,7 +365,7 @@ namespace elasty
         const double m_d;
     };
 
-    class EnvironmentalCollisionConstraint final : public FixedNumConstraint<1>
+    class EnvironmentalCollisionConstraint final : public FixedNumAbstractConstraint<1>
     {
     public:
         EnvironmentalCollisionConstraint(const std::shared_ptr<Particle> p_0,
@@ -384,7 +384,7 @@ namespace elasty
         const double          m_d;
     };
 
-    class FixedPointConstraint final : public FixedNumConstraint<1>
+    class FixedPointConstraint final : public FixedNumAbstractConstraint<1>
     {
     public:
         FixedPointConstraint(const std::shared_ptr<Particle> p_0,
@@ -401,7 +401,7 @@ namespace elasty
         const Eigen::Vector3d m_point;
     };
 
-    class IsometricBendingConstraint final : public FixedNumConstraint<4>
+    class IsometricBendingConstraint final : public FixedNumAbstractConstraint<4>
     {
     public:
         IsometricBendingConstraint(const std::shared_ptr<Particle> p_0,

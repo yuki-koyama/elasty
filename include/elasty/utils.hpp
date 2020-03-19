@@ -9,7 +9,7 @@
 namespace elasty
 {
     struct Particle;
-    class Constraint;
+    class AbstractConstraint;
     class ClothSimObject;
     class AlembicManager;
 
@@ -28,10 +28,10 @@ namespace elasty
 
     void setRandomVelocities(const std::vector<std::shared_ptr<Particle>>& particles, const double scale = 1.0);
 
-    void generateFixedPointConstraints(const Eigen::Vector3d&                        search_position,
-                                       const Eigen::Vector3d&                        fixed_position,
-                                       const std::vector<std::shared_ptr<Particle>>& particles,
-                                       std::vector<std::shared_ptr<Constraint>>&     constraints);
+    void generateFixedPointConstraints(const Eigen::Vector3d&                            search_position,
+                                       const Eigen::Vector3d&                            fixed_position,
+                                       const std::vector<std::shared_ptr<Particle>>&     particles,
+                                       std::vector<std::shared_ptr<AbstractConstraint>>& constraints);
 
     std::shared_ptr<AlembicManager> createAlembicManager(const std::string&                    file_path,
                                                          const std::shared_ptr<ClothSimObject> cloth_sim_object,

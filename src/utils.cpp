@@ -26,10 +26,10 @@ void elasty::setRandomVelocities(const std::vector<std::shared_ptr<Particle>>& p
     }
 }
 
-void elasty::generateFixedPointConstraints(const Eigen::Vector3d&                        search_position,
-                                           const Eigen::Vector3d&                        fixed_position,
-                                           const std::vector<std::shared_ptr<Particle>>& particles,
-                                           std::vector<std::shared_ptr<Constraint>>&     constraints)
+void elasty::generateFixedPointConstraints(const Eigen::Vector3d&                            search_position,
+                                           const Eigen::Vector3d&                            fixed_position,
+                                           const std::vector<std::shared_ptr<Particle>>&     particles,
+                                           std::vector<std::shared_ptr<AbstractConstraint>>& constraints)
 {
     constexpr double dummy_dt = 1.0 / 60.0;
 

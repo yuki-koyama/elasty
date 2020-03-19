@@ -35,7 +35,7 @@ elasty::BendingConstraint::BendingConstraint(const std::shared_ptr<Particle> p_0
                                              const double                    compliance,
                                              const double                    dt,
                                              const double                    dihedral_angle)
-    : FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2, p_3}, stiffness, compliance, dt),
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2, p_3}, stiffness, compliance, dt),
       m_dihedral_angle(dihedral_angle)
 {
 }
@@ -129,7 +129,7 @@ elasty::ContinuumTriangleConstraint::ContinuumTriangleConstraint(const std::shar
                                                                  const double                    dt,
                                                                  const double                    youngs_modulus,
                                                                  const double                    poisson_ratio)
-    : FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2}, stiffness, compliance, dt),
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2}, stiffness, compliance, dt),
       m_first_lame(youngs_modulus * poisson_ratio / ((1.0 + poisson_ratio) * (1.0 - 2.0 * poisson_ratio))),
       m_second_lame(youngs_modulus / (2.0 * (1.0 + poisson_ratio)))
 {
@@ -229,7 +229,7 @@ elasty::DistanceConstraint::DistanceConstraint(const std::shared_ptr<Particle> p
                                                const double                    compliance,
                                                const double                    dt,
                                                const double                    d)
-    : FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1}, stiffness, compliance, dt), m_d(d)
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1}, stiffness, compliance, dt), m_d(d)
 {
     assert(d >= 0.0);
 }
@@ -268,7 +268,7 @@ elasty::EnvironmentalCollisionConstraint::EnvironmentalCollisionConstraint(const
                                                                            const double                    dt,
                                                                            const Eigen::Vector3d&          n,
                                                                            const double                    d)
-    : FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{p_0}, stiffness, compliance, dt), m_n(n), m_d(d)
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0}, stiffness, compliance, dt), m_n(n), m_d(d)
 {
 }
 
@@ -288,7 +288,7 @@ elasty::FixedPointConstraint::FixedPointConstraint(const std::shared_ptr<Particl
                                                    const double                    compliance,
                                                    const double                    dt,
                                                    const Eigen::Vector3d&          point)
-    : FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{p_0}, stiffness, compliance, dt), m_point(point)
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0}, stiffness, compliance, dt), m_point(point)
 {
 }
 
@@ -318,7 +318,7 @@ elasty::IsometricBendingConstraint::IsometricBendingConstraint(const std::shared
                                                                const double                    stiffness,
                                                                const double                    compliance,
                                                                const double                    dt)
-    : FixedNumConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2, p_3}, stiffness, compliance, dt)
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2, p_3}, stiffness, compliance, dt)
 {
     const Eigen::Vector3d& x_0 = p_0->x;
     const Eigen::Vector3d& x_1 = p_1->x;

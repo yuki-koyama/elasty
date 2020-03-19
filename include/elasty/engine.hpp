@@ -6,7 +6,7 @@
 
 namespace elasty
 {
-    class Constraint;
+    class AbstractConstraint;
     struct Particle;
 
     class Engine
@@ -24,15 +24,15 @@ namespace elasty
 
         std::vector<std::shared_ptr<Particle>> m_particles;
 
-        std::vector<std::shared_ptr<Constraint>> m_constraints;
-        std::vector<std::shared_ptr<Constraint>> m_instant_constraints;
+        std::vector<std::shared_ptr<AbstractConstraint>> m_constraints;
+        std::vector<std::shared_ptr<AbstractConstraint>> m_instant_constraints;
 
         double       m_dt             = 1.0 / 60.0;
         unsigned int m_num_iterations = 10;
 
     protected:
-        void addConstraint(std::shared_ptr<Constraint> constraint);
-        void addInstantConstraint(std::shared_ptr<Constraint> constraint);
+        void addConstraint(std::shared_ptr<AbstractConstraint> constraint);
+        void addInstantConstraint(std::shared_ptr<AbstractConstraint> constraint);
     };
 } // namespace elasty
 
