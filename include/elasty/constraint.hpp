@@ -1,5 +1,5 @@
-#ifndef constraint_hpp
-#define constraint_hpp
+#ifndef ELASTY_CONSTRAINT_HPP
+#define ELASTY_CONSTRAINT_HPP
 
 #include <Eigen/Core>
 #include <elasty/particle.hpp>
@@ -445,4 +445,4 @@ namespace elasty
     };
 } // namespace elasty
 
-#endif /* constraint_hpp */
+#endif // ELASTY_CONSTRAINT_HPP

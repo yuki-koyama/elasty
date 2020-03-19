@@ -1,5 +1,5 @@
-#ifndef sim_object_hpp
-#define sim_object_hpp
+#ifndef ELASTY_SIM_OBJECT_HPP
+#define ELASTY_SIM_OBJECT_HPP
 
 #include <memory>
 #include <vector>
@@ -17,4 +17,4 @@ namespace elasty
     };
 } // namespace elasty
 
-#endif /* sim_object_hpp */
+#endif // ELASTY_SIM_OBJECT_HPP

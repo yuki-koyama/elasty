@@ -1,5 +1,5 @@
-#ifndef cloth_sim_object_hpp
-#define cloth_sim_object_hpp
+#ifndef ELASTY_CLOTH_SIM_OBJECT_HPP
+#define ELASTY_CLOTH_SIM_OBJECT_HPP
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -45,4 +45,4 @@ namespace elasty
     };
 } // namespace elasty
 
-#endif /* cloth_sim_object_hpp */
+#endif // ELASTY_CLOTH_SIM_OBJECT_HPP

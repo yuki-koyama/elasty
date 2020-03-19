@@ -1,5 +1,5 @@
-#ifndef particle_hpp
-#define particle_hpp
+#ifndef ELASTY_PARTICLE_HPP
+#define ELASTY_PARTICLE_HPP
 
 #include <Eigen/Core>
 
@@ -21,4 +21,4 @@ namespace elasty
     };
 } // namespace elasty
 
-#endif /* particle_hpp */
+#endif // ELASTY_PARTICLE_HPP

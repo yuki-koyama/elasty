@@ -1,5 +1,5 @@
-#ifndef engine_hpp
-#define engine_hpp
+#ifndef ELASTY_ENGINE_HPP
+#define ELASTY_ENGINE_HPP
 
 #include <memory>
 #include <vector>
@@ -36,4 +36,4 @@ namespace elasty
     };
 } // namespace elasty
 
-#endif /* engine_hpp */
+#endif // ELASTY_ENGINE_HPP

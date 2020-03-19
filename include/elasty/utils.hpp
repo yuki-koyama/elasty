@@ -1,5 +1,5 @@
-#ifndef elasty_utils_hpp
-#define elasty_utils_hpp
+#ifndef ELASTY_UTILS_HPP
+#define ELASTY_UTILS_HPP
 
 #include <Eigen/Core>
 #include <memory>
@@ -40,4 +40,4 @@ namespace elasty
     void submitCurrentStatus(const std::shared_ptr<AlembicManager> alembic_manager);
 } // namespace elasty
 
-#endif /* elasty_utils_hpp */
+#endif // ELASTY_UTILS_HPP
