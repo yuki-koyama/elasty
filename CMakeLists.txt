@@ -59,6 +59,7 @@ target_link_libraries(elasty PRIVATE Alembic tinyobjloader)
 
 option(ELASTY_EXAMPLES ON "")
 if(ELASTY_EXAMPLES)
+  set(BIGGER_EXAMPLES OFF CACHE INTERNAL "" FORCE)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/bigger)
 
   add_executable(cloth-alembic ${CMAKE_CURRENT_SOURCE_DIR}/examples/cloth-alembic/main.cpp)
