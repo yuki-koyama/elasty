@@ -13,6 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: install-gcc6
+      run: |
+        sudo apt-get -y install gcc-6 g++-6
+        export CXX='g++-6'
+        export CC='gcc-6'
     - name: install-openexr-v2.3.0
       run: |
         curl -L https://github.com/AcademySoftwareFoundation/openexr/tarball/v2.3.0 | tar -xvz
