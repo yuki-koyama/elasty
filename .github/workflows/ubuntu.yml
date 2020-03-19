@@ -16,8 +16,10 @@ jobs:
     - name: install-gcc6
       run: |
         sudo apt-get -y install gcc-6 g++-6
-        export CXX='g++-6'
-        export CC='gcc-6'
+        export CXX=g++-6
+        export CC=gcc-6
+        gcc --version
+        g++ --version
     - name: install-openexr-v2.3.0
       run: |
         curl -L https://github.com/AcademySoftwareFoundation/openexr/tarball/v2.3.0 | tar -xvz
@@ -31,7 +33,10 @@ jobs:
     - name: submodule
       run: git submodule update --init --recursive
     - name: cmake
-      run: cmake -DELASTY_EXAMPLES=ON -DELASTY_TESTS=ON .
+      run: |
+        gcc --version
+        g++ --version
+        cmake -DELASTY_EXAMPLES=ON -DELASTY_TESTS=ON .
     - name: make
       run: make
     - name: ctest
