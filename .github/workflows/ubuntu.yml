@@ -16,18 +16,12 @@ jobs:
     - name: install-gcc6
       run: |
         sudo apt-get -y install gcc-6 g++-6
-        export CXX=g++-6
-        export CC=gcc-6
-        gcc --version
-        g++ --version
-        gcc-6 --version
-        g++-6 --version
     - name: install-openexr-v2.3.0
       run: |
         curl -L https://github.com/AcademySoftwareFoundation/openexr/tarball/v2.3.0 | tar -xvz
         mkdir build-openexr
         cd build-openexr
-        cmake ../AcademySoftwareFoundation-openexr-0ac2ea3 -DOPENEXR_BUILD_PYTHON_LIBS=OFF -DOPENEXR_BUILD_TESTS=OFF -DOPENEXR_BUILD_UTILS=OFF
+        cmake ../AcademySoftwareFoundation-openexr-0ac2ea3 -DOPENEXR_BUILD_PYTHON_LIBS=OFF -DOPENEXR_BUILD_TESTS=OFF -DOPENEXR_BUILD_UTILS=OFF -DCMAKE_C_COMPILER=gcc-6 -DCMAKE_CXX_COMPILER=g++-6
         make
         sudo make install
     - name: install-other-build-dependencies
@@ -36,9 +30,7 @@ jobs:
       run: git submodule update --init --recursive
     - name: cmake
       run: |
-        gcc --version
-        g++ --version
-        cmake -DELASTY_EXAMPLES=ON -DELASTY_TESTS=ON -DCMAKE_C_COMPILER=gcc-6 -DCMAKE_CXX_COMPILER=g++-6 .
+        cmake . -DELASTY_EXAMPLES=ON -DELASTY_TESTS=ON -DCMAKE_C_COMPILER=gcc-6 -DCMAKE_CXX_COMPILER=g++-6
     - name: make
       run: make
     - name: ctest

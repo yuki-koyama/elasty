@@ -14,7 +14,7 @@ jobs:
     - name: submodule
       run: git submodule update --init --recursive
     - name: cmake
-      run: cmake -DELASTY_EXAMPLES=ON -DELASTY_TESTS=ON .
+      run: cmake . -DELASTY_EXAMPLES=ON -DELASTY_TESTS=ON
     - name: make
       run: make
     - name: ctest
