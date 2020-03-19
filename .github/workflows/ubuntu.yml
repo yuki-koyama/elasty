@@ -20,6 +20,8 @@ jobs:
         export CC=gcc-6
         gcc --version
         g++ --version
+        gcc-6 --version
+        g++-6 --version
     - name: install-openexr-v2.3.0
       run: |
         curl -L https://github.com/AcademySoftwareFoundation/openexr/tarball/v2.3.0 | tar -xvz
@@ -36,7 +38,7 @@ jobs:
       run: |
         gcc --version
         g++ --version
-        cmake -DELASTY_EXAMPLES=ON -DELASTY_TESTS=ON .
+        cmake -DELASTY_EXAMPLES=ON -DELASTY_TESTS=ON -DCMAKE_C_COMPILER=gcc-6 -DCMAKE_CXX_COMPILER=g++-6 .
     - name: make
       run: make
     - name: ctest
