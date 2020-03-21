@@ -83,8 +83,12 @@ option(ELASTY_TESTS ON "")
 if(ELASTY_TESTS)
   enable_testing()
 
+  set(BUILD_GMOCK   OFF CACHE INTERNAL "" FORCE)
+  set(INSTALL_GTEST OFF CACHE INTERNAL "" FORCE)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/googletest)
+
   add_executable(test-bending-constraint ${CMAKE_CURRENT_SOURCE_DIR}/tests/test-bending-constraint.cpp)
-  target_link_libraries(test-bending-constraint elasty)
+  target_link_libraries(test-bending-constraint elasty gtest_main)
 
   add_test(NAME test-bending-constraint COMMAND $<TARGET_FILE:test-bending-constraint>)
 endif()
