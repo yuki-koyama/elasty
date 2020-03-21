@@ -5,7 +5,7 @@
 using Eigen::Matrix;
 using Eigen::Vector3d;
 
-TEST(CostraintTest, BendingZero)
+TEST(CostraintTest, BendingRestShape)
 {
     constexpr double dt = 1.0 / 60.0;
 
@@ -47,7 +47,7 @@ TEST(CostraintTest, BendingZero)
     EXPECT_TRUE(grad.norm() < epsilon);
 }
 
-TEST(ConstraintTest, BendingDerivative)
+TEST(ConstraintTest, IsometricBendingDerivative)
 {
     constexpr double dt = 1.0 / 60.0;
 
@@ -61,35 +61,38 @@ TEST(ConstraintTest, BendingDerivative)
     const auto isometric_bending_constraint =
         std::make_shared<elasty::IsometricBendingConstraint>(p_0, p_1, p_2, p_3, 1.0, 0.0, dt);
 
-    constexpr double eps = 1e-06;
+    constexpr double delta   = 1e-06;
+    constexpr double epsilon = 1e-04;
 
     for (int i = 0; i < 4; ++i)
     {
-        particles[i]->x = particles[i]->x + Eigen::Vector3d::Random();
+        particles[i]->p = particles[i]->x + Eigen::Vector3d::Random();
     }
+
+    Matrix<double, 12, 1> grad;
+    isometric_bending_constraint->calculateGrad(grad.data());
 
     for (int i = 0; i < 4; ++i)
     {
         for (int j = 0; j < 3; ++j)
         {
             Vector3d eps3d = Vector3d::Zero();
-            eps3d(j)       = eps;
+            eps3d(j)       = delta;
 
-            particles[i]->p        = particles[i]->x + eps3d;
+            const Vector3d orig_pos = particles[i]->p;
+
+            particles[i]->p        = orig_pos + eps3d;
             const double cost_plus = isometric_bending_constraint->calculateValue();
 
-            particles[i]->p         = particles[i]->x - eps3d;
+            particles[i]->p         = orig_pos - eps3d;
             const double cost_minus = isometric_bending_constraint->calculateValue();
 
-            particles[i]->p = particles[i]->x;
+            particles[i]->p = orig_pos;
 
-            const double numerical_derivative = (cost_plus - cost_minus) / (2.0 * eps);
+            const double numerical_derivative = (cost_plus - cost_minus) / (2.0 * delta);
+            const double analytic_derivative  = grad(i * 3 + j);
 
-            Matrix<double, 12, 1> grad;
-            isometric_bending_constraint->calculateGrad(grad.data());
-            const double analytic_derivative = grad(i * 3 + j);
-
-            EXPECT_TRUE(std::abs(numerical_derivative - analytic_derivative) < eps);
+            EXPECT_TRUE(std::abs(numerical_derivative - analytic_derivative) < epsilon);
         }
     }
 }
