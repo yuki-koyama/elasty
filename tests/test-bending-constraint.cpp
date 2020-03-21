@@ -5,6 +5,35 @@
 using Eigen::Matrix;
 using Eigen::Vector3d;
 
+template <int Num>
+void calculateNumericalDerivative(const std::shared_ptr<elasty::Particle>           particles[],
+                                  const std::shared_ptr<elasty::AbstractConstraint> constraint,
+                                  double*                                           grad)
+{
+    constexpr double delta = 1e-06;
+
+    for (int i = 0; i < Num; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            Vector3d eps3d = Vector3d::Zero();
+            eps3d(j)       = delta;
+
+            const Vector3d orig_pos = particles[i]->p;
+
+            particles[i]->p        = orig_pos + eps3d;
+            const double cost_plus = constraint->calculateValue();
+
+            particles[i]->p         = orig_pos - eps3d;
+            const double cost_minus = constraint->calculateValue();
+
+            particles[i]->p = orig_pos;
+
+            grad[i * 3 + j] = (cost_plus - cost_minus) / (2.0 * delta);
+        }
+    }
+}
+
 TEST(CostraintTest, BendingRestShape)
 {
     constexpr double dt = 1.0 / 60.0;
@@ -131,10 +160,8 @@ TEST(ConstraintTest, IsometricBendingDerivative)
 
     const std::shared_ptr<elasty::Particle> particles[] = {p_0, p_1, p_2, p_3};
 
-    const auto isometric_bending_constraint =
-        std::make_shared<elasty::IsometricBendingConstraint>(p_0, p_1, p_2, p_3, 1.0, 0.0, dt);
+    const auto constraint = std::make_shared<elasty::IsometricBendingConstraint>(p_0, p_1, p_2, p_3, 1.0, 0.0, dt);
 
-    constexpr double delta   = 1e-06;
     constexpr double epsilon = 1e-04;
 
     for (int i = 0; i < 4; ++i)
@@ -142,32 +169,13 @@ TEST(ConstraintTest, IsometricBendingDerivative)
         particles[i]->p = particles[i]->x + Eigen::Vector3d::Random();
     }
 
-    Matrix<double, 12, 1> grad;
-    isometric_bending_constraint->calculateGrad(grad.data());
+    Matrix<double, 12, 1> analytic_grad;
+    constraint->calculateGrad(analytic_grad.data());
 
-    for (int i = 0; i < 4; ++i)
-    {
-        for (int j = 0; j < 3; ++j)
-        {
-            Vector3d eps3d = Vector3d::Zero();
-            eps3d(j)       = delta;
+    Matrix<double, 12, 1> numerical_grad;
+    calculateNumericalDerivative<4>(particles, constraint, numerical_grad.data());
 
-            const Vector3d orig_pos = particles[i]->p;
-
-            particles[i]->p        = orig_pos + eps3d;
-            const double cost_plus = isometric_bending_constraint->calculateValue();
-
-            particles[i]->p         = orig_pos - eps3d;
-            const double cost_minus = isometric_bending_constraint->calculateValue();
-
-            particles[i]->p = orig_pos;
-
-            const double numerical_derivative = (cost_plus - cost_minus) / (2.0 * delta);
-            const double analytic_derivative  = grad(i * 3 + j);
-
-            EXPECT_TRUE(std::abs(numerical_derivative - analytic_derivative) < epsilon);
-        }
-    }
+    EXPECT_TRUE((numerical_grad - analytic_grad).cwiseAbs().maxCoeff() < epsilon);
 }
 
 int main(int argc, char** argv)
