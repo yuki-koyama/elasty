@@ -1,7 +1,8 @@
 #include <elasty/constraint.hpp>
 #include <elasty/particle.hpp>
+#include <gtest/gtest.h>
 
-void testBendingConstraint()
+TEST(CostraintTest, BendingZero)
 {
     constexpr double dt = 1.0 / 60.0;
 
@@ -22,12 +23,12 @@ void testBendingConstraint()
     const Eigen::Vector3d n_0 = p_10.cross(p_20).normalized();
     const Eigen::Vector3d n_1 = p_10.cross(p_30).normalized();
 
-    assert(!n_0.hasNaN());
-    assert(!n_1.hasNaN());
+    EXPECT_FALSE(n_0.hasNaN());
+    EXPECT_FALSE(n_1.hasNaN());
 
     const double dihedral_angle = std::acos(std::max(-1.0, std::min(+1.0, n_0.dot(n_1))));
 
-    assert(!std::isnan(dihedral_angle));
+    EXPECT_FALSE(std::isnan(dihedral_angle));
 
     const auto constraint =
         std::make_shared<elasty::BendingConstraint>(p_0, p_1, p_2, p_3, 1.0, 0.0, dt, dihedral_angle);
@@ -38,13 +39,12 @@ void testBendingConstraint()
     constraint->calculateGrad(grad.data());
 
     constexpr double epsilon = 1e-20;
-    if (!(std::abs(value) < epsilon) || !(grad.norm() < epsilon))
-    {
-        throw std::runtime_error("");
-    }
+
+    EXPECT_TRUE(std::abs(value) < epsilon);
+    EXPECT_TRUE(grad.norm() < epsilon);
 }
 
-void testIsometricBendingConstraint()
+TEST(ConstraintTest, BendingDerivative)
 {
     constexpr double dt = 1.0 / 60.0;
 
@@ -86,18 +86,14 @@ void testIsometricBendingConstraint()
             isometric_bending_constraint->calculateGrad(grad.data());
             const double analytic_derivative = grad(i * 3 + j);
 
-            if (std::abs(numerical_derivative - analytic_derivative) > eps)
-            {
-                throw std::runtime_error("");
-            }
+            EXPECT_TRUE(std::abs(numerical_derivative - analytic_derivative) < eps);
         }
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {
-    testBendingConstraint();
-    testIsometricBendingConstraint();
+    ::testing::InitGoogleTest(&argc, argv);
 
-    return 0;
+    return RUN_ALL_TESTS();
 }
