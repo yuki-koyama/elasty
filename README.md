@@ -66,6 +66,10 @@ A research-oriented elastic body simulator
   - tinyobjloader <https://github.com/syoyo/tinyobjloader> [MIT]
 - timer <https://github.com/yuki-koyama/timer> [MIT]
 
+### Tests
+
+- googletest <https://github.com/google/googletest> [BSD 3-Clause]
+
 ## Prerequisites
 
 macOS:
