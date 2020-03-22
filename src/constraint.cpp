@@ -86,7 +86,7 @@ void elasty::BendingConstraint::calculateGrad(double* grad_C)
 
     // If the dihedral angle is sufficiently small, return zeros
     constexpr double epsilon = 1e-12;
-    if (std::abs(d) - 1.0 < epsilon)
+    if (1.0 - d * d < epsilon)
     {
         std::fill(grad_C, grad_C + 12, 0.0);
         return;
