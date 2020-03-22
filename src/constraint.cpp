@@ -10,12 +10,12 @@ namespace
     inline Eigen::Matrix3d convertVecToCrossOp(const Eigen::Vector3d& vec)
     {
         Eigen::Matrix3d mat = Eigen::Matrix3d::Zero();
-        mat(0, 1)           = +vec(2);
-        mat(0, 2)           = -vec(1);
-        mat(1, 0)           = -vec(2);
-        mat(1, 2)           = +vec(0);
-        mat(2, 0)           = +vec(1);
-        mat(2, 1)           = -vec(0);
+        mat(0, 1)           = -vec(2);
+        mat(0, 2)           = +vec(1);
+        mat(1, 0)           = +vec(2);
+        mat(1, 2)           = -vec(0);
+        mat(2, 0)           = -vec(1);
+        mat(2, 1)           = +vec(0);
         return mat;
     };
 
@@ -64,6 +64,7 @@ double elasty::BendingConstraint::calculateValue()
     return current_dihedral_angle - m_dihedral_angle;
 }
 
+// See the appendix of the original paper by Muller et al. (2007) for details.
 void elasty::BendingConstraint::calculateGrad(double* grad_C)
 {
     const Eigen::Vector3d& x_0 = m_particles[0]->p;
