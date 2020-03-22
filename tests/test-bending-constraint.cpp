@@ -34,7 +34,7 @@ void calculateNumericalDerivative(const std::shared_ptr<elasty::Particle>       
     }
 }
 
-TEST(CostraintTest, BendingRestShape)
+TEST(ConstraintTest, BendingRestShape)
 {
     constexpr double dt = 1.0 / 60.0;
 
