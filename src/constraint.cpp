@@ -7,7 +7,7 @@
 
 namespace
 {
-    inline Eigen::Matrix3d convert_vector_to_cross_operator(const Eigen::Vector3d& vec)
+    inline Eigen::Matrix3d convertVecToCrossOp(const Eigen::Vector3d& vec)
     {
         Eigen::Matrix3d mat = Eigen::Matrix3d::Zero();
         mat(0, 1)           = +vec(2);
@@ -94,25 +94,25 @@ void elasty::BendingConstraint::calculateGrad(double* grad_C)
 
     const double common_coeff = -1.0 / std::sqrt(1.0 - d * d);
 
-    auto calculate_gradient_of_normalized_cross_product_wrt_p_1 =
-        [](const Eigen::Vector3d& p_1, const Eigen::Vector3d& p_2, const Eigen::Vector3d& n) -> Eigen::Matrix3d {
-        return +(1.0 / p_1.cross(p_2).norm()) *
-               (-convert_vector_to_cross_operator(p_2) + n * (n.cross(p_2)).transpose());
+    auto calc_grad_of_normalized_cross_prod_wrt_p_a =
+        [](const Eigen::Vector3d& p_a, const Eigen::Vector3d& p_b, const Eigen::Vector3d& n) -> Eigen::Matrix3d {
+        return +(1.0 / p_a.cross(p_b).norm()) * (-convertVecToCrossOp(p_b) + n * (n.cross(p_b)).transpose());
     };
 
-    auto calculate_gradient_of_normalized_cross_product_wrt_p_2 =
-        [](const Eigen::Vector3d& p_1, const Eigen::Vector3d& p_2, const Eigen::Vector3d& n) -> Eigen::Matrix3d {
-        return -(1.0 / p_1.cross(p_2).norm()) *
-               (-convert_vector_to_cross_operator(p_1) + n * (n.cross(p_1)).transpose());
+    auto calc_grad_of_normalized_cross_prod_wrt_p_b =
+        [](const Eigen::Vector3d& p_a, const Eigen::Vector3d& p_b, const Eigen::Vector3d& n) -> Eigen::Matrix3d {
+        return -(1.0 / p_a.cross(p_b).norm()) * (-convertVecToCrossOp(p_a) + n * (n.cross(p_a)).transpose());
     };
+
+    const Eigen::Matrix3d partial_n_0_per_partial_p_1 = calc_grad_of_normalized_cross_prod_wrt_p_a(p_1, p_2, n_0);
+    const Eigen::Matrix3d partial_n_1_per_partial_p_1 = calc_grad_of_normalized_cross_prod_wrt_p_a(p_1, p_3, n_1);
+    const Eigen::Matrix3d partial_n_0_per_partial_p_2 = calc_grad_of_normalized_cross_prod_wrt_p_b(p_1, p_2, n_0);
+    const Eigen::Matrix3d partial_n_1_per_partial_p_3 = calc_grad_of_normalized_cross_prod_wrt_p_b(p_1, p_3, n_1);
 
     const Eigen::Vector3d grad_C_wrt_p_1 =
-        common_coeff * (calculate_gradient_of_normalized_cross_product_wrt_p_1(n_0, p_1, p_2).transpose() * n_1 +
-                        calculate_gradient_of_normalized_cross_product_wrt_p_1(n_1, p_1, p_3).transpose() * n_0);
-    const Eigen::Vector3d grad_C_wrt_p_2 =
-        common_coeff * calculate_gradient_of_normalized_cross_product_wrt_p_2(n_0, p_1, p_2).transpose() * n_1;
-    const Eigen::Vector3d grad_C_wrt_p_3 =
-        common_coeff * calculate_gradient_of_normalized_cross_product_wrt_p_2(n_1, p_1, p_3).transpose() * n_0;
+        common_coeff * (partial_n_0_per_partial_p_1.transpose() * n_1 + partial_n_1_per_partial_p_1.transpose() * n_0);
+    const Eigen::Vector3d grad_C_wrt_p_2 = common_coeff * partial_n_0_per_partial_p_2.transpose() * n_1;
+    const Eigen::Vector3d grad_C_wrt_p_3 = common_coeff * partial_n_1_per_partial_p_3.transpose() * n_0;
     const Eigen::Vector3d grad_C_wrt_p_0 = -grad_C_wrt_p_1 - grad_C_wrt_p_2 - grad_C_wrt_p_3;
 
     std::memcpy(grad_C + (3 * 0), grad_C_wrt_p_0.data(), sizeof(double) * 3);
