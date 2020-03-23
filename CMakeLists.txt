@@ -87,10 +87,10 @@ if(ELASTY_TESTS)
   set(INSTALL_GTEST OFF CACHE INTERNAL "" FORCE)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/googletest)
 
-  add_executable(test-bending-constraint ${CMAKE_CURRENT_SOURCE_DIR}/tests/test-bending-constraint.cpp)
-  target_link_libraries(test-bending-constraint elasty gtest_main)
+  add_executable(constraint-test ${CMAKE_CURRENT_SOURCE_DIR}/tests/constraint-test.cpp)
+  target_link_libraries(constraint-test elasty gtest_main)
 
-  add_test(NAME test-bending-constraint COMMAND $<TARGET_FILE:test-bending-constraint>)
+  add_test(NAME constraint-test COMMAND $<TARGET_FILE:constraint-test>)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ if(CLANG_FORMAT)
     ${sources}
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/cloth-alembic/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/interactive-app/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/test-bending-constraint.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/constraint-test.cpp
   )
   add_custom_target(elasty-format COMMAND ${CLANG_FORMAT} -i ${format_target_sources} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
