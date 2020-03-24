@@ -56,7 +56,7 @@ double elasty::BendingConstraint::calculateValue()
     const Eigen::Vector3d n_0 = p_10.cross(p_20).normalized();
     const Eigen::Vector3d n_1 = p_10.cross(p_30).normalized();
 
-    const double current_dihedral_angle = std::acos(std::clamp(n_0.dot(n_1), -1.0, 1.0));
+    const double current_dihedral_angle = std::acos(std::min(1.0, std::max(n_0.dot(n_1), -1.0)));
 
     assert(n_0.norm() > 0.0);
     assert(n_1.norm() > 0.0);

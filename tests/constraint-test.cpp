@@ -74,7 +74,7 @@ TEST(ConstraintTest, BendingRestShape)
     EXPECT_FALSE(n_0.hasNaN());
     EXPECT_FALSE(n_1.hasNaN());
 
-    const double dihedral_angle = std::acos(std::clamp(n_0.dot(n_1), -1.0, 1.0));
+    const double dihedral_angle = std::acos(std::min(1.0, std::max(n_0.dot(n_1), -1.0)));
 
     EXPECT_FALSE(std::isnan(dihedral_angle));
 
@@ -118,7 +118,7 @@ TEST(ConstraintTest, BendingDerivative)
     EXPECT_FALSE(n_0.hasNaN());
     EXPECT_FALSE(n_1.hasNaN());
 
-    const double dihedral_angle = std::acos(std::clamp(n_0.dot(n_1), -1.0, 1.0));
+    const double dihedral_angle = std::acos(std::min(1.0, std::max(n_0.dot(n_1), -1.0)));
 
     EXPECT_FALSE(std::isnan(dihedral_angle));
 
