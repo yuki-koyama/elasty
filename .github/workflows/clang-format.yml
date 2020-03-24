@@ -1,0 +1,17 @@
+name: Format Test
+
+on: [push]
+
+jobs:
+  format-test:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: install-clang-format
+      run: sudo apt-get -y install clang-format
+    - name: clang-format
+      run: |
+        clang-format src/*.cpp include/elasty/*.hpp tests/*.*pp examples/**/*.*pp
+        if [ $? -ne 1 ]; then; exit 1; fi
