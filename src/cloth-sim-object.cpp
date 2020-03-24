@@ -1,4 +1,5 @@
 #include <Eigen/Geometry>
+#include <algorithm>
 #include <elasty/cloth-sim-object.hpp>
 #include <elasty/constraint.hpp>
 #include <elasty/particle.hpp>
@@ -200,7 +201,7 @@ elasty::ClothSimObject::ClothSimObject(const std::string&       obj_path,
                 assert(!n_1.hasNaN());
 
                 // Typical value is 0.0 or pi
-                const double dihedral_angle = std::acos(std::max(-1.0, std::min(+1.0, n_0.dot(n_1))));
+                const double dihedral_angle = std::acos(std::clamp(n_0.dot(n_1), -1.0, 1.0));
 
                 assert(!std::isnan(dihedral_angle));
 

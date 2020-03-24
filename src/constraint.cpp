@@ -10,12 +10,14 @@ namespace
     inline Eigen::Matrix3d convertVecToCrossOp(const Eigen::Vector3d& vec)
     {
         Eigen::Matrix3d mat = Eigen::Matrix3d::Zero();
-        mat(0, 1)           = -vec(2);
-        mat(0, 2)           = +vec(1);
-        mat(1, 0)           = +vec(2);
-        mat(1, 2)           = -vec(0);
-        mat(2, 0)           = -vec(1);
-        mat(2, 1)           = +vec(0);
+
+        mat(0, 1) = -vec(2);
+        mat(0, 2) = +vec(1);
+        mat(1, 0) = +vec(2);
+        mat(1, 2) = -vec(0);
+        mat(2, 0) = -vec(1);
+        mat(2, 1) = +vec(0);
+
         return mat;
     };
 
@@ -54,11 +56,10 @@ double elasty::BendingConstraint::calculateValue()
     const Eigen::Vector3d n_0 = p_10.cross(p_20).normalized();
     const Eigen::Vector3d n_1 = p_10.cross(p_30).normalized();
 
-    assert(!n_0.hasNaN());
-    assert(!n_1.hasNaN());
+    const double current_dihedral_angle = std::acos(std::clamp(n_0.dot(n_1), -1.0, 1.0));
 
-    const double current_dihedral_angle = std::acos(std::min(+1.0, std::max(-1.0, n_0.dot(n_1))));
-
+    assert(n_0.norm() > 0.0);
+    assert(n_1.norm() > 0.0);
     assert(!std::isnan(current_dihedral_angle));
 
     return current_dihedral_angle - m_dihedral_angle;
