@@ -85,7 +85,8 @@ void elasty::BendingConstraint::calculateGrad(double* grad_C)
 
     const double d = n_0.dot(n_1);
 
-    // If the dihedral angle is sufficiently small, return zeros
+    // If the current dihedral angle is sufficiently small or large (i.e., zero or pi), return zeros.
+    // This is only an ad-hoc solution for stability and it needs to be solved in a more theoretically grounded way.
     constexpr double epsilon = 1e-12;
     if (1.0 - d * d < epsilon)
     {
@@ -248,12 +249,14 @@ void elasty::DistanceConstraint::calculateGrad(double* grad_C)
     const Eigen::Vector3d& x_0 = m_particles[0]->p;
     const Eigen::Vector3d& x_1 = m_particles[1]->p;
 
-    Eigen::Vector3d n = (x_0 - x_1).normalized();
+    const Eigen::Vector3d r = x_0 - x_1;
 
-    if (n.hasNaN())
-    {
-        n = Eigen::Vector3d::Random(3).normalized();
-    }
+    const double dist = r.norm();
+
+    constexpr double epsilon = 1e-24;
+
+    // Calculate a normalized vector, where a random direction is selected when the points are degenerated
+    const Eigen::Vector3d n = (dist < epsilon) ? Eigen::Vector3d::Random().normalized() : (1.0 / dist) * r;
 
     grad_C[0] = +n(0);
     grad_C[1] = +n(1);
