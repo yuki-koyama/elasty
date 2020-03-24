@@ -179,7 +179,6 @@ TEST(ConstraintTest, DistanceZero)
     EXPECT_TRUE(analytic_grad.norm() < epsilon);
 }
 
-
 TEST(ConstraintTest, DistanceDerivative)
 {
     constexpr double dt = 1.0 / 60.0;
@@ -214,13 +213,14 @@ TEST(ConstraintTest, ContinuumTriangleDerivative)
     constexpr double dt = 1.0 / 60.0;
 
     constexpr double youngs_modulus = 1000.0;
-    constexpr double poisson_ratio = 0.10;
+    constexpr double poisson_ratio  = 0.10;
 
     auto p_0 = std::make_shared<elasty::Particle>(Vector3d(0.0, 0.0, 0.0), Vector3d::Zero(), 1.0);
     auto p_1 = std::make_shared<elasty::Particle>(Vector3d(0.0, 1.0, 0.0), Vector3d::Zero(), 1.0);
     auto p_2 = std::make_shared<elasty::Particle>(Vector3d(1.0, 0.0, 0.0), Vector3d::Zero(), 1.0);
 
-    const auto constraint = std::make_shared<elasty::ContinuumTriangleConstraint>(p_0, p_1, p_2, 1.0, 0.0, dt, youngs_modulus, poisson_ratio);
+    const auto constraint = std::make_shared<elasty::ContinuumTriangleConstraint>(
+        p_0, p_1, p_2, 1.0, 0.0, dt, youngs_modulus, poisson_ratio);
 
     const std::shared_ptr<elasty::Particle> particles[] = {p_0, p_1, p_2};
 
