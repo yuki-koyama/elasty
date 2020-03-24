@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <elasty/constraint.hpp>
 #include <elasty/particle.hpp>
 #include <gtest/gtest.h>
@@ -73,7 +74,7 @@ TEST(ConstraintTest, BendingRestShape)
     EXPECT_FALSE(n_0.hasNaN());
     EXPECT_FALSE(n_1.hasNaN());
 
-    const double dihedral_angle = std::acos(std::max(-1.0, std::min(+1.0, n_0.dot(n_1))));
+    const double dihedral_angle = std::acos(std::clamp(n_0.dot(n_1), -1.0, 1.0));
 
     EXPECT_FALSE(std::isnan(dihedral_angle));
 
@@ -117,7 +118,7 @@ TEST(ConstraintTest, BendingDerivative)
     EXPECT_FALSE(n_0.hasNaN());
     EXPECT_FALSE(n_1.hasNaN());
 
-    const double dihedral_angle = std::acos(std::max(-1.0, std::min(+1.0, n_0.dot(n_1))));
+    const double dihedral_angle = std::acos(std::clamp(n_0.dot(n_1), -1.0, 1.0));
 
     EXPECT_FALSE(std::isnan(dihedral_angle));
 
@@ -128,7 +129,7 @@ TEST(ConstraintTest, BendingDerivative)
 
     for (auto particle : particles)
     {
-        particle->p = particle->x + Eigen::Vector3d::Random();
+        particle->p = particle->x + Vector3d::Random();
     }
 
     Matrix<double, 12, 1> analytic_grad;
@@ -158,7 +159,7 @@ TEST(ConstraintTest, IsometricBendingDerivative)
 
     for (auto particle : particles)
     {
-        particle->p = particle->x + Eigen::Vector3d::Random();
+        particle->p = particle->x + Vector3d::Random();
     }
 
     Matrix<double, 12, 1> analytic_grad;
@@ -188,7 +189,7 @@ TEST(ConstraintTest, DistanceDegenerated)
 
     for (auto particle : particles)
     {
-        particle->p = Eigen::Vector3d::Zero();
+        particle->p = Vector3d::Zero();
     }
 
     Matrix<double, 6, 1> analytic_grad;
@@ -242,7 +243,7 @@ TEST(ConstraintTest, DistanceDerivative)
 
     for (auto particle : particles)
     {
-        particle->p = particle->x + Eigen::Vector3d::Random();
+        particle->p = particle->x + Vector3d::Random();
     }
 
     Matrix<double, 6, 1> analytic_grad;
@@ -274,7 +275,7 @@ TEST(ConstraintTest, ContinuumTriangleDerivative)
 
     for (auto particle : particles)
     {
-        particle->p = particle->x + Eigen::Vector3d::Random();
+        particle->p = particle->x + Vector3d::Random();
     }
 
     Matrix<double, 9, 1> analytic_grad;
