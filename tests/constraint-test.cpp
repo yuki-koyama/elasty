@@ -154,6 +154,32 @@ TEST(ConstraintTest, IsometricBendingDerivative)
     EXPECT_TRUE((numerical_grad - analytic_grad).cwiseAbs().maxCoeff() < epsilon);
 }
 
+TEST(ConstraintTest, DistanceZero)
+{
+    constexpr double dt = 1.0 / 60.0;
+
+    auto p_0 = std::make_shared<elasty::Particle>(Vector3d(0.0, 0.0, 0.0), Vector3d::Zero(), 1.0);
+    auto p_1 = std::make_shared<elasty::Particle>(Vector3d(0.0, 0.0, 0.0), Vector3d::Zero(), 1.0);
+
+    const double dist = (p_0->x - p_1->x).norm();
+
+    const auto constraint = std::make_shared<elasty::DistanceConstraint>(p_0, p_1, 1.0, 0.0, dt, dist);
+
+    const std::shared_ptr<elasty::Particle> particles[] = {p_0, p_1};
+
+    constexpr double epsilon = 1e-04;
+
+    Matrix<double, 6, 1> analytic_grad;
+    constraint->calculateGrad(analytic_grad.data());
+
+    Matrix<double, 6, 1> numerical_grad;
+    calculateNumericalDerivative<2>(particles, constraint, numerical_grad.data());
+
+    EXPECT_TRUE((numerical_grad - analytic_grad).cwiseAbs().maxCoeff() < epsilon);
+    EXPECT_TRUE(analytic_grad.norm() < epsilon);
+}
+
+
 TEST(ConstraintTest, DistanceDerivative)
 {
     constexpr double dt = 1.0 / 60.0;
