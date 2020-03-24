@@ -209,6 +209,37 @@ TEST(ConstraintTest, DistanceDerivative)
     EXPECT_TRUE((numerical_grad - analytic_grad).cwiseAbs().maxCoeff() < epsilon);
 }
 
+TEST(ConstraintTest, ContinuumTriangleDerivative)
+{
+    constexpr double dt = 1.0 / 60.0;
+
+    constexpr double youngs_modulus = 1000.0;
+    constexpr double poisson_ratio = 0.10;
+
+    auto p_0 = std::make_shared<elasty::Particle>(Vector3d(0.0, 0.0, 0.0), Vector3d::Zero(), 1.0);
+    auto p_1 = std::make_shared<elasty::Particle>(Vector3d(0.0, 1.0, 0.0), Vector3d::Zero(), 1.0);
+    auto p_2 = std::make_shared<elasty::Particle>(Vector3d(1.0, 0.0, 0.0), Vector3d::Zero(), 1.0);
+
+    const auto constraint = std::make_shared<elasty::ContinuumTriangleConstraint>(p_0, p_1, p_2, 1.0, 0.0, dt, youngs_modulus, poisson_ratio);
+
+    const std::shared_ptr<elasty::Particle> particles[] = {p_0, p_1, p_2};
+
+    constexpr double epsilon = 1e-04;
+
+    for (int i = 0; i < 3; ++i)
+    {
+        particles[i]->p = particles[i]->x + Eigen::Vector3d::Random();
+    }
+
+    Matrix<double, 9, 1> analytic_grad;
+    constraint->calculateGrad(analytic_grad.data());
+
+    Matrix<double, 9, 1> numerical_grad;
+    calculateNumericalDerivative<3>(particles, constraint, numerical_grad.data());
+
+    EXPECT_TRUE((numerical_grad - analytic_grad).cwiseAbs().maxCoeff() < epsilon);
+}
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
