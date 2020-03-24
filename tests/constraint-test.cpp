@@ -34,6 +34,21 @@ void calculateNumericalDerivative(const std::shared_ptr<elasty::Particle>       
     }
 }
 
+template <int Num> bool checkZeroSumCondition(double* grad)
+{
+    constexpr double epsilon = 1e-12;
+
+    Vector3d sum = Vector3d::Zero();
+    for (int i = 0; i < Num; ++i)
+    {
+        sum(0) += grad[i * 3 + 0];
+        sum(1) += grad[i * 3 + 1];
+        sum(2) += grad[i * 3 + 2];
+    }
+
+    return sum.norm() < epsilon;
+}
+
 TEST(ConstraintTest, BendingRestShape)
 {
     constexpr double dt = 1.0 / 60.0;
@@ -111,9 +126,9 @@ TEST(ConstraintTest, BendingDerivative)
 
     constexpr double epsilon = 1e-04;
 
-    for (int i = 0; i < 4; ++i)
+    for (auto particle : particles)
     {
-        particles[i]->p = particles[i]->x + Eigen::Vector3d::Random();
+        particle->p = particle->x + Eigen::Vector3d::Random();
     }
 
     Matrix<double, 12, 1> analytic_grad;
@@ -123,6 +138,7 @@ TEST(ConstraintTest, BendingDerivative)
     calculateNumericalDerivative<4>(particles, constraint, numerical_grad.data());
 
     EXPECT_TRUE((numerical_grad - analytic_grad).cwiseAbs().maxCoeff() < epsilon);
+    EXPECT_TRUE(checkZeroSumCondition<4>(analytic_grad.data()));
 }
 
 TEST(ConstraintTest, IsometricBendingDerivative)
@@ -140,9 +156,9 @@ TEST(ConstraintTest, IsometricBendingDerivative)
 
     constexpr double epsilon = 1e-04;
 
-    for (int i = 0; i < 4; ++i)
+    for (auto particle : particles)
     {
-        particles[i]->p = particles[i]->x + Eigen::Vector3d::Random();
+        particle->p = particle->x + Eigen::Vector3d::Random();
     }
 
     Matrix<double, 12, 1> analytic_grad;
@@ -152,9 +168,38 @@ TEST(ConstraintTest, IsometricBendingDerivative)
     calculateNumericalDerivative<4>(particles, constraint, numerical_grad.data());
 
     EXPECT_TRUE((numerical_grad - analytic_grad).cwiseAbs().maxCoeff() < epsilon);
+    EXPECT_TRUE(checkZeroSumCondition<4>(analytic_grad.data()));
 }
 
-TEST(ConstraintTest, DistanceZero)
+TEST(ConstraintTest, DistanceDegenerated)
+{
+    constexpr double dt = 1.0 / 60.0;
+
+    auto p_0 = std::make_shared<elasty::Particle>(Vector3d(0.0, 0.0, 0.0), Vector3d::Zero(), 1.0);
+    auto p_1 = std::make_shared<elasty::Particle>(Vector3d(0.0, 1.0, 0.0), Vector3d::Zero(), 1.0);
+
+    const double dist = (p_0->x - p_1->x).norm();
+
+    const auto constraint = std::make_shared<elasty::DistanceConstraint>(p_0, p_1, 1.0, 0.0, dt, dist);
+
+    const std::shared_ptr<elasty::Particle> particles[] = {p_0, p_1};
+
+    constexpr double epsilon = 1e-04;
+
+    for (auto particle : particles)
+    {
+        particle->p = Eigen::Vector3d::Zero();
+    }
+
+    Matrix<double, 6, 1> analytic_grad;
+    constraint->calculateGrad(analytic_grad.data());
+
+    EXPECT_TRUE(std::abs(analytic_grad.segment<3>(0 * 3).norm() - 1.0) < epsilon);
+    EXPECT_TRUE(std::abs(analytic_grad.segment<3>(1 * 3).norm() - 1.0) < epsilon);
+    EXPECT_TRUE(checkZeroSumCondition<2>(analytic_grad.data()));
+}
+
+TEST(ConstraintTest, DistanceZeroDegenerated)
 {
     constexpr double dt = 1.0 / 60.0;
 
@@ -172,11 +217,12 @@ TEST(ConstraintTest, DistanceZero)
     Matrix<double, 6, 1> analytic_grad;
     constraint->calculateGrad(analytic_grad.data());
 
-    Matrix<double, 6, 1> numerical_grad;
-    calculateNumericalDerivative<2>(particles, constraint, numerical_grad.data());
+    const double value = constraint->calculateValue();
 
-    EXPECT_TRUE((numerical_grad - analytic_grad).cwiseAbs().maxCoeff() < epsilon);
-    EXPECT_TRUE(analytic_grad.norm() < epsilon);
+    EXPECT_TRUE(std::abs(value) < epsilon);
+    EXPECT_TRUE(std::abs(analytic_grad.segment<3>(0 * 3).norm() - 1.0) < epsilon);
+    EXPECT_TRUE(std::abs(analytic_grad.segment<3>(1 * 3).norm() - 1.0) < epsilon);
+    EXPECT_TRUE(checkZeroSumCondition<2>(analytic_grad.data()));
 }
 
 TEST(ConstraintTest, DistanceDerivative)
@@ -194,9 +240,9 @@ TEST(ConstraintTest, DistanceDerivative)
 
     constexpr double epsilon = 1e-04;
 
-    for (int i = 0; i < 2; ++i)
+    for (auto particle : particles)
     {
-        particles[i]->p = particles[i]->x + Eigen::Vector3d::Random();
+        particle->p = particle->x + Eigen::Vector3d::Random();
     }
 
     Matrix<double, 6, 1> analytic_grad;
@@ -226,9 +272,9 @@ TEST(ConstraintTest, ContinuumTriangleDerivative)
 
     constexpr double epsilon = 1e-04;
 
-    for (int i = 0; i < 3; ++i)
+    for (auto particle : particles)
     {
-        particles[i]->p = particles[i]->x + Eigen::Vector3d::Random();
+        particle->p = particle->x + Eigen::Vector3d::Random();
     }
 
     Matrix<double, 9, 1> analytic_grad;
