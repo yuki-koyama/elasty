@@ -347,6 +347,8 @@ namespace elasty
         Eigen::Matrix2d m_rest_D_inv;
     };
 
+    /// \details When the two particles are degenerated (i.e., at an exactly same posinion), the gradient will be set as
+    /// a random direction to recover from the degenerated state.
     class DistanceConstraint final : public FixedNumAbstractConstraint<2>
     {
     public:
