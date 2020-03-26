@@ -289,7 +289,7 @@ public:
     {
         m_material->submitUniforms();
 
-        for (auto& particle : m_engine->m_particles)
+        for (const auto& particle : m_engine->getParticles())
         {
             const glm::mat4 translate_matrix = glm::translate(eigen2glm(particle->x));
             const glm::mat4 scale_matrix     = glm::scale(glm::vec3(scale));

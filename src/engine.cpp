@@ -27,7 +27,7 @@ void elasty::AbstractEngine::stepTime()
     }
 
     // Solve constraints
-    for (unsigned int i = 0; i < m_num_iterations; ++i)
+    for (unsigned int i = 0; i < m_num_iters; ++i)
     {
         for (auto constraint : m_constraints)
         {
