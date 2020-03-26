@@ -27,12 +27,17 @@ namespace elasty
         std::vector<std::shared_ptr<AbstractConstraint>> m_constraints;
         std::vector<std::shared_ptr<AbstractConstraint>> m_instant_constraints;
 
-        double       m_dt             = 1.0 / 60.0;
-        unsigned int m_num_iterations = 10;
+        double getDeltaTime() const { return m_delta_time; }
+
+        void setNumIters(unsigned int num_iters) { m_num_iterations = num_iters; }
 
     protected:
         void addConstraint(std::shared_ptr<AbstractConstraint> constraint);
         void addInstantConstraint(std::shared_ptr<AbstractConstraint> constraint);
+
+    private:
+        double       m_delta_time     = 1.0 / 60.0;
+        unsigned int m_num_iterations = 10;
     };
 } // namespace elasty
 

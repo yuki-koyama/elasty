@@ -8,13 +8,13 @@ void elasty::AbstractEngine::stepTime()
     setExternalForces();
     for (auto& particle : m_particles)
     {
-        particle->v = particle->v + m_dt * particle->w * particle->f;
+        particle->v = particle->v + m_delta_time * particle->w * particle->f;
     }
 
     // Calculate predicted positions
     for (auto& particle : m_particles)
     {
-        particle->p = particle->x + m_dt * particle->v;
+        particle->p = particle->x + m_delta_time * particle->v;
     }
 
     // Generate collision constraints
@@ -43,7 +43,7 @@ void elasty::AbstractEngine::stepTime()
     // Apply the results
     for (auto& particle : m_particles)
     {
-        particle->v = (particle->p - particle->x) * (1.0 / m_dt);
+        particle->v = (particle->p - particle->x) * (1.0 / m_delta_time);
         particle->x = particle->p;
     }
 
