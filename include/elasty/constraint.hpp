@@ -110,12 +110,8 @@ namespace elasty
             const Eigen::Matrix<double, Num * 3, 1> grad_C = calculateGrad();
 
             // Skip if the gradient is sufficiently small
-#if 1
-            constexpr double very_small_value = 1e-10;
+            constexpr double very_small_value = 1e-12;
             if (grad_C.norm() < very_small_value)
-#else
-            if (grad_C.isApprox(Eigen::Matrix<double, Num * 3, 1>::Zero()))
-#endif
             {
                 return;
             }
