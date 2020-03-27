@@ -2,6 +2,7 @@
 #define ELASTY_CONSTRAINT_HPP
 
 #include <Eigen/Core>
+#include <elasty/algorithm-type.hpp>
 #include <elasty/particle.hpp>
 #include <memory>
 #include <vector>
@@ -12,12 +13,6 @@ namespace elasty
     {
         Bilateral,
         Unilateral
-    };
-
-    enum class AlgorithmType
-    {
-        Pbd,
-        Xpbd
     };
 
     class AbstractConstraint
