@@ -2,8 +2,10 @@
 #include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
 
-elasty::AbstractEngine::AbstractEngine(const double delta_time, const unsigned int num_iters)
-    : m_delta_time(delta_time), m_num_iters(num_iters)
+elasty::AbstractEngine::AbstractEngine(const double        delta_time,
+                                       const unsigned int  num_iters,
+                                       const AlgorithmType algorithm_type)
+    : m_delta_time(delta_time), m_num_iters(num_iters), m_algorithm_type(algorithm_type)
 {
 }
 
@@ -36,12 +38,12 @@ void elasty::AbstractEngine::stepTime()
     {
         for (auto constraint : m_constraints)
         {
-            constraint->projectParticles(AlgorithmType::Pbd);
+            constraint->projectParticles(m_algorithm_type);
         }
 
         for (auto constraint : m_instant_constraints)
         {
-            constraint->projectParticles(AlgorithmType::Pbd);
+            constraint->projectParticles(m_algorithm_type);
         }
     }
 

@@ -1,6 +1,7 @@
 #ifndef ELASTY_ENGINE_HPP
 #define ELASTY_ENGINE_HPP
 
+#include <elasty/algorithm-type.hpp>
 #include <memory>
 #include <vector>
 
@@ -12,7 +13,9 @@ namespace elasty
     class AbstractEngine
     {
     public:
-        AbstractEngine(const double delta_time = 1.0 / 60.0, const unsigned int num_iters = 10);
+        AbstractEngine(const double        delta_time     = 1.0 / 60.0,
+                       const unsigned int  num_iters      = 10,
+                       const AlgorithmType algorithm_type = AlgorithmType::Xpbd);
 
         void stepTime();
 
@@ -40,8 +43,9 @@ namespace elasty
         std::vector<std::shared_ptr<AbstractConstraint>> m_instant_constraints;
 
     private:
-        const double       m_delta_time;
-        const unsigned int m_num_iters;
+        const double        m_delta_time;
+        const unsigned int  m_num_iters;
+        const AlgorithmType m_algorithm_type;
     };
 } // namespace elasty
 
