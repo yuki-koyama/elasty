@@ -13,10 +13,10 @@
 class SimpleEngine final : public elasty::AbstractEngine
 {
 public:
+    SimpleEngine() : elasty::AbstractEngine(1.0 / 60.0, 50) {}
+
     void initializeScene() override
     {
-        setNumIters(50);
-
         // Instantiate a cloth object
         constexpr double  cloth_in_plane_stiffness      = 1.000; ///< PBD
         constexpr double  cloth_in_plane_compliance     = 1.000; ///< XPBD

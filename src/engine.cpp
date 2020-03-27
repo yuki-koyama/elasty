@@ -2,6 +2,11 @@
 #include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
 
+elasty::AbstractEngine::AbstractEngine(const double delta_time, const unsigned int num_iters)
+    : m_delta_time(delta_time), m_num_iters(num_iters)
+{
+}
+
 void elasty::AbstractEngine::stepTime()
 {
     // Apply external forces

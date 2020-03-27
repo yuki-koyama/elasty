@@ -12,6 +12,8 @@ namespace elasty
     class AbstractEngine
     {
     public:
+        AbstractEngine(const double delta_time = 1.0 / 60.0, const unsigned int num_iters = 10);
+
         void stepTime();
 
         virtual void initializeScene() = 0;
@@ -24,9 +26,6 @@ namespace elasty
 
         /// \brief Getter of the delta time value
         double getDeltaTime() const { return m_delta_time; }
-
-        /// \brief Setter of the number of iterations for constraint solving
-        void setNumIters(unsigned int num_iters) { m_num_iters = num_iters; }
 
         /// \brief Getter of the particles this engine manages
         const std::vector<std::shared_ptr<Particle>>& getParticles() const { return m_particles; }
@@ -41,8 +40,8 @@ namespace elasty
         std::vector<std::shared_ptr<AbstractConstraint>> m_instant_constraints;
 
     private:
-        double       m_delta_time = 1.0 / 60.0;
-        unsigned int m_num_iters  = 10;
+        const double       m_delta_time;
+        const unsigned int m_num_iters;
     };
 } // namespace elasty
 
