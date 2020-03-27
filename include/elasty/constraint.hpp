@@ -213,12 +213,8 @@ namespace elasty
             const Eigen::VectorXd grad_C = calculateGrad();
 
             // Skip if the gradient is sufficiently small
-#if 1
-            constexpr double very_small_value = 1e-10;
+            constexpr double very_small_value = 1e-12;
             if (grad_C.norm() < very_small_value)
-#else
-            if (grad_C.isApprox(Eigen::VectorXd::Zero(grad_C.size())))
-#endif
             {
                 return;
             }
