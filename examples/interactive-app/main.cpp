@@ -159,9 +159,9 @@ public:
 
 private:
     const double          m_cloth_in_plane_stiffness      = 0.95;
-    const double          m_cloth_in_plane_compliance     = 1.00;
+    const double          m_cloth_in_plane_compliance     = 1e-2;
     const double          m_cloth_out_of_plane_stiffness  = 0.05;
-    const double          m_cloth_out_of_plane_compliance = 10.0;
+    const double          m_cloth_out_of_plane_compliance = 1e+4;
     const std::string     m_cloth_obj_path                = "./models/cloths/0.10.obj";
     const Eigen::Affine3d m_cloth_import_transform =
         Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * glm::pi<double>(), Eigen::Vector3d::UnitX());

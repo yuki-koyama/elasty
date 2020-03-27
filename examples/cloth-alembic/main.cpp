@@ -13,15 +13,15 @@
 class SimpleEngine final : public elasty::AbstractEngine
 {
 public:
-    SimpleEngine() : elasty::AbstractEngine(1.0 / 60.0, 50) {}
+    SimpleEngine() : elasty::AbstractEngine(1.0 / 60.0, 50, elasty::AlgorithmType::Xpbd) {}
 
     void initializeScene() override
     {
         // Instantiate a cloth object
         constexpr double  cloth_in_plane_stiffness      = 1.000; ///< PBD
-        constexpr double  cloth_in_plane_compliance     = 1.000; ///< XPBD
+        constexpr double  cloth_in_plane_compliance     = 1e-02; ///< XPBD
         constexpr double  cloth_out_of_plane_stiffness  = 0.100; ///< PBD
-        constexpr double  cloth_out_of_plane_compliance = 10.00; ///< XPBD
+        constexpr double  cloth_out_of_plane_compliance = 1e+04; ///< XPBD
         const std::string cloth_obj_path                = "./models/cloths/0.10.obj";
 
         const Eigen::Affine3d cloth_import_transform =
@@ -39,8 +39,8 @@ public:
                                                      cloth_out_of_plane_compliance,
                                                      getDeltaTime(),
                                                      cloth_import_transform,
-                                                     elasty::ClothSimObject::InPlaneStrategy::ContinuumTriangle,
-                                                     elasty::ClothSimObject::OutOfPlaneStrategy::Bending);
+                                                     elasty::ClothSimObject::InPlaneStrategy::EdgeDistance,
+                                                     elasty::ClothSimObject::OutOfPlaneStrategy::IsometricBending);
 
         // Register the cloth object
         std::copy(m_cloth_sim_object->m_particles.begin(),
