@@ -148,9 +148,9 @@ std::string elasty::generateClothMeshObjData(const double   width,
     const double v_step = height / static_cast<double>(vertical_resolution);
 
     // Vertices
-    for (unsigned h_index = 0; h_index <= horizontal_resolution; ++h_index)
+    for (unsigned v_index = 0; v_index <= vertical_resolution; ++v_index)
     {
-        for (unsigned v_index = 0; v_index <= vertical_resolution; ++v_index)
+        for (unsigned h_index = 0; h_index <= horizontal_resolution; ++h_index)
         {
             const double x = [&]() {
                 if (v_index % 2 == 0 || h_index == 0)
@@ -167,7 +167,7 @@ std::string elasty::generateClothMeshObjData(const double   width,
             vertices.push_back(Eigen::Vector3d(x, 0.0, y));
 
             // Additional vetex at the even-indexed row
-            if (v_index % 2 == 0 || h_index == horizontal_resolution)
+            if (v_index % 2 == 1 && h_index == horizontal_resolution)
             {
                 vertices.push_back(Eigen::Vector3d(0.5 * width, 0.0, y));
             }
@@ -175,9 +175,54 @@ std::string elasty::generateClothMeshObjData(const double   width,
     }
 
     // Triangles
-    // TODO
+    for (unsigned v_index = 0; v_index < vertical_resolution; ++v_index)
+    {
+        if (v_index % 2 == 0)
+        {
+            const unsigned top_row_begin    = (2 * (horizontal_resolution + 1) + 1) * (v_index / 2);
+            const unsigned bottom_row_begin = top_row_begin + horizontal_resolution + 1;
 
-    // Output
+            for (unsigned h_index = 0; h_index <= horizontal_resolution; ++h_index)
+            {
+                if (h_index == 0)
+                {
+                    triangles.push_back(
+                        Eigen::Vector3i(top_row_begin + h_index, bottom_row_begin + 0, bottom_row_begin + 1));
+                }
+                else
+                {
+                    triangles.push_back(Eigen::Vector3i(
+                        top_row_begin + h_index, top_row_begin + h_index - 1, bottom_row_begin + h_index));
+                    triangles.push_back(Eigen::Vector3i(
+                        top_row_begin + h_index, bottom_row_begin + h_index, bottom_row_begin + h_index + 1));
+                }
+            }
+        }
+        else
+        {
+            const unsigned top_row_begin =
+                (2 * (horizontal_resolution + 1) + 1) * ((v_index - 1) / 2) + horizontal_resolution + 1;
+            const unsigned bottom_row_begin = top_row_begin + horizontal_resolution + 2;
+
+            for (unsigned h_index = 0; h_index <= horizontal_resolution; ++h_index)
+            {
+                if (h_index == 0)
+                {
+                    triangles.push_back(Eigen::Vector3i(
+                        top_row_begin + h_index, bottom_row_begin + h_index, top_row_begin + h_index + 1));
+                }
+                else
+                {
+                    triangles.push_back(Eigen::Vector3i(
+                        top_row_begin + h_index, bottom_row_begin + h_index - 1, bottom_row_begin + h_index));
+                    triangles.push_back(Eigen::Vector3i(
+                        top_row_begin + h_index, bottom_row_begin + h_index, top_row_begin + h_index + 1));
+                }
+            }
+        }
+    }
+
+    // Convert to the OBJ format
     std::stringstream sstream;
     for (const auto& vertex : vertices)
     {
@@ -185,7 +230,7 @@ std::string elasty::generateClothMeshObjData(const double   width,
     }
     for (const auto& triangle : triangles)
     {
-        sstream << "f " << triangle(0) << " " << triangle(1) << " " << triangle(2) << std::endl;
+        sstream << "f " << triangle(0) + 1 << " " << triangle(1) + 1 << " " << triangle(2) + 1 << std::endl;
     }
 
     return sstream.str();
