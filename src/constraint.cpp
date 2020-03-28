@@ -35,9 +35,12 @@ elasty::BendingConstraint::BendingConstraint(const std::shared_ptr<Particle> p_0
                                              const std::shared_ptr<Particle> p_3,
                                              const double                    stiffness,
                                              const double                    compliance,
-                                             const double                    dt,
+                                             const double                    delta_time,
                                              const double                    dihedral_angle)
-    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2, p_3}, stiffness, compliance, dt),
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2, p_3},
+                                 stiffness,
+                                 compliance,
+                                 delta_time),
       m_dihedral_angle(dihedral_angle)
 {
 }
@@ -129,10 +132,13 @@ elasty::ContinuumTriangleConstraint::ContinuumTriangleConstraint(const std::shar
                                                                  const std::shared_ptr<Particle> p_2,
                                                                  const double                    stiffness,
                                                                  const double                    compliance,
-                                                                 const double                    dt,
+                                                                 const double                    delta_time,
                                                                  const double                    youngs_modulus,
                                                                  const double                    poisson_ratio)
-    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2}, stiffness, compliance, dt),
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2},
+                                 stiffness,
+                                 compliance,
+                                 delta_time),
       m_first_lame(youngs_modulus * poisson_ratio / ((1.0 + poisson_ratio) * (1.0 - 2.0 * poisson_ratio))),
       m_second_lame(youngs_modulus / (2.0 * (1.0 + poisson_ratio)))
 {
@@ -230,9 +236,10 @@ elasty::DistanceConstraint::DistanceConstraint(const std::shared_ptr<Particle> p
                                                const std::shared_ptr<Particle> p_1,
                                                const double                    stiffness,
                                                const double                    compliance,
-                                               const double                    dt,
+                                               const double                    delta_time,
                                                const double                    d)
-    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1}, stiffness, compliance, dt), m_d(d)
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1}, stiffness, compliance, delta_time),
+      m_d(d)
 {
     assert(d >= 0.0);
 }
@@ -270,10 +277,12 @@ void elasty::DistanceConstraint::calculateGrad(double* grad_C)
 elasty::EnvironmentalCollisionConstraint::EnvironmentalCollisionConstraint(const std::shared_ptr<Particle> p_0,
                                                                            const double                    stiffness,
                                                                            const double                    compliance,
-                                                                           const double                    dt,
+                                                                           const double                    delta_time,
                                                                            const Eigen::Vector3d&          n,
                                                                            const double                    d)
-    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0}, stiffness, compliance, dt), m_n(n), m_d(d)
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0}, stiffness, compliance, delta_time),
+      m_n(n),
+      m_d(d)
 {
 }
 
@@ -291,9 +300,10 @@ void elasty::EnvironmentalCollisionConstraint::calculateGrad(double* grad_C)
 elasty::FixedPointConstraint::FixedPointConstraint(const std::shared_ptr<Particle> p_0,
                                                    const double                    stiffness,
                                                    const double                    compliance,
-                                                   const double                    dt,
+                                                   const double                    delta_time,
                                                    const Eigen::Vector3d&          point)
-    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0}, stiffness, compliance, dt), m_point(point)
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0}, stiffness, compliance, delta_time),
+      m_point(point)
 {
 }
 
@@ -322,8 +332,11 @@ elasty::IsometricBendingConstraint::IsometricBendingConstraint(const std::shared
                                                                const std::shared_ptr<Particle> p_3,
                                                                const double                    stiffness,
                                                                const double                    compliance,
-                                                               const double                    dt)
-    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2, p_3}, stiffness, compliance, dt)
+                                                               const double                    delta_time)
+    : FixedNumAbstractConstraint(std::vector<std::shared_ptr<Particle>>{p_0, p_1, p_2, p_3},
+                                 stiffness,
+                                 compliance,
+                                 delta_time)
 {
     const Eigen::Vector3d& x_0 = p_0->x;
     const Eigen::Vector3d& x_1 = p_1->x;
@@ -378,8 +391,8 @@ void elasty::IsometricBendingConstraint::calculateGrad(double* grad_C)
 elasty::ShapeMatchingConstraint::ShapeMatchingConstraint(const std::vector<std::shared_ptr<Particle>>& particles,
                                                          const double                                  stiffness,
                                                          const double                                  compliance,
-                                                         const double                                  dt)
-    : VariableNumConstraint(particles, stiffness, compliance, dt)
+                                                         const double                                  delta_time)
+    : VariableNumConstraint(particles, stiffness, compliance, delta_time)
 {
     // Calculate the initial center of mass and the total mass
     Eigen::Vector3d x_0_cm = Eigen::Vector3d::Zero();
