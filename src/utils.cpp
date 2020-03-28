@@ -164,12 +164,12 @@ std::string elasty::generateClothMeshObjData(const double   width,
             }();
             const double y = static_cast<double>(v_index) * v_step - 0.5 * height;
 
-            vertices.push_back(Eigen::Vector3d(x, y, 0.0));
+            vertices.push_back(Eigen::Vector3d(x, 0.0, y));
 
             // Additional vetex at the even-indexed row
             if (v_index % 2 == 0 || h_index == horizontal_resolution)
             {
-                vertices.push_back(Eigen::Vector3d(0.5 * width, y, 0.0));
+                vertices.push_back(Eigen::Vector3d(0.5 * width, 0.0, y));
             }
         }
     }
