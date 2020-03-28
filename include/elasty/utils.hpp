@@ -35,7 +35,7 @@ namespace elasty
 
     std::shared_ptr<AlembicManager> createAlembicManager(const std::string&                    file_path,
                                                          const std::shared_ptr<ClothSimObject> cloth_sim_object,
-                                                         const double                          dt);
+                                                         const double                          delta_time);
 
     void submitCurrentStatus(const std::shared_ptr<AlembicManager> alembic_manager);
 } // namespace elasty
