@@ -39,10 +39,10 @@ namespace elasty
 
     void submitCurrentStatus(const std::shared_ptr<AlembicManager> alembic_manager);
 
-    std::string generateClothMeshObjData(const double   width                 = 1.0,
-                                         const double   height                = 1.0,
-                                         const unsigned horizontal_resolution = 10,
-                                         const unsigned vertical_resolution   = 10);
+    std::string generateClothMeshObjData(const double   width                 = 2.0,
+                                         const double   height                = 2.0,
+                                         const unsigned horizontal_resolution = 50,
+                                         const unsigned vertical_resolution   = 50);
 } // namespace elasty
 
 #endif // ELASTY_UTILS_HPP
