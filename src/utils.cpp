@@ -144,8 +144,8 @@ std::string elasty::generateClothMeshObjData(const double   width,
     std::vector<Eigen::Vector3d> vertices;
     std::vector<Eigen::Vector3i> triangles;
 
-    const double h_step = width / static_cast<double>(horizontal_resolution + 1);
-    const double v_step = height / static_cast<double>(vertical_resolution + 1);
+    const double h_step = width / static_cast<double>(horizontal_resolution);
+    const double v_step = height / static_cast<double>(vertical_resolution);
 
     // Vertices
     for (unsigned h_index = 0; h_index <= horizontal_resolution; ++h_index)
