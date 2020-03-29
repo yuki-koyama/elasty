@@ -143,33 +143,36 @@ std::string elasty::generateClothMeshObjData(const double   width,
 {
     std::vector<Eigen::Vector3d> vertices;
     std::vector<Eigen::Vector3i> triangles;
-
-    const double h_step = width / static_cast<double>(horizontal_resolution);
-    const double v_step = height / static_cast<double>(vertical_resolution);
+    std::vector<Eigen::Vector2d> uvs;
 
     // Vertices
     for (unsigned v_index = 0; v_index <= vertical_resolution; ++v_index)
     {
         for (unsigned h_index = 0; h_index <= horizontal_resolution; ++h_index)
         {
-            const double x = [&]() {
+            const double u = [&]() {
                 if (v_index % 2 == 0 || h_index == 0)
                 {
-                    return static_cast<double>(h_index) * h_step - 0.5 * width;
+                    return static_cast<double>(h_index) / static_cast<double>(horizontal_resolution);
                 }
                 else
                 {
-                    return (static_cast<double>(h_index) - 0.5) * h_step - 0.5 * width;
+                    return (static_cast<double>(h_index) - 0.5) / static_cast<double>(horizontal_resolution);
                 }
             }();
-            const double y = static_cast<double>(v_index) * v_step - 0.5 * height;
+            const double v = static_cast<double>(v_index) / static_cast<double>(vertical_resolution);
+
+            const double x = (u - 0.5) * width;
+            const double y = (v - 0.5) * height;
 
             vertices.push_back(Eigen::Vector3d(x, 0.0, y));
+            uvs.push_back(Eigen::Vector2d(u, v));
 
             // Additional vetex at the even-indexed row
             if (v_index % 2 == 1 && h_index == horizontal_resolution)
             {
                 vertices.push_back(Eigen::Vector3d(0.5 * width, 0.0, y));
+                uvs.push_back(Eigen::Vector2d(1.0, v));
             }
         }
     }
@@ -228,9 +231,16 @@ std::string elasty::generateClothMeshObjData(const double   width,
     {
         sstream << "v " << vertex(0) << " " << vertex(1) << " " << vertex(2) << std::endl;
     }
+    for (const auto& uv : uvs)
+    {
+        sstream << "vt " << uv(0) << " " << uv(1) << std::endl;
+    }
     for (const auto& triangle : triangles)
     {
-        sstream << "f " << triangle(0) + 1 << " " << triangle(1) + 1 << " " << triangle(2) + 1 << std::endl;
+        sstream << "f ";
+        sstream << triangle(0) + 1 << "/" << triangle(0) + 1 << " ";
+        sstream << triangle(1) + 1 << "/" << triangle(1) + 1 << " ";
+        sstream << triangle(2) + 1 << "/" << triangle(2) + 1 << std::endl;
     }
 
     return sstream.str();
