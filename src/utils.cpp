@@ -4,6 +4,9 @@
 #include <elasty/constraint.hpp>
 #include <elasty/particle.hpp>
 #include <elasty/utils.hpp>
+#include <sstream>
+#include <unordered_map>
+#include <utility>
 
 std::vector<float> elasty::packParticlePositions(const std::vector<std::shared_ptr<Particle>>& particles)
 {
@@ -131,4 +134,104 @@ elasty::createAlembicManager(const std::string&                    file_path,
 void elasty::submitCurrentStatus(const std::shared_ptr<AlembicManager> alembic_manager)
 {
     alembic_manager->submitCurrentStatus();
+}
+
+std::string elasty::generateClothMeshObjData(const double   width,
+                                             const double   height,
+                                             const unsigned horizontal_resolution,
+                                             const unsigned vertical_resolution)
+{
+    std::vector<Eigen::Vector3d> vertices;
+    std::vector<Eigen::Vector3i> triangles;
+
+    const double h_step = width / static_cast<double>(horizontal_resolution);
+    const double v_step = height / static_cast<double>(vertical_resolution);
+
+    // Vertices
+    for (unsigned v_index = 0; v_index <= vertical_resolution; ++v_index)
+    {
+        for (unsigned h_index = 0; h_index <= horizontal_resolution; ++h_index)
+        {
+            const double x = [&]() {
+                if (v_index % 2 == 0 || h_index == 0)
+                {
+                    return static_cast<double>(h_index) * h_step - 0.5 * width;
+                }
+                else
+                {
+                    return (static_cast<double>(h_index) - 0.5) * h_step - 0.5 * width;
+                }
+            }();
+            const double y = static_cast<double>(v_index) * v_step - 0.5 * height;
+
+            vertices.push_back(Eigen::Vector3d(x, 0.0, y));
+
+            // Additional vetex at the even-indexed row
+            if (v_index % 2 == 1 && h_index == horizontal_resolution)
+            {
+                vertices.push_back(Eigen::Vector3d(0.5 * width, 0.0, y));
+            }
+        }
+    }
+
+    // Triangles
+    for (unsigned v_index = 0; v_index < vertical_resolution; ++v_index)
+    {
+        if (v_index % 2 == 0)
+        {
+            const unsigned top_row_begin    = (2 * (horizontal_resolution + 1) + 1) * (v_index / 2);
+            const unsigned bottom_row_begin = top_row_begin + horizontal_resolution + 1;
+
+            for (unsigned h_index = 0; h_index <= horizontal_resolution; ++h_index)
+            {
+                if (h_index == 0)
+                {
+                    triangles.push_back(
+                        Eigen::Vector3i(top_row_begin + h_index, bottom_row_begin + 0, bottom_row_begin + 1));
+                }
+                else
+                {
+                    triangles.push_back(Eigen::Vector3i(
+                        top_row_begin + h_index, top_row_begin + h_index - 1, bottom_row_begin + h_index));
+                    triangles.push_back(Eigen::Vector3i(
+                        top_row_begin + h_index, bottom_row_begin + h_index, bottom_row_begin + h_index + 1));
+                }
+            }
+        }
+        else
+        {
+            const unsigned top_row_begin =
+                (2 * (horizontal_resolution + 1) + 1) * ((v_index - 1) / 2) + horizontal_resolution + 1;
+            const unsigned bottom_row_begin = top_row_begin + horizontal_resolution + 2;
+
+            for (unsigned h_index = 0; h_index <= horizontal_resolution; ++h_index)
+            {
+                if (h_index == 0)
+                {
+                    triangles.push_back(Eigen::Vector3i(
+                        top_row_begin + h_index, bottom_row_begin + h_index, top_row_begin + h_index + 1));
+                }
+                else
+                {
+                    triangles.push_back(Eigen::Vector3i(
+                        top_row_begin + h_index, bottom_row_begin + h_index - 1, bottom_row_begin + h_index));
+                    triangles.push_back(Eigen::Vector3i(
+                        top_row_begin + h_index, bottom_row_begin + h_index, top_row_begin + h_index + 1));
+                }
+            }
+        }
+    }
+
+    // Convert to the OBJ format
+    std::stringstream sstream;
+    for (const auto& vertex : vertices)
+    {
+        sstream << "v " << vertex(0) << " " << vertex(1) << " " << vertex(2) << std::endl;
+    }
+    for (const auto& triangle : triangles)
+    {
+        sstream << "f " << triangle(0) + 1 << " " << triangle(1) + 1 << " " << triangle(2) + 1 << std::endl;
+    }
+
+    return sstream.str();
 }

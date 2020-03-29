@@ -162,7 +162,7 @@ private:
     const double          m_cloth_in_plane_compliance     = 1e-2;
     const double          m_cloth_out_of_plane_stiffness  = 0.05;
     const double          m_cloth_out_of_plane_compliance = 1e+4;
-    const std::string     m_cloth_obj_path                = "./models/cloths/0.10.obj";
+    const unsigned        m_cloth_resolution              = 30;
     const Eigen::Affine3d m_cloth_import_transform =
         Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * glm::pi<double>(), Eigen::Vector3d::UnitX());
 
@@ -365,7 +365,7 @@ void SimpleApp::initialize(int argc, char** argv)
     m_plane_primitive                    = std::make_shared<bigger::PlanePrimitive>();
 
     m_engine                     = std::make_unique<SimpleEngine>();
-    m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(m_cloth_obj_path,
+    m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(m_cloth_resolution,
                                                                             m_cloth_in_plane_stiffness,
                                                                             m_cloth_in_plane_compliance,
                                                                             m_cloth_out_of_plane_stiffness,
@@ -412,7 +412,7 @@ void SimpleApp::updateApp()
             m_engine->clearScene();
 
             // Init
-            m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(m_cloth_obj_path,
+            m_engine->m_cloth_sim_object = std::make_shared<elasty::ClothSimObject>(m_cloth_resolution,
                                                                                     m_cloth_in_plane_stiffness,
                                                                                     m_cloth_in_plane_compliance,
                                                                                     m_cloth_out_of_plane_stiffness,
