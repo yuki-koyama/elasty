@@ -28,7 +28,7 @@ namespace elasty
         using TriangleList = Eigen::Matrix<int32_t, Eigen::Dynamic, 3, Eigen::RowMajor>;
         using UvList       = Eigen::Matrix<float, Eigen::Dynamic, 2 * 3, Eigen::RowMajor>;
 
-        ClothSimObject(const std::string&       obj_path,
+        ClothSimObject(const unsigned           resolution,
                        const double             in_plane_stiffness      = 1.000,      ///< PBD
                        const double             in_plane_compliance     = 0.001,      ///< XPBD
                        const double             out_of_plane_stiffness  = 0.100,      ///< PBD

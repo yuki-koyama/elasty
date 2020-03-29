@@ -3,10 +3,11 @@
 #include <elasty/cloth-sim-object.hpp>
 #include <elasty/constraint.hpp>
 #include <elasty/particle.hpp>
+#include <elasty/utils.hpp>
 #include <iostream>
 #include <tiny_obj_loader.h>
 
-elasty::ClothSimObject::ClothSimObject(const std::string&       obj_path,
+elasty::ClothSimObject::ClothSimObject(const unsigned           resolution,
                                        const double             in_plane_stiffness,
                                        const double             in_plane_compliance,
                                        const double             out_of_plane_stiffness,
@@ -16,13 +17,15 @@ elasty::ClothSimObject::ClothSimObject(const std::string&       obj_path,
                                        const InPlaneStrategy    in_plane_strategy,
                                        const OutOfPlaneStrategy out_of_plane_strategy)
 {
+    std::istringstream obj_data_stream(generateClothMeshObjData(2.0, 2.0, resolution, resolution));
+
     tinyobj::attrib_t                attrib;
     std::vector<tinyobj::shape_t>    shapes;
     std::vector<tinyobj::material_t> materials;
 
     std::string warn;
     std::string err;
-    const bool  return_value = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, obj_path.c_str());
+    const bool  return_value = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, &obj_data_stream);
 
     if (!warn.empty())
     {
@@ -36,8 +39,7 @@ elasty::ClothSimObject::ClothSimObject(const std::string&       obj_path,
     {
         throw std::runtime_error("");
     }
-
-    if (attrib.vertices.empty() || attrib.normals.empty())
+    if (attrib.vertices.empty())
     {
         throw std::runtime_error("");
     }

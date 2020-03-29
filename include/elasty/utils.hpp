@@ -39,6 +39,9 @@ namespace elasty
 
     void submitCurrentStatus(const std::shared_ptr<AlembicManager> alembic_manager);
 
+    /// \brief Generate rectangular plane mesh for cloth simulation in the obj string format.
+    ///
+    /// \param vertical_resolution Need to be an even number.
     std::string generateClothMeshObjData(const double   width                 = 2.0,
                                          const double   height                = 2.0,
                                          const unsigned horizontal_resolution = 50,

@@ -18,11 +18,11 @@ public:
     void initializeScene() override
     {
         // Instantiate a cloth object
-        constexpr double  cloth_in_plane_stiffness      = 1.000; ///< PBD
-        constexpr double  cloth_in_plane_compliance     = 1e-02; ///< XPBD
-        constexpr double  cloth_out_of_plane_stiffness  = 0.100; ///< PBD
-        constexpr double  cloth_out_of_plane_compliance = 1e+04; ///< XPBD
-        const std::string cloth_obj_path                = "./models/cloths/0.10.obj";
+        constexpr double   cloth_in_plane_stiffness      = 1.000; ///< PBD
+        constexpr double   cloth_in_plane_compliance     = 1e-02; ///< XPBD
+        constexpr double   cloth_out_of_plane_stiffness  = 0.100; ///< PBD
+        constexpr double   cloth_out_of_plane_compliance = 1e+04; ///< XPBD
+        constexpr unsigned cloth_resolution              = 20;
 
         const Eigen::Affine3d cloth_import_transform =
 #if defined(CLOTH_FALL)
@@ -32,7 +32,7 @@ public:
 #endif
 
         m_cloth_sim_object =
-            std::make_shared<elasty::ClothSimObject>(cloth_obj_path,
+            std::make_shared<elasty::ClothSimObject>(cloth_resolution,
                                                      cloth_in_plane_stiffness,
                                                      cloth_in_plane_compliance,
                                                      cloth_out_of_plane_stiffness,
