@@ -315,13 +315,14 @@ double elasty::FixedPointConstraint::calculateValue()
 
 void elasty::FixedPointConstraint::calculateGrad(double* grad_C)
 {
-    const Eigen::Vector3d& x = m_particles[0]->p;
-    const Eigen::Vector3d  n = (x - m_point).normalized();
+    const Eigen::Vector3d& x    = m_particles[0]->p;
+    const Eigen::Vector3d  r    = x - m_point;
+    const double           dist = r.norm();
 
-    if (n.hasNaN())
-    {
-        std::fill(grad_C, grad_C + 3, 0.0);
-    }
+    constexpr double epsilon = 1e-24;
+
+    // Calculate a normalized vector, where a random direction is selected when the points are degenerated
+    const Eigen::Vector3d n = (dist < epsilon) ? Eigen::Vector3d::Random().normalized() : (1.0 / dist) * r;
 
     std::memcpy(grad_C, n.data(), sizeof(double) * 3);
 }
