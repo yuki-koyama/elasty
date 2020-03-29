@@ -425,8 +425,6 @@ void elasty::ShapeMatchingConstraint::calculateGrad(double* grad_C)
 
 void elasty::ShapeMatchingConstraint::projectParticles(const AlgorithmType type)
 {
-    assert(type == AlgorithmType::Pbd && "ShapeMatching Constraint does not support XPBD.");
-
     // Calculate the current center of mass
     Eigen::Vector3d x_cm = Eigen::Vector3d::Zero();
     for (int i = 0; i < m_particles.size(); ++i)
@@ -443,16 +441,20 @@ void elasty::ShapeMatchingConstraint::projectParticles(const AlgorithmType type)
     }
 
     // Calculate the rotation matrix
-    const Eigen::Matrix3d                                ATA = A_pq.transpose() * A_pq;
-    const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigen_solver(ATA);
-    const Eigen::Matrix3d                                S_inv = eigen_solver.operatorInverseSqrt();
-    const Eigen::Matrix3d                                R     = A_pq * S_inv;
+    const auto            ATA          = A_pq.transpose() * A_pq;
+    const auto            eigen_solver = Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d>(ATA);
+    const auto            S_inv        = eigen_solver.operatorInverseSqrt();
+    const Eigen::Matrix3d R            = A_pq * S_inv;
+
     assert(R.determinant() > 0);
 
-    // Calculate the goal position and move the particles
+    // Update the particle positions
     for (int i = 0; i < m_particles.size(); ++i)
     {
+        // Calculate the goal position
         const Eigen::Vector3d g = R * m_q[i] + x_cm;
-        m_particles[i]->p       = m_stiffness * g + (1.0 - m_stiffness) * m_particles[i]->p;
+
+        // Move the particle
+        m_particles[i]->p = m_stiffness * g + (1.0 - m_stiffness) * m_particles[i]->p;
     }
 }

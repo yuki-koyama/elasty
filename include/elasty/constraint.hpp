@@ -421,13 +421,23 @@ namespace elasty
                                 const double                                  delta_time  ///< for XPBD
         );
 
-        double         calculateValue() override;
-        void           calculateGrad(double* grad_C) override;
+        /// \details This method should never be called.
+        double calculateValue() override;
+
+        /// \details This method should never be called.
+        void calculateGrad(double* grad_C) override;
+
         ConstraintType getType() override { return ConstraintType::Bilateral; }
 
-        /// \details Unlike other PBD constraints, ShapeMatchingConstraint does not offer a closed-form constraint
-        /// function, but does offer a particle projection procedure directly. Thus, this class needs to override the
-        /// particle projection method.
+        /// \details Unlike other constraints, ShapeMatchingConstraint does not offer a closed-form constraint function
+        /// (i.e., it cannot be represented as a cost function), but does offer a particle projection procedure
+        /// directly. This means that does not support XPBD.
+        ///
+        /// Thus, even when the "type" is specified as XPBD, it uses the PBD update scheme and the "stiffness" value to
+        /// adjust the constraint stiffness. Thus, it is not generally recommended to use this constraint with XPBD
+        /// scenes for consistency.
+        ///
+        /// This is why this class needs to override the particle projection procedure.
         void projectParticles(const AlgorithmType type) override;
 
     private:
