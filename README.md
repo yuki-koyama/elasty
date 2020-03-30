@@ -92,6 +92,16 @@ cmake ../elasty
 make
 ```
 
+## Gallary
+
+### PBD vs. XPBD
+
+The constraint stiffnesses in PBD [Müller+07] are dependent on the number of iterations for constraint solving. As the number of iterations increases, the constraints become infinitely stiff regardless of the `stiffness` parameters. This issue makes the parameter tuning difficult.
+
+XPBD [Macklin+16] resolves this issue. As the number of iterations increases, the constraint stiffnesses converge to some (non-infinitely-stiff) states in accordance with the `compliance` parameters. This property makes the parameter tuning easier and more consistent.
+
+![](./docs/pbd-xpbd-comparison.jpg)
+
 ## License
 
 MIT License
