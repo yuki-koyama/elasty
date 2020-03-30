@@ -101,7 +101,8 @@ int main(int argc, char** argv)
         for (const auto num_iters : num_iters_conditions)
         {
             const std::string name = type_name + "-" + std::to_string(num_iters);
-            timer::Timer t(name);
+
+            const timer::Timer t(name);
 
             SimpleEngine engine(num_iters, type);
             engine.initializeScene();
