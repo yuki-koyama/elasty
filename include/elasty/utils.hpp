@@ -33,11 +33,15 @@ namespace elasty
                                        const std::vector<std::shared_ptr<Particle>>&     particles,
                                        std::vector<std::shared_ptr<AbstractConstraint>>& constraints);
 
-    std::shared_ptr<AlembicManager> createAlembicManager(const std::string&                    file_path,
+    std::shared_ptr<AlembicManager> createAlembicManager(const std::string&                    output_file_path,
                                                          const std::shared_ptr<ClothSimObject> cloth_sim_object,
                                                          const double                          delta_time);
 
     void submitCurrentStatus(const std::shared_ptr<AlembicManager> alembic_manager);
+
+    /// \brief Export the current cloth state as an obj file.
+    void exportCurrentClothStateAsObj(const std::string&                    output_file_path,
+                                      const std::shared_ptr<ClothSimObject> cloth_sim_object);
 
     /// \brief Generate rectangular plane mesh for cloth simulation in the obj string format.
     ///

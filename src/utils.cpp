@@ -4,6 +4,7 @@
 #include <elasty/constraint.hpp>
 #include <elasty/particle.hpp>
 #include <elasty/utils.hpp>
+#include <fstream>
 #include <sstream>
 #include <unordered_map>
 #include <utility>
@@ -49,10 +50,11 @@ void elasty::generateFixedPointConstraints(const Eigen::Vector3d&               
 class elasty::AlembicManager
 {
 public:
-    AlembicManager(const std::string&                    file_path,
+    AlembicManager(const std::string&                    output_file_path,
                    const std::shared_ptr<ClothSimObject> cloth_sim_object,
                    const double                          delta_time = 1.0 / 60.0)
-        : m_cloth_sim_object(cloth_sim_object), m_archive(Alembic::AbcCoreOgawa::WriteArchive(), file_path.c_str())
+        : m_cloth_sim_object(cloth_sim_object),
+          m_archive(Alembic::AbcCoreOgawa::WriteArchive(), output_file_path.c_str())
     {
         using namespace Alembic::Abc;
         using namespace Alembic::AbcGeom;
@@ -72,9 +74,8 @@ public:
         const size_t             num_verts = m_cloth_sim_object->m_particles.size();
         const std::vector<float> verts     = packParticlePositions(m_cloth_sim_object->m_particles);
 
-        // If this is the first call, set a sample with full properties
-        // including vertex positions, indices, counts, and UVs (if exists);
-        // otherwise, set a sample with only vertex positions.
+        // If this is the first call, set a sample with full properties including vertex positions, indices, counts, and
+        // UVs (if exists); otherwise, set a sample with only vertex positions.
         if (m_is_first)
         {
             const size_t               num_indices = m_cloth_sim_object->m_triangle_list.size();
@@ -134,6 +135,33 @@ elasty::createAlembicManager(const std::string&                    file_path,
 void elasty::submitCurrentStatus(const std::shared_ptr<AlembicManager> alembic_manager)
 {
     alembic_manager->submitCurrentStatus();
+}
+
+void elasty::exportCurrentClothStateAsObj(const std::string&                    output_file_path,
+                                          const std::shared_ptr<ClothSimObject> cloth_sim_object)
+{
+    const auto& particles = cloth_sim_object->m_particles;
+    const auto& triangles = cloth_sim_object->m_triangle_list;
+    const auto& uvs       = cloth_sim_object->m_uv_list;
+
+    // Convert to the OBJ format
+    std::ofstream file(output_file_path);
+    for (const auto& particle : particles)
+    {
+        file << "v " << particle->x(0) << " " << particle->x(1) << " " << particle->x(2) << std::endl;
+    }
+    for (unsigned row = 0; row < uvs.rows(); ++row)
+    {
+        file << "vt " << uvs.row(row)(0) << " " << uvs.row(row)(1) << std::endl;
+    }
+    for (unsigned row = 0; row < triangles.rows(); ++row)
+    {
+        file << "f ";
+        file << triangles.row(row)(0) + 1 << "/" << triangles.row(row)(0) + 1 << " ";
+        file << triangles.row(row)(1) + 1 << "/" << triangles.row(row)(1) + 1 << " ";
+        file << triangles.row(row)(2) + 1 << "/" << triangles.row(row)(2) + 1 << std::endl;
+    }
+    file.close();
 }
 
 std::string elasty::generateClothMeshObjData(const double   width,
