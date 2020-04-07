@@ -287,7 +287,7 @@ TEST(ConstraintTest, ContinuumTriangleDerivative)
     EXPECT_TRUE((numerical_grad - analytic_grad).cwiseAbs().maxCoeff() < epsilon);
 }
 
-TEST(ConstraintTest, FixedDerivative)
+TEST(ConstraintTest, FixedPointDerivative)
 {
     constexpr double dt = 1.0 / 60.0;
 
@@ -308,7 +308,7 @@ TEST(ConstraintTest, FixedDerivative)
     EXPECT_TRUE((numerical_grad - analytic_grad).cwiseAbs().maxCoeff() < epsilon);
 }
 
-TEST(ConstraintTest, FixedRestState)
+TEST(ConstraintTest, FixedPointRestState)
 {
     constexpr double dt = 1.0 / 60.0;
 
