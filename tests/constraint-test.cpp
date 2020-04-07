@@ -50,7 +50,7 @@ template <int Num> bool checkZeroSumCondition(double* grad)
     return sum.norm() < epsilon;
 }
 
-TEST(ConstraintTest, BendingRestShape)
+TEST(ConstraintTest, BendingRestState)
 {
     constexpr double dt = 1.0 / 60.0;
 
