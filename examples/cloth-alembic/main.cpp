@@ -75,11 +75,46 @@ public:
 
     void setExternalForces() override
     {
-        const Eigen::Vector3d gravity = Eigen::Vector3d(0.0, -9.8, 0.0);
+        const auto gravity = Eigen::Vector3d{0.0, -9.8, 0.0};
 
         for (auto particle : m_particles)
         {
             particle->f = particle->m * gravity;
+        }
+
+        // Aerodynamic force for cloth
+        const int num_triangles = m_cloth_sim_object->m_triangle_list.rows();
+
+        for (int i = 0; i < num_triangles; ++i)
+        {
+            const auto v_wind = Eigen::Vector3d{0.0, 0.0, 10.0};
+
+            const auto& x_0 = m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(0)]->x;
+            const auto& x_1 = m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(1)]->x;
+            const auto& x_2 = m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(2)]->x;
+
+            const auto& v_0 = m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(0)]->v;
+            const auto& v_1 = m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(1)]->v;
+            const auto& v_2 = m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(2)]->v;
+
+            const auto& m_0 = m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(0)]->m;
+            const auto& m_1 = m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(1)]->m;
+            const auto& m_2 = m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(2)]->m;
+
+            const double m_sum = m_0 + m_1 + m_2;
+
+            // Calculate the weighted average of the particle vecities
+            const Eigen::Vector3d v_triangle = (m_0 * v_0 + m_1 * v_1 + m_2 * v_2) / m_sum;
+
+            // Calculate the relative velocity of the triangle
+            const Eigen::Vector3d v_rel         = v_triangle - v_wind;
+            const Eigen::Vector3d v_rel_dir     = v_rel.normalized();
+            const double          v_rel_squared = v_rel.squaredNorm();
+
+            const auto            cross         = (x_1 - x_0).cross(x_2 - x_0);
+            const double          area          = 0.5 * cross.norm();
+            const auto            n_either_side = cross.normalized();
+            const Eigen::Vector3d n             = (n_either_side.dot(v_rel) > 0.0) ? n_either_side : -n_either_side;
         }
     }
 
