@@ -135,9 +135,11 @@ public:
 
     void updateVelocities() override
     {
+        const double decay_rate = std::exp(std::log(0.9) * getDeltaPhysicsTime());
+
         for (auto particle : m_particles)
         {
-            particle->v *= 0.999;
+            particle->v *= decay_rate;
         }
     }
 
