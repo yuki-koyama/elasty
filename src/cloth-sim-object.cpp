@@ -239,4 +239,24 @@ elasty::ClothSimObject::ClothSimObject(const unsigned           resolution,
             }
         }
     }
+
+    calculateAreas();
+}
+
+void elasty::ClothSimObject::calculateAreas()
+{
+    const int num_triangles = m_triangle_list.rows();
+
+    m_area_list = Eigen::VectorXd(num_triangles);
+
+    for (int i = 0; i < num_triangles; ++i)
+    {
+        const auto& x_0 = m_particles[m_triangle_list.row(i)[0]]->x;
+        const auto& x_1 = m_particles[m_triangle_list.row(i)[1]]->x;
+        const auto& x_2 = m_particles[m_triangle_list.row(i)[2]]->x;
+
+        const double area = 0.5 * (x_1 - x_0).cross(x_2 - x_0).norm();
+
+        m_area_list(i) = area;
+    }
 }

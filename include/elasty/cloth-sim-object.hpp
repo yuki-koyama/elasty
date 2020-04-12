@@ -42,6 +42,17 @@ namespace elasty
         UvList       m_uv_list;
 
         bool hasUv() const { return m_uv_list.size() != 0; }
+
+        /// \brief Getter of the areas of the triangles.
+        const Eigen::VectorXd& getAreaList() const { return m_area_list; }
+
+    private:
+        Eigen::VectorXd m_area_list;
+
+        /// \brief Calculate areas of the triangles.
+        ///
+        /// \details The result will be stored in m_area_list. This function needs to be called only once.
+        void calculateAreas();
     };
 } // namespace elasty
 
