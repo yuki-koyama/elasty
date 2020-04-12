@@ -56,6 +56,8 @@ namespace elasty
         const unsigned int  m_num_constraint_iters;
         const unsigned int  m_num_substeps;
         const AlgorithmType m_algorithm_type;
+
+        void proceedSubstep();
     };
 } // namespace elasty
 

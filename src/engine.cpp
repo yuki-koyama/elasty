@@ -16,6 +16,31 @@ elasty::AbstractEngine::AbstractEngine(const double        delta_frame_time,
 
 void elasty::AbstractEngine::proceedFrame()
 {
+    for (unsigned int i = 0; i < m_num_substeps; ++i)
+    {
+        proceedSubstep();
+    }
+}
+
+void elasty::AbstractEngine::addConstraint(std::shared_ptr<AbstractConstraint> constraint)
+{
+    m_constraints.push_back(constraint);
+}
+
+void elasty::AbstractEngine::addInstantConstraint(std::shared_ptr<AbstractConstraint> constraint)
+{
+    m_instant_constraints.push_back(constraint);
+}
+
+void elasty::AbstractEngine::clearScene()
+{
+    m_particles.clear();
+    m_constraints.clear();
+    m_instant_constraints.clear();
+}
+
+void elasty::AbstractEngine::proceedSubstep()
+{
     // Apply external forces
     setExternalForces();
     for (auto& particle : m_particles)
@@ -63,22 +88,5 @@ void elasty::AbstractEngine::proceedFrame()
     updateVelocities();
 
     // Clear instant constraints
-    m_instant_constraints.clear();
-}
-
-void elasty::AbstractEngine::addConstraint(std::shared_ptr<AbstractConstraint> constraint)
-{
-    m_constraints.push_back(constraint);
-}
-
-void elasty::AbstractEngine::addInstantConstraint(std::shared_ptr<AbstractConstraint> constraint)
-{
-    m_instant_constraints.push_back(constraint);
-}
-
-void elasty::AbstractEngine::clearScene()
-{
-    m_particles.clear();
-    m_constraints.clear();
     m_instant_constraints.clear();
 }
