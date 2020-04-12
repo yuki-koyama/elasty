@@ -13,16 +13,16 @@
 class SimpleEngine final : public elasty::AbstractEngine
 {
 public:
-    SimpleEngine() : elasty::AbstractEngine(1.0 / 60.0, 50, 1, elasty::AlgorithmType::Xpbd) {}
+    SimpleEngine() : elasty::AbstractEngine(1.0 / 60.0, 25, 2, elasty::AlgorithmType::Xpbd) {}
 
     void initializeScene() override
     {
         // Instantiate a cloth object
         constexpr double   cloth_in_plane_stiffness      = 1.000; ///< PBD
-        constexpr double   cloth_in_plane_compliance     = 1e-02; ///< XPBD
+        constexpr double   cloth_in_plane_compliance     = 5e-02; ///< XPBD
         constexpr double   cloth_out_of_plane_stiffness  = 0.100; ///< PBD
-        constexpr double   cloth_out_of_plane_compliance = 1e+04; ///< XPBD
-        constexpr unsigned cloth_resolution              = 20;
+        constexpr double   cloth_out_of_plane_compliance = 5e+04; ///< XPBD
+        constexpr unsigned cloth_resolution              = 40;
 
         const Eigen::Affine3d cloth_import_transform =
 #if defined(CLOTH_FALL)
@@ -105,7 +105,7 @@ public:
         }
 #elif defined(MOVING_SPHERE_COLLISION)
         // Collision with a moving sphere
-        const Eigen::Vector3d center(0.0, 1.0, std::max(0.0, (double(m_count) - 100.0) * 0.01));
+        const Eigen::Vector3d center(0.0, 1.0, std::max(0.0, (getCurrentPhysicsTime() - 1.80)));
         constexpr double      tolerance  = 0.05;
         constexpr double      radius     = 0.50 + 0.02;
         constexpr double      stiffness  = 1.00;
@@ -124,11 +124,17 @@ public:
 #endif
     }
 
-    void updateVelocities() override {}
+    void updateVelocities() override
+    {
+        const double decay_rate = std::exp(std::log(0.9) * getDeltaPhysicsTime());
+
+        for (auto particle : m_particles)
+        {
+            particle->v *= decay_rate;
+        }
+    }
 
     std::shared_ptr<elasty::ClothSimObject> m_cloth_sim_object;
-
-    int m_count = 0;
 };
 
 int main(int argc, char** argv)
@@ -137,14 +143,13 @@ int main(int argc, char** argv)
     engine.initializeScene();
 
     auto alembic_manager =
-        elasty::createAlembicManager("./cloth.abc", engine.m_cloth_sim_object, engine.getDeltaPhysicsTime());
+        elasty::createAlembicManager("./cloth.abc", engine.m_cloth_sim_object, engine.getDeltaFrameTime());
 
     for (unsigned int frame = 0; frame < 300; ++frame)
     {
         timer::Timer t(std::to_string(frame));
         elasty::submitCurrentStatus(alembic_manager);
 
-        engine.m_count = frame;
         engine.proceedFrame();
     }
 

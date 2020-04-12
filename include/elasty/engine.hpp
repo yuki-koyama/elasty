@@ -28,17 +28,23 @@ namespace elasty
 
         void clearScene();
 
-        /// \brief Getter of the delta physics time
+        /// \brief Getter of the delta physics time.
         ///
-        /// \details The value equals to the delta frame time devided by the number of substeps
+        /// \details The value equals to the delta frame time devided by the number of substeps.
         double getDeltaPhysicsTime() const { return m_delta_physics_time; }
 
-        /// \brief Getter of the delta frame time
+        /// \brief Getter of the delta frame time.
         ///
-        /// \details The value equals to the delta physics time multipled by the number of substeps
+        /// \details The value equals to the delta physics time multipled by the number of substeps.
         double getDeltaFrameTime() const { return m_delta_frame_time; }
 
-        /// \brief Getter of the particles this engine manages
+        /// \brief Getter of the current physics time.
+        ///
+        /// \details Routine functions for external forces, collisions, etc. can call this member function to retrieve
+        /// the current physics time.
+        double getCurrentPhysicsTime() const { return m_current_physics_time; }
+
+        /// \brief Getter of the particles this engine manages.
         const std::vector<std::shared_ptr<Particle>>& getParticles() const { return m_particles; }
 
     protected:
@@ -56,6 +62,8 @@ namespace elasty
         const unsigned int  m_num_constraint_iters;
         const unsigned int  m_num_substeps;
         const AlgorithmType m_algorithm_type;
+
+        double m_current_physics_time = 0.0;
 
         void proceedSubstep();
     };

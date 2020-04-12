@@ -89,4 +89,7 @@ void elasty::AbstractEngine::proceedSubstep()
 
     // Clear instant constraints
     m_instant_constraints.clear();
+
+    // Increment the current physics time
+    m_current_physics_time += m_delta_physics_time;
 }
