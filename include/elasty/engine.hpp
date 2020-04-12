@@ -14,8 +14,8 @@ namespace elasty
     {
     public:
         AbstractEngine(const double        delta_frame_time     = 1.0 / 60.0,
-                       const unsigned int  num_constraint_iters = 10,
-                       const unsigned int  num_substeps         = 1,
+                       const unsigned int  num_constraint_iters = 4,
+                       const unsigned int  num_substeps         = 2,
                        const AlgorithmType algorithm_type       = AlgorithmType::Xpbd);
 
         void proceedFrame();

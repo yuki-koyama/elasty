@@ -71,15 +71,17 @@ public:
         constexpr double range_radius = 0.1;
         for (const auto& particle : m_particles)
         {
-            if ((particle->x - Eigen::Vector3d(+1.0 + 1.0, 2.0, 0.0)).norm() < range_radius)
+            const Eigen::Vector3d translation{0.0, 0.0, 0.0};
+
+            if ((particle->x - Eigen::Vector3d(+1.0 + 1.0, 3.0, 0.0)).norm() < range_radius)
             {
                 m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(
-                    particle, 1.0, 0.0, getDeltaPhysicsTime(), particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
+                    particle, 1.0, 0.0, getDeltaPhysicsTime(), particle->x + translation));
             }
-            if ((particle->x - Eigen::Vector3d(-1.0 + 1.0, 2.0, 0.0)).norm() < range_radius)
+            if ((particle->x - Eigen::Vector3d(-1.0 + 1.0, 3.0, 0.0)).norm() < range_radius)
             {
                 m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(
-                    particle, 1.0, 0.0, getDeltaPhysicsTime(), particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
+                    particle, 1.0, 0.0, getDeltaPhysicsTime(), particle->x + translation));
             }
         }
 
@@ -135,7 +137,7 @@ public:
     {
         for (auto particle : m_particles)
         {
-            particle->v *= 0.995;
+            particle->v *= 0.999;
         }
     }
 
@@ -159,12 +161,11 @@ public:
 
 private:
     const double          m_cloth_in_plane_stiffness      = 0.95;
-    const double          m_cloth_in_plane_compliance     = 1e-2;
+    const double          m_cloth_in_plane_compliance     = 5e-2;
     const double          m_cloth_out_of_plane_stiffness  = 0.05;
     const double          m_cloth_out_of_plane_compliance = 1e+4;
-    const unsigned        m_cloth_resolution              = 30;
-    const Eigen::Affine3d m_cloth_import_transform =
-        Eigen::Translation3d(1.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * glm::pi<double>(), Eigen::Vector3d::UnitX());
+    const unsigned        m_cloth_resolution              = 20;
+    const Eigen::Affine3d m_cloth_import_transform        = Eigen::Affine3d(Eigen::Translation3d(1.0, 3.0, 1.0));
 
     // Shared resources
     std::shared_ptr<bigger::BlinnPhongMaterial> m_default_material;
