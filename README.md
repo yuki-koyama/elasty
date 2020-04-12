@@ -14,7 +14,7 @@ A research-oriented elastic body simulator
 
 - [x] Position-based dynamics (PBD) [Müller+07]
 - [x] Extended position-based dynamics (XPBD) [Macklin+16]
-- [ ] Small-steps XPBD [Macklin+19]
+- [x] Small-steps XPBD [Macklin+19]
 - [ ] Projective dynamics [Bouaziz+14]
 - [ ] Quasi-Newton dynamics [Liu+17]
 - [ ] ...
