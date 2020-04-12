@@ -37,7 +37,7 @@ public:
                                                      cloth_in_plane_compliance,
                                                      cloth_out_of_plane_stiffness,
                                                      cloth_out_of_plane_compliance,
-                                                     getDeltaTime(),
+                                                     getDeltaPhysicsTime(),
                                                      cloth_import_transform,
                                                      elasty::ClothSimObject::InPlaneStrategy::EdgeDistance,
                                                      elasty::ClothSimObject::OutOfPlaneStrategy::IsometricBending);
@@ -62,13 +62,13 @@ public:
         {
             if ((particle->x - Eigen::Vector3d(+1.0, 2.0, 0.0)).norm() < range_radius)
             {
-                m_constraints.push_back(
-                    std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, 0.0, getDeltaTime(), particle->x));
+                m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(
+                    particle, 1.0, 0.0, getDeltaPhysicsTime(), particle->x));
             }
             if ((particle->x - Eigen::Vector3d(-1.0, 2.0, 0.0)).norm() < range_radius)
             {
-                m_constraints.push_back(
-                    std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, 0.0, getDeltaTime(), particle->x));
+                m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(
+                    particle, 1.0, 0.0, getDeltaPhysicsTime(), particle->x));
             }
         }
     }
@@ -118,7 +118,7 @@ public:
                 const Eigen::Vector3d normal   = direction.normalized();
                 const double          distance = center.transpose() * normal + radius;
                 m_instant_constraints.push_back(std::make_shared<elasty::EnvironmentalCollisionConstraint>(
-                    particle, stiffness, compliance, getDeltaTime(), normal, distance));
+                    particle, stiffness, compliance, getDeltaPhysicsTime(), normal, distance));
             }
         }
 #endif
@@ -137,7 +137,7 @@ int main(int argc, char** argv)
     engine.initializeScene();
 
     auto alembic_manager =
-        elasty::createAlembicManager("./cloth.abc", engine.m_cloth_sim_object, engine.getDeltaTime());
+        elasty::createAlembicManager("./cloth.abc", engine.m_cloth_sim_object, engine.getDeltaPhysicsTime());
 
     for (unsigned int frame = 0; frame < 300; ++frame)
     {
@@ -145,7 +145,7 @@ int main(int argc, char** argv)
         elasty::submitCurrentStatus(alembic_manager);
 
         engine.m_count = frame;
-        engine.stepTime();
+        engine.proceedFrame();
     }
 
     return 0;

@@ -49,15 +49,15 @@ public:
             if (last_particle != nullptr)
             {
                 addConstraint(std::make_shared<elasty::DistanceConstraint>(
-                    last_particle, particle, 0.5, 0.0, getDeltaTime(), segment_length));
+                    last_particle, particle, 0.5, 0.0, getDeltaPhysicsTime(), segment_length));
             }
 
             last_particle = particle;
         }
 
         // Pin the tip of the rod
-        addConstraint(
-            std::make_shared<elasty::FixedPointConstraint>(last_particle, 1.0, 0.0, getDeltaTime(), last_particle->x));
+        addConstraint(std::make_shared<elasty::FixedPointConstraint>(
+            last_particle, 1.0, 0.0, getDeltaPhysicsTime(), last_particle->x));
 
         // Register the cloth object
         std::copy(m_cloth_sim_object->m_particles.begin(),
@@ -74,12 +74,12 @@ public:
             if ((particle->x - Eigen::Vector3d(+1.0 + 1.0, 2.0, 0.0)).norm() < range_radius)
             {
                 m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(
-                    particle, 1.0, 0.0, getDeltaTime(), particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
+                    particle, 1.0, 0.0, getDeltaPhysicsTime(), particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
             }
             if ((particle->x - Eigen::Vector3d(-1.0 + 1.0, 2.0, 0.0)).norm() < range_radius)
             {
                 m_constraints.push_back(std::make_shared<elasty::FixedPointConstraint>(
-                    particle, 1.0, 0.0, getDeltaTime(), particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
+                    particle, 1.0, 0.0, getDeltaPhysicsTime(), particle->x + Eigen::Vector3d(0.0, 1.0, 0.0)));
             }
         }
 
@@ -105,7 +105,7 @@ public:
             m_particles.push_back(particle);
         }
         auto shape_matching_constaint = std::make_shared<elasty::ShapeMatchingConstraint>(
-            shape_matching_particles, shape_matching_stiffness, 0.0, getDeltaTime());
+            shape_matching_particles, shape_matching_stiffness, 0.0, getDeltaPhysicsTime());
         m_constraints.push_back(shape_matching_constaint);
     }
 
@@ -126,7 +126,7 @@ public:
             if (particle->p.y() < 0.0)
             {
                 addInstantConstraint(std::make_shared<elasty::EnvironmentalCollisionConstraint>(
-                    particle, 1.0, 0.0, getDeltaTime(), Eigen::Vector3d(0.0, 1.0, 0.0), 0.0));
+                    particle, 1.0, 0.0, getDeltaPhysicsTime(), Eigen::Vector3d(0.0, 1.0, 0.0), 0.0));
             }
         }
     }
@@ -370,7 +370,7 @@ void SimpleApp::initialize(int argc, char** argv)
                                                                             m_cloth_in_plane_compliance,
                                                                             m_cloth_out_of_plane_stiffness,
                                                                             m_cloth_out_of_plane_compliance,
-                                                                            m_engine->getDeltaTime(),
+                                                                            m_engine->getDeltaPhysicsTime(),
                                                                             m_cloth_import_transform);
     m_engine->initializeScene();
 
@@ -417,7 +417,7 @@ void SimpleApp::updateApp()
                                                                                     m_cloth_in_plane_compliance,
                                                                                     m_cloth_out_of_plane_stiffness,
                                                                                     m_cloth_out_of_plane_compliance,
-                                                                                    m_engine->getDeltaTime(),
+                                                                                    m_engine->getDeltaPhysicsTime(),
                                                                                     m_cloth_import_transform);
             m_engine->initializeScene();
 
@@ -437,7 +437,7 @@ void SimpleApp::updateApp()
     }
 
     // Physics
-    m_engine->stepTime();
+    m_engine->proceedFrame();
 }
 
 void SimpleApp::releaseSharedResources()

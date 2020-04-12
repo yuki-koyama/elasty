@@ -2,36 +2,37 @@
 #include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
 
-elasty::AbstractEngine::AbstractEngine(const double        delta_time,
+elasty::AbstractEngine::AbstractEngine(const double        delta_frame_time,
                                        const unsigned int  num_iters,
                                        const unsigned int  num_substeps,
                                        const AlgorithmType algorithm_type)
-    : m_delta_time(delta_time),
+    : m_delta_physics_time(delta_frame_time / static_cast<double>(num_substeps)),
+      m_delta_frame_time(delta_frame_time),
       m_num_constraint_iters(num_iters),
       m_num_substeps(num_substeps),
       m_algorithm_type(algorithm_type)
 {
 }
 
-void elasty::AbstractEngine::stepTime()
+void elasty::AbstractEngine::proceedFrame()
 {
     // Apply external forces
     setExternalForces();
     for (auto& particle : m_particles)
     {
-        particle->v = particle->v + m_delta_time * particle->w * particle->f;
+        particle->v = particle->v + m_delta_physics_time * particle->w * particle->f;
     }
 
     // Calculate predicted positions
     for (auto& particle : m_particles)
     {
-        particle->p = particle->x + m_delta_time * particle->v;
+        particle->p = particle->x + m_delta_physics_time * particle->v;
     }
 
     // Generate collision constraints
     generateCollisionConstraints();
 
-    // Reset Lagrange multipliers (only for XPBD)
+    // Reset Lagrange multipliers (only necessary for XPBD)
     for (auto constraint : m_constraints)
     {
         constraint->m_lagrange_multiplier = 0.0;
@@ -54,7 +55,7 @@ void elasty::AbstractEngine::stepTime()
     // Apply the results
     for (auto& particle : m_particles)
     {
-        particle->v = (particle->p - particle->x) * (1.0 / m_delta_time);
+        particle->v = (particle->p - particle->x) * (1.0 / m_delta_physics_time);
         particle->x = particle->p;
     }
 
