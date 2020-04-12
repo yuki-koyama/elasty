@@ -8,8 +8,8 @@
 class SimpleEngine final : public elasty::AbstractEngine
 {
 public:
-    SimpleEngine(const unsigned num_iters, const elasty::AlgorithmType type)
-        : elasty::AbstractEngine(1.0 / 60.0, num_iters, type)
+    SimpleEngine(const unsigned num_constraint_iters, const elasty::AlgorithmType type)
+        : elasty::AbstractEngine(1.0 / 60.0, num_constraint_iters, 1, type)
     {
     }
 
