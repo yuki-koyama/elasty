@@ -13,7 +13,7 @@
 class SimpleEngine final : public elasty::AbstractEngine
 {
 public:
-    SimpleEngine() : elasty::AbstractEngine(1.0 / 60.0, 50, elasty::AlgorithmType::Xpbd) {}
+    SimpleEngine() : elasty::AbstractEngine(1.0 / 60.0, 50, 1, elasty::AlgorithmType::Xpbd) {}
 
     void initializeScene() override
     {

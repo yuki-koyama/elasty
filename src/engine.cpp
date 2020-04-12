@@ -4,8 +4,12 @@
 
 elasty::AbstractEngine::AbstractEngine(const double        delta_time,
                                        const unsigned int  num_iters,
+                                       const unsigned int  num_substeps,
                                        const AlgorithmType algorithm_type)
-    : m_delta_time(delta_time), m_num_iters(num_iters), m_algorithm_type(algorithm_type)
+    : m_delta_time(delta_time),
+      m_num_constraint_iters(num_iters),
+      m_num_substeps(num_substeps),
+      m_algorithm_type(algorithm_type)
 {
 }
 
@@ -34,7 +38,7 @@ void elasty::AbstractEngine::stepTime()
     }
 
     // Solve constraints
-    for (unsigned int i = 0; i < m_num_iters; ++i)
+    for (unsigned int i = 0; i < m_num_constraint_iters; ++i)
     {
         for (auto constraint : m_constraints)
         {

@@ -13,9 +13,10 @@ namespace elasty
     class AbstractEngine
     {
     public:
-        AbstractEngine(const double        delta_time     = 1.0 / 60.0,
-                       const unsigned int  num_iters      = 10,
-                       const AlgorithmType algorithm_type = AlgorithmType::Xpbd);
+        AbstractEngine(const double        delta_time           = 1.0 / 60.0,
+                       const unsigned int  num_constraint_iters = 10,
+                       const unsigned int  num_substeps         = 1,
+                       const AlgorithmType algorithm_type       = AlgorithmType::Xpbd);
 
         void stepTime();
 
@@ -44,7 +45,8 @@ namespace elasty
 
     private:
         const double        m_delta_time;
-        const unsigned int  m_num_iters;
+        const unsigned int  m_num_constraint_iters;
+        const unsigned int  m_num_substeps;
         const AlgorithmType m_algorithm_type;
     };
 } // namespace elasty
