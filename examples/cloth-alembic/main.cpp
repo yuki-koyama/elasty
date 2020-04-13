@@ -13,7 +13,7 @@
 class SimpleEngine final : public elasty::AbstractEngine
 {
 public:
-    SimpleEngine() : elasty::AbstractEngine(1.0 / 60.0, 25, 2, elasty::AlgorithmType::Xpbd) {}
+    SimpleEngine() : elasty::AbstractEngine(1.0 / 60.0, 10, 5, elasty::AlgorithmType::Xpbd) {}
 
     void initializeScene() override
     {
@@ -22,7 +22,7 @@ public:
         constexpr double   cloth_in_plane_compliance     = 5e-02; ///< XPBD
         constexpr double   cloth_out_of_plane_stiffness  = 0.100; ///< PBD
         constexpr double   cloth_out_of_plane_compliance = 5e+04; ///< XPBD
-        constexpr unsigned cloth_resolution              = 40;
+        constexpr unsigned cloth_resolution              = 50;
 
         const Eigen::Affine3d cloth_import_transform =
 #if defined(CLOTH_FALL)
@@ -87,7 +87,7 @@ public:
 
         for (int i = 0; i < num_triangles; ++i)
         {
-            const auto v_wind = Eigen::Vector3d{0.0, 0.0, 10.0};
+            const auto v_wind = Eigen::Vector3d{0.0, 0.0, 0.0};
 
             const auto& x_0 = m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(0)]->x;
             const auto& x_1 = m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(1)]->x;
@@ -108,13 +108,25 @@ public:
 
             // Calculate the relative velocity of the triangle
             const Eigen::Vector3d v_rel         = v_triangle - v_wind;
-            const Eigen::Vector3d v_rel_dir     = v_rel.normalized();
             const double          v_rel_squared = v_rel.squaredNorm();
 
             const auto            cross         = (x_1 - x_0).cross(x_2 - x_0);
             const double          area          = 0.5 * cross.norm();
             const auto            n_either_side = cross.normalized();
             const Eigen::Vector3d n             = (n_either_side.dot(v_rel) > 0.0) ? n_either_side : -n_either_side;
+
+            constexpr double c_d = 0.100; // TODO: Find more reasonable values
+            constexpr double c_l = 0.050; // TODO: Find more reasonable values
+            constexpr double rho = 1.225; // Taken from Wikipedia: https://en.wikipedia.org/wiki/Density_of_air
+
+            const double coeff = 0.5 * rho * area;
+
+            // Note: This wind force model was proposed by [Wilson+14]
+            const Eigen::Vector3d f = -coeff * ((c_d - c_l) * v_rel.dot(n) * v_rel + c_l * v_rel_squared * n);
+
+            m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(0)]->f += (m_0 / m_sum) * f;
+            m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(1)]->f += (m_1 / m_sum) * f;
+            m_cloth_sim_object->m_particles[m_cloth_sim_object->m_triangle_list.row(i)(2)]->f += (m_2 / m_sum) * f;
         }
     }
 
@@ -161,7 +173,7 @@ public:
 
     void updateVelocities() override
     {
-        const double decay_rate = std::exp(std::log(0.9) * getDeltaPhysicsTime());
+        const double decay_rate = std::exp(std::log(0.95) * getDeltaPhysicsTime());
 
         for (auto particle : m_particles)
         {
