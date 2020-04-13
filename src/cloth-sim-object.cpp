@@ -249,6 +249,8 @@ void elasty::ClothSimObject::applyAerodynamicForces(const Eigen::Vector3d& globa
 {
     constexpr double rho = 1.225; // Taken from Wikipedia: https://en.wikipedia.org/wiki/Density_of_air
 
+    assert(drag_coeff >= lift_coeff);
+
     const int num_triangles = m_triangle_list.rows();
 
     for (int i = 0; i < num_triangles; ++i)

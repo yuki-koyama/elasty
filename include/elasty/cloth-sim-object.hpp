@@ -50,6 +50,10 @@ namespace elasty
         ///
         /// \details The aerodynamics model is based on [Wilson+14]. This member function is intended to be called in
         /// the setExternalForces() routine in engines.
+        ///
+        /// \param drag_coeff The coefficient for drag forces. This value should be larger than lift_coeff.
+        ///
+        /// \param lift_coeff The coefficient for lift forces. This value should be smaller than drag_coeff.
         void applyAerodynamicForces(const Eigen::Vector3d& global_velocity = Eigen::Vector3d::Zero(),
                                     const double           drag_coeff      = 0.100,
                                     const double           lift_coeff      = 0.060);
