@@ -39,7 +39,8 @@ A research-oriented elastic body simulator
 
 ## Additional Features
 
-- Export simulated cloth meshes as Alembic
+- Alembic export of simulated cloth meshes
+- Simple aerodynamics for clothes [Wilson+14]
 
 ## Dependencies
 
@@ -126,4 +127,5 @@ Issue reports and pull requests are highly welcomed.
 - __[Müller+05]__ Matthias Müller, Bruno Heidelberger, Matthias Teschner, and Markus Gross. 2005. Meshless deformations based on shape matching. ACM Trans. Graph. 24, 3 (2005), 471-478. DOI: https://doi.org/10.1145/1073204.1073216
 - __[Müller+07]__ Matthias Müller, Bruno Heidelberger, Marcus Hennix, and John Ratcliff. 2007. Position based dynamics. J. Vis. Comun. Image Represent. 18, 2 (2007), 109-118. DOI: https://doi.org/10.1016/j.jvcir.2007.01.005
 - __[Umetani+14]__ Nobuyuki Umetani, Ryan Schmidt, and Jos Stam. 2014. Position-based elastic rods. In Proc. SCA '14, 21-30. DOI: https://doi.org/10.2312/sca.20141119
+- __[Wilson+14]__ Keith Wilson, Aleka McAdams, Hubert Leo, and Maryann Simmons. 2014. Simulating wind effects on cloth and hair in Disney’s Frozen. In ACM SIGGRAPH 2014 Talks, 48:1. DOI: https://doi.org/10.1145/2614106.2614120
 - (TODO)
