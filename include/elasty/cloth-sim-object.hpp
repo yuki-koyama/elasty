@@ -46,6 +46,14 @@ namespace elasty
         /// \brief Getter of the areas of the triangles.
         const Eigen::VectorXd& getAreaList() const { return m_area_list; }
 
+        /// \brief Apply aerodynamic forces to the relevant particles.
+        ///
+        /// \details The aerodynamics model is based on [Wilson+14]. This member function is intended to be called in
+        /// the setExternalForces() routine in engines.
+        void applyAerodynamicForces(const Eigen::Vector3d& global_velocity = Eigen::Vector3d::Zero(),
+                                    const double           drag_coeff      = 0.100,
+                                    const double           lift_coeff      = 0.060);
+
     private:
         Eigen::VectorXd m_area_list;
 
