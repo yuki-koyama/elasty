@@ -124,9 +124,12 @@ int main(int argc, char** argv)
         {0.080, 0.080, 8.0, "wind-high-lift"},
     };
 
-    for (const auto condition : conditions)
+    for (const auto& condition : conditions)
     {
-        const auto [drag_coeff, lift_coeff, wind_velocity, condition_name] = condition;
+        const auto& drag_coeff     = std::get<0>(condition);
+        const auto& lift_coeff     = std::get<1>(condition);
+        const auto& wind_velocity  = std::get<2>(condition);
+        const auto& condition_name = std::get<3>(condition);
 
         const std::string name{condition_name};
 
