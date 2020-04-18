@@ -5,15 +5,16 @@
 #include <elasty/utils.hpp>
 #include <timer.hpp>
 
-// #define SPHERE_COLLISION
-#define MOVING_SPHERE_COLLISION
-
-#define CLOTH_FALL
-
 class SimpleEngine final : public elasty::AbstractEngine
 {
 public:
-    SimpleEngine() : elasty::AbstractEngine(1.0 / 60.0, 10, 5, elasty::AlgorithmType::Xpbd) {}
+    SimpleEngine(const double draf_coeff, const double lift_coeff, const double wind_velocity)
+        : elasty::AbstractEngine(1.0 / 60.0, 16, 4, elasty::AlgorithmType::Xpbd),
+          m_wind_velocity(0.0, 0.0, wind_velocity),
+          m_drag_coeff(draf_coeff),
+          m_lift_coeff(lift_coeff)
+    {
+    }
 
     void initializeScene() override
     {
@@ -22,14 +23,9 @@ public:
         constexpr double   cloth_in_plane_compliance     = 5e-02; ///< XPBD
         constexpr double   cloth_out_of_plane_stiffness  = 0.100; ///< PBD
         constexpr double   cloth_out_of_plane_compliance = 5e+04; ///< XPBD
-        constexpr unsigned cloth_resolution              = 50;
+        constexpr unsigned cloth_resolution              = 60;
 
-        const Eigen::Affine3d cloth_import_transform =
-#if defined(CLOTH_FALL)
-            Eigen::Affine3d(Eigen::Translation3d(0.0, 2.0, 1.0));
-#else
-            Eigen::Translation3d(0.0, 1.0, 0.0) * Eigen::AngleAxisd(0.5 * elasty::pi(), Eigen::Vector3d::UnitX());
-#endif
+        const Eigen::Affine3d cloth_import_transform = Eigen::Affine3d(Eigen::Translation3d(0.0, 2.0, 1.0));
 
         m_cloth_sim_object =
             std::make_shared<elasty::ClothSimObject>(cloth_resolution,
@@ -50,12 +46,6 @@ public:
                   m_cloth_sim_object->m_constraints.end(),
                   std::back_inserter(m_constraints));
 
-        // Add small perturb
-        for (const auto& particle : m_particles)
-        {
-            particle->v = 1e-03 * Eigen::Vector3d::Random();
-        }
-
         // Pin two of the corners of the cloth
         constexpr double range_radius = 0.1;
         for (const auto& particle : m_particles)
@@ -75,40 +65,20 @@ public:
 
     void setExternalForces() override
     {
-        const auto gravity = Eigen::Vector3d{0.0, -9.8, 0.0};
+        const Eigen::Vector3d gravity = Eigen::Vector3d(0.0, -9.8, 0.0);
 
         for (auto particle : m_particles)
         {
             particle->f = particle->m * gravity;
         }
 
-        // Aerodynamic force for cloth
-        m_cloth_sim_object->applyAerodynamicForces();
+        m_cloth_sim_object->applyAerodynamicForces(m_wind_velocity, m_drag_coeff, m_lift_coeff);
     }
 
     void generateCollisionConstraints() override
     {
-#if defined(SPHERE_COLLISION)
         // Collision with a sphere
         const Eigen::Vector3d center(0.0, 1.0, 0.0);
-        constexpr double      tolerance  = 0.05;
-        constexpr double      radius     = 0.50 + 0.02;
-        constexpr double      stiffness  = 1.00;
-        constexpr double      compliance = 0.00;
-        for (auto particle : m_particles)
-        {
-            const Eigen::Vector3d direction = particle->x - center;
-            if (direction.norm() < radius + tolerance)
-            {
-                const Eigen::Vector3d normal   = direction.normalized();
-                const double          distance = center.transpose() * normal + radius;
-                m_instant_constraints.push_back(std::make_shared<elasty::EnvironmentalCollisionConstraint>(
-                    particle, stiffness, compliance, m_dt, normal, distance));
-            }
-        }
-#elif defined(MOVING_SPHERE_COLLISION)
-        // Collision with a moving sphere
-        const Eigen::Vector3d center(0.0, 1.0, std::max(0.0, (getCurrentPhysicsTime() - 1.80)));
         constexpr double      tolerance  = 0.05;
         constexpr double      radius     = 0.50 + 0.02;
         constexpr double      stiffness  = 1.00;
@@ -124,7 +94,6 @@ public:
                     particle, stiffness, compliance, getDeltaPhysicsTime(), normal, distance));
             }
         }
-#endif
     }
 
     void updateVelocities() override
@@ -138,22 +107,45 @@ public:
     }
 
     std::shared_ptr<elasty::ClothSimObject> m_cloth_sim_object;
+
+private:
+    const Eigen::Vector3d m_wind_velocity;
+    const double          m_drag_coeff;
+    const double          m_lift_coeff;
 };
 
 int main(int argc, char** argv)
 {
-    SimpleEngine engine;
-    engine.initializeScene();
+    constexpr std::tuple<double, double, double, const char*> conditions[] = {
+        {0.000, 0.000, 0.0, "without-aerodynamics"},
+        {0.060, 0.030, 0.0, "with-aerodynamics"},
+        {0.080, 0.030, 8.0, "wind"},
+        {0.080, 0.000, 8.0, "wind-high-drag"},
+        {0.080, 0.080, 8.0, "wind-high-lift"},
+    };
 
-    auto alembic_manager =
-        elasty::createAlembicManager("./cloth.abc", engine.m_cloth_sim_object, engine.getDeltaFrameTime());
-
-    for (unsigned int frame = 0; frame < 300; ++frame)
+    for (const auto& condition : conditions)
     {
-        timer::Timer t(std::to_string(frame));
-        elasty::submitCurrentStatus(alembic_manager);
+        const auto& drag_coeff     = std::get<0>(condition);
+        const auto& lift_coeff     = std::get<1>(condition);
+        const auto& wind_velocity  = std::get<2>(condition);
+        const auto& condition_name = std::get<3>(condition);
 
-        engine.proceedFrame();
+        const std::string name{condition_name};
+
+        const timer::Timer t(name);
+
+        SimpleEngine engine(drag_coeff, lift_coeff, wind_velocity);
+        engine.initializeScene();
+
+        auto alembic_manager =
+            elasty::createAlembicManager(name + ".abc", engine.m_cloth_sim_object, engine.getDeltaFrameTime());
+
+        for (unsigned int frame = 0; frame < 300; ++frame)
+        {
+            elasty::submitCurrentStatus(alembic_manager);
+            engine.proceedFrame();
+        }
     }
 
     return 0;

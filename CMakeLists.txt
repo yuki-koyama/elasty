@@ -71,6 +71,9 @@ if(ELASTY_EXAMPLES)
 
   add_executable(pbd-xpbd-comparison ${CMAKE_CURRENT_SOURCE_DIR}/examples/pbd-xpbd-comparison/main.cpp)
   target_link_libraries(pbd-xpbd-comparison elasty timer)
+
+  add_executable(aerodynamics ${CMAKE_CURRENT_SOURCE_DIR}/examples/aerodynamics/main.cpp)
+  target_link_libraries(aerodynamics elasty timer)
 else()
   # Both bigger and elasty depend on tinyobjloader; when bigger is not added, it is necessary to add tinyobjloader explicitly
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/bigger/external/tinyobjloader)
@@ -106,6 +109,7 @@ if(CLANG_FORMAT)
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/cloth-alembic/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/interactive-app/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/pbd-xpbd-comparison/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/aerodynamics/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/constraint-test.cpp
   )
   add_custom_target(elasty-format COMMAND ${CLANG_FORMAT} -i ${format_target_sources} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
