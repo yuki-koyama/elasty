@@ -269,7 +269,7 @@ void elasty::ClothSimObject::applyAerodynamicForces(const Eigen::Vector3d& globa
 
         const double m_sum = m_0 + m_1 + m_2;
 
-        // Calculate the weighted average of the particle vecities
+        // Calculate the weighted average of the particle velocities
         const Eigen::Vector3d v_triangle = (m_0 * v_0 + m_1 * v_1 + m_2 * v_2) / m_sum;
 
         // Calculate the relative velocity of the triangle
