@@ -19,6 +19,11 @@ A research-oriented elastic body simulator
 - [ ] Quasi-Newton dynamics [Liu+17]
 - [ ] ...
 
+### Update Schemes for PBD/XPBD
+
+- [x] Gauss-Seidel update
+- [ ] Jacobi update
+
 ### Constraints for PBD/XPBD
 
 - [ ] Area conservation constraint [Müller+14]
