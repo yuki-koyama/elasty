@@ -1,3 +1,4 @@
+#include <Eigen/Geometry>
 #include <algorithm>
 #include <elasty/constraint.hpp>
 #include <elasty/particle.hpp>
