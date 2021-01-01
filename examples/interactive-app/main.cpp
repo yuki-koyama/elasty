@@ -294,8 +294,8 @@ public:
 
         for (const auto& particle : m_engine->getParticles())
         {
-            const glm::mat4 translate_matrix = glm::translate(eigen2glm(particle->x));
-            const glm::mat4 scale_matrix     = glm::scale(glm::vec3(scale));
+            const glm::mat4 translate_matrix = glm::translate(glm::mat4(1.0f), eigen2glm(particle->x));
+            const glm::mat4 scale_matrix     = glm::scale(glm::mat4(1.0f), glm::vec3(scale));
 
             const glm::mat4 transform = parent_transform_matrix * translate_matrix * scale_matrix;
 

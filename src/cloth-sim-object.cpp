@@ -203,7 +203,7 @@ elasty::ClothSimObject::ClothSimObject(const unsigned           resolution,
                 assert(!n_1.hasNaN());
 
                 // Typical value is 0.0 or pi
-                const double dihedral_angle = std::acos(std::min(1.0, std::max(n_0.dot(n_1), -1.0)));
+                const double dihedral_angle = std::acos(std::clamp(n_0.dot(n_1), -1.0, 1.0));
 
                 assert(!std::isnan(dihedral_angle));
 

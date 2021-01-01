@@ -76,6 +76,9 @@ if(ELASTY_EXAMPLES)
   target_link_libraries(aerodynamics elasty timer)
 else()
   # Both bigger and elasty depend on tinyobjloader; when bigger is not added, it is necessary to add tinyobjloader explicitly
+  set(TINYOBJLOADER_BUILD_OBJ_STICHER OFF CACHE INTERNAL "" FORCE)
+  set(TINYOBJLOADER_BUILD_TEST_LOADER OFF CACHE INTERNAL "" FORCE)
+  set(TINYOBJLOADER_USE_DOUBLE        OFF CACHE INTERNAL "" FORCE)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/bigger/external/tinyobjloader)
 endif()
 
