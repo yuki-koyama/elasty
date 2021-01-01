@@ -36,7 +36,6 @@ set(USE_STATIC_BOOST       OFF CACHE INTERNAL "" FORCE)
 set(USE_STATIC_HDF5        OFF CACHE INTERNAL "" FORCE)
 set(USE_TESTS              OFF CACHE INTERNAL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/alembic)
-set_target_properties(Alembic PROPERTIES CXX_STANDARD 11)
 target_include_directories(Alembic PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/alembic/lib>)
 
 set(TIMER_BUILD_TEST OFF CACHE INTERNAL "" FORCE)
