@@ -193,7 +193,7 @@ public:
                 std::shared_ptr<bigger::BlinnPhongMaterial> material)
         : bigger::SceneObject(material), m_cloth_sim_object(cloth_sim_object)
     {
-        std::vector<bigger::PositionNormalVertex> vertex_data = generateVertexData();
+        std::vector<bigger::PositionNormalUvVertex> vertex_data = generateVertexData();
 
         std::vector<uint16_t> triangle_list;
         for (unsigned int i = 0; i < cloth_sim_object->m_triangle_list.rows(); ++i)
@@ -223,7 +223,7 @@ public:
     {
         m_material->submitUniforms();
 
-        const std::vector<bigger::PositionNormalVertex> vertex_data = generateVertexData();
+        const std::vector<bigger::PositionNormalUvVertex> vertex_data = generateVertexData();
         m_dynamic_mesh_primitive->updateVertexData(vertex_data);
 
         // Do not cull back-facing triangles
@@ -241,9 +241,9 @@ private:
 
     std::unique_ptr<bigger::DynamicMeshPrimitive> m_dynamic_mesh_primitive;
 
-    std::vector<bigger::PositionNormalVertex> generateVertexData() const
+    std::vector<bigger::PositionNormalUvVertex> generateVertexData() const
     {
-        std::vector<bigger::PositionNormalVertex> vertex_data(m_cloth_sim_object->m_particles.size());
+        std::vector<bigger::PositionNormalUvVertex> vertex_data(m_cloth_sim_object->m_particles.size());
         for (unsigned int i = 0; i < m_cloth_sim_object->m_particles.size(); ++i)
         {
             vertex_data[i] = {{m_cloth_sim_object->m_particles[i]->x(0),
@@ -359,11 +359,11 @@ void SimpleApp::initialize(int argc, char** argv)
 
     m_default_material                   = std::make_shared<bigger::BlinnPhongMaterial>();
     m_checker_white_material             = std::make_shared<bigger::BlinnPhongMaterial>();
-    m_checker_white_material->u_diffuse  = glm::vec3(0.8);
-    m_checker_white_material->u_specular = glm::vec3(0.0);
+    m_checker_white_material->m_diffuse  = glm::vec3(0.9);
+    m_checker_white_material->m_specular = glm::vec3(0.0);
     m_checker_black_material             = std::make_shared<bigger::BlinnPhongMaterial>();
-    m_checker_black_material->u_diffuse  = glm::vec3(0.3);
-    m_checker_black_material->u_specular = glm::vec3(0.0);
+    m_checker_black_material->m_diffuse  = glm::vec3(0.6);
+    m_checker_black_material->m_specular = glm::vec3(0.0);
     m_sphere_primitive                   = std::make_shared<bigger::SpherePrimitive>();
     m_plane_primitive                    = std::make_shared<bigger::PlanePrimitive>();
 
@@ -399,8 +399,7 @@ void SimpleApp::updateApp()
         ImGui::Text("time: %.2f", m_time);
         ImGui::Text("fps: %.2f", 1.0f / m_last_dt);
         ImGui::Separator();
-        ImGui::SliderFloat3("camera.position", glm::value_ptr(getCamera().m_position), -10.0f, 10.0f);
-        ImGui::SliderFloat("camera.fov", &(getCamera().m_fov), 10.0f, 120.0f);
+        getCamera().drawImgui();
         ImGui::Separator();
         m_default_material->drawImgui();
     }
