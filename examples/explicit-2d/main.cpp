@@ -12,7 +12,7 @@ namespace
     constexpr double k_youngs_modulus = 50.0;
     constexpr double k_poisson_ratio  = 0.45;
 
-    // https://encyclopediaofmath.org/wiki/Lam%C3%A9_constants
+    // Reference: https://encyclopediaofmath.org/wiki/Lam%C3%A9_constants
     constexpr double k_first_lame =
         k_youngs_modulus * k_poisson_ratio / ((1.0 + k_poisson_ratio) * (1.0 - 2.0 * k_poisson_ratio));
     constexpr double k_second_lame = k_youngs_modulus / (2.0 * (1.0 + k_poisson_ratio));
@@ -224,7 +224,8 @@ public:
 
     void proceedFrame()
     {
-        const size_t num_verts = m_mesh.x_rest.size() / k_num_dims;
+        const size_t              num_verts         = m_mesh.x_rest.size() / k_num_dims;
+        const std::vector<size_t> constrained_verts = {0, 1};
 
         // TODO
         const auto M =
@@ -321,8 +322,22 @@ public:
             assert(std::abs(PPsiPx.norm() - diff.norm()) < 1e-04);
         }
 
-        // Note: Explicit Euler integration
+        // Apply gravity force
+        for (size_t i = 0; i < num_verts; ++i)
+        {
+            m_mesh.f[i * 2 + 1] += M.diagonal()(i * 2 + 1) * (-9.80665);
+        }
+
+        // Note: Explicit Euler integration (for velocities)
         m_mesh.v = m_mesh.v + m_delta_physics_time * M.inverse() * m_mesh.f;
+
+        // Naive constraints
+        for (size_t i : constrained_verts)
+        {
+            m_mesh.v.segment(i * 2, 2) = Eigen::Vector2d::Zero();
+        }
+
+        // Note: Explicit Euler integration (for positions)
         m_mesh.x = m_mesh.x + m_delta_physics_time * m_mesh.v;
 
         // Naive damping
@@ -331,22 +346,55 @@ public:
 
     void initializeScene()
     {
-        constexpr size_t num_verts = 4;
-        constexpr size_t num_elems = 2;
+        if constexpr (false)
+        {
+            // A simple square
 
-        m_mesh.elems.resize(num_elems, 3);
-        m_mesh.elems.row(0) << 0, 1, 2;
-        m_mesh.elems.row(1) << 1, 3, 2;
+            constexpr size_t num_verts = 4;
+            constexpr size_t num_elems = 2;
 
-        m_mesh.x_rest.resize(num_verts * k_num_dims);
-        m_mesh.x_rest.segment(k_num_dims * 0, k_num_dims) = Eigen::Vector2d{0.0, 0.0};
-        m_mesh.x_rest.segment(k_num_dims * 1, k_num_dims) = Eigen::Vector2d{1.0, 0.0};
-        m_mesh.x_rest.segment(k_num_dims * 2, k_num_dims) = Eigen::Vector2d{0.0, 1.0};
-        m_mesh.x_rest.segment(k_num_dims * 3, k_num_dims) = Eigen::Vector2d{1.0, 1.0};
+            m_mesh.elems.resize(num_elems, 3);
+            m_mesh.elems.row(0) << 0, 1, 2;
+            m_mesh.elems.row(1) << 1, 3, 2;
 
-        m_mesh.x = m_mesh.x_rest;
-        m_mesh.v = Eigen::VectorXd::Random(k_num_dims * num_verts);
-        m_mesh.f = Eigen::VectorXd::Zero(k_num_dims * num_verts);
+            m_mesh.x_rest.resize(num_verts * k_num_dims);
+            m_mesh.x_rest.segment(k_num_dims * 0, k_num_dims) = Eigen::Vector2d{0.0, 0.0};
+            m_mesh.x_rest.segment(k_num_dims * 1, k_num_dims) = Eigen::Vector2d{1.0, 0.0};
+            m_mesh.x_rest.segment(k_num_dims * 2, k_num_dims) = Eigen::Vector2d{0.0, 1.0};
+            m_mesh.x_rest.segment(k_num_dims * 3, k_num_dims) = Eigen::Vector2d{1.0, 1.0};
+
+            m_mesh.x = m_mesh.x_rest;
+            m_mesh.v = Eigen::VectorXd::Random(k_num_dims * num_verts);
+            m_mesh.f = Eigen::VectorXd::Zero(k_num_dims * num_verts);
+        }
+        else
+        {
+            // A simple cantilever
+
+            constexpr size_t num_blocks = 6;
+            constexpr size_t num_verts  = (num_blocks + 1) * 2;
+            constexpr size_t num_elems  = num_blocks * 2;
+
+            m_mesh.elems.resize(num_elems, 3);
+            m_mesh.x_rest.resize(num_verts * k_num_dims);
+
+            for (size_t i = 0; i < num_blocks; ++i)
+            {
+                m_mesh.elems.row(2 * i + 0) << 0 + i * 2, 1 + i * 2, 3 + i * 2;
+                m_mesh.elems.row(2 * i + 1) << 0 + i * 2, 3 + i * 2, 2 + i * 2;
+
+                m_mesh.x_rest.segment(k_num_dims * (2 * i + 0), k_num_dims) = Eigen::Vector2d{i * 1.0, +0.5};
+                m_mesh.x_rest.segment(k_num_dims * (2 * i + 1), k_num_dims) = Eigen::Vector2d{i * 1.0, -0.5};
+            }
+            m_mesh.x_rest.segment(k_num_dims * (2 * num_blocks + 0), k_num_dims) =
+                Eigen::Vector2d{num_blocks * 1.0, +0.5};
+            m_mesh.x_rest.segment(k_num_dims * (2 * num_blocks + 1), k_num_dims) =
+                Eigen::Vector2d{num_blocks * 1.0, -0.5};
+
+            m_mesh.x = m_mesh.x_rest;
+            m_mesh.v = Eigen::VectorXd::Random(k_num_dims * num_verts);
+            m_mesh.f = Eigen::VectorXd::Zero(k_num_dims * num_verts);
+        }
     }
 
     /// \brief Getter of the delta physics time.
@@ -357,7 +405,7 @@ public:
     const TriangleMesh* getMesh() const { return &m_mesh; }
 
 private:
-    const double m_delta_physics_time = 1.0 / 60.0;
+    const double m_delta_physics_time = 1.0 / 120.0;
 
     double m_current_physics_time = 0.0;
 
@@ -377,6 +425,7 @@ int main(int argc, char** argv)
 
         alembic_manager.submitCurrentStatus();
 
+        engine.proceedFrame();
         engine.proceedFrame();
     }
 
