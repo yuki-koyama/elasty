@@ -9,7 +9,7 @@ namespace
 {
     constexpr size_t k_num_dims = 2;
 
-    constexpr double k_youngs_modulus = 50.0;
+    constexpr double k_youngs_modulus = 100.0;
     constexpr double k_poisson_ratio  = 0.45;
 
     // Reference: https://encyclopediaofmath.org/wiki/Lam%C3%A9_constants
@@ -225,7 +225,7 @@ public:
     void proceedFrame()
     {
         const size_t              num_verts         = m_mesh.x_rest.size() / k_num_dims;
-        const std::vector<size_t> constrained_verts = {0, 1};
+        const std::vector<size_t> constrained_verts = {0, 1, 2, 3};
 
         // TODO
         const auto M =
@@ -341,7 +341,7 @@ public:
         m_mesh.x = m_mesh.x + m_delta_physics_time * m_mesh.v;
 
         // Naive damping
-        m_mesh.v *= 0.99;
+        m_mesh.v *= 0.995;
     }
 
     void initializeScene()
@@ -371,25 +371,45 @@ public:
         {
             // A simple cantilever
 
-            constexpr size_t num_blocks = 6;
-            constexpr size_t num_verts  = (num_blocks + 1) * 2;
-            constexpr size_t num_elems  = num_blocks * 2;
+            constexpr size_t num_cols  = 15;
+            constexpr size_t num_rows  = 3;
+            constexpr size_t num_verts = (num_cols + 1) * (num_rows + 1);
+            constexpr size_t num_elems = (num_cols * num_rows) * 2;
 
             m_mesh.elems.resize(num_elems, 3);
             m_mesh.x_rest.resize(num_verts * k_num_dims);
 
-            for (size_t i = 0; i < num_blocks; ++i)
+            for (size_t col = 0; col < num_cols; ++col)
             {
-                m_mesh.elems.row(2 * i + 0) << 0 + i * 2, 1 + i * 2, 3 + i * 2;
-                m_mesh.elems.row(2 * i + 1) << 0 + i * 2, 3 + i * 2, 2 + i * 2;
+                for (size_t row = 0; row < num_rows; ++row)
+                {
+                    const auto base = col * (num_rows + 1) + row;
 
-                m_mesh.x_rest.segment(k_num_dims * (2 * i + 0), k_num_dims) = Eigen::Vector2d{i * 1.0, +0.5};
-                m_mesh.x_rest.segment(k_num_dims * (2 * i + 1), k_num_dims) = Eigen::Vector2d{i * 1.0, -0.5};
+                    m_mesh.elems.row(2 * num_rows * col + 2 * row + 0) << 0 + base, 1 + base, (num_rows + 1) + 1 + base;
+                    m_mesh.elems.row(2 * num_rows * col + 2 * row + 1) << 0 + base, (num_rows + 1) + 1 + base,
+                        (num_rows + 1) + base;
+
+                    m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + row), k_num_dims) =
+                        Eigen::Vector2d{col * 1.0, -1.0 * row};
+                }
+                m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + num_rows), k_num_dims) =
+                    Eigen::Vector2d{col * 1.0, -1.0 * num_rows};
             }
-            m_mesh.x_rest.segment(k_num_dims * (2 * num_blocks + 0), k_num_dims) =
-                Eigen::Vector2d{num_blocks * 1.0, +0.5};
-            m_mesh.x_rest.segment(k_num_dims * (2 * num_blocks + 1), k_num_dims) =
-                Eigen::Vector2d{num_blocks * 1.0, -0.5};
+            size_t col = num_cols;
+            for (size_t row = 0; row < num_rows; ++row)
+            {
+                m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + row), k_num_dims) =
+                    Eigen::Vector2d{col * 1.0, -1.0 * row};
+            }
+            m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + num_rows), k_num_dims) =
+                Eigen::Vector2d{col * 1.0, -1.0 * num_rows};
+
+            // Transform
+            m_mesh.x_rest *= 1.0 / static_cast<double>(num_rows);
+            for (size_t vert = 0; vert < num_verts; ++vert)
+            {
+                m_mesh.x_rest[2 * vert + 1] += 0.5;
+            }
 
             m_mesh.x = m_mesh.x_rest;
             m_mesh.v = Eigen::VectorXd::Random(k_num_dims * num_verts);
@@ -405,7 +425,7 @@ public:
     const TriangleMesh* getMesh() const { return &m_mesh; }
 
 private:
-    const double m_delta_physics_time = 1.0 / 120.0;
+    const double m_delta_physics_time = 1.0 / (5 * 60.0);
 
     double m_current_physics_time = 0.0;
 
@@ -419,14 +439,16 @@ int main(int argc, char** argv)
 
     auto alembic_manager = AlembicManager("./out.abc", engine.getMesh(), engine.getDeltaPhysicsTime());
 
-    for (unsigned int frame = 0; frame < 600; ++frame)
+    for (unsigned int frame = 0; frame < 480; ++frame)
     {
         timer::Timer t(std::to_string(frame));
 
         alembic_manager.submitCurrentStatus();
 
-        engine.proceedFrame();
-        engine.proceedFrame();
+        for (int i = 0; i < 5; ++i)
+        {
+            engine.proceedFrame();
+        }
     }
 
     return 0;
