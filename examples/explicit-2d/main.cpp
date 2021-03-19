@@ -16,7 +16,7 @@ struct TriangleMesh
 
     TriangleList elems;
 
-    Eigen::VectorXd x_0;
+    Eigen::VectorXd x_rest;
     Eigen::VectorXd x;
     Eigen::VectorXd v;
     Eigen::VectorXd f;
@@ -45,7 +45,7 @@ public:
         using namespace Alembic::Abc;
         using namespace Alembic::AbcGeom;
 
-        const size_t num_verts = m_mesh->x_0.size() / num_dims;
+        const size_t num_verts = m_mesh->x_rest.size() / num_dims;
 
         const Eigen::VectorXf verts = [&]() {
             assert(num_dims == 2);
@@ -143,7 +143,7 @@ public:
 
     void proceedFrame()
     {
-        const size_t num_verts = m_mesh.x_0.size() / num_dims;
+        const size_t num_verts = m_mesh.x_rest.size() / num_dims;
 
         // TODO
         const auto M =
@@ -153,7 +153,7 @@ public:
         const auto K = 10.0 * Eigen::MatrixXd::Identity(num_dims * num_verts, num_dims * num_verts);
 
         // TODO
-        m_mesh.f = -K * (m_mesh.x - m_mesh.x_0);
+        m_mesh.f = -K * (m_mesh.x - m_mesh.x_rest);
 
         // Note: Explicit Euler integration
         m_mesh.v = m_mesh.v + m_delta_physics_time * M.inverse() * m_mesh.f;
@@ -170,12 +170,12 @@ public:
         m_mesh.elems(0, 1) = 1;
         m_mesh.elems(0, 2) = 2;
 
-        m_mesh.x_0.resize(num_verts * num_dims);
-        m_mesh.x_0.segment(num_dims * 0, num_dims) = Eigen::Vector2d{0.0, 0.0};
-        m_mesh.x_0.segment(num_dims * 1, num_dims) = Eigen::Vector2d{1.0, 0.0};
-        m_mesh.x_0.segment(num_dims * 2, num_dims) = Eigen::Vector2d{0.0, 1.0};
+        m_mesh.x_rest.resize(num_verts * num_dims);
+        m_mesh.x_rest.segment(num_dims * 0, num_dims) = Eigen::Vector2d{0.0, 0.0};
+        m_mesh.x_rest.segment(num_dims * 1, num_dims) = Eigen::Vector2d{1.0, 0.0};
+        m_mesh.x_rest.segment(num_dims * 2, num_dims) = Eigen::Vector2d{0.0, 1.0};
 
-        m_mesh.x = m_mesh.x_0;
+        m_mesh.x = m_mesh.x_rest;
         m_mesh.v = Eigen::VectorXd::Random(num_dims * num_verts);
         m_mesh.f = Eigen::VectorXd::Zero(num_dims * num_verts);
     }
