@@ -287,33 +287,36 @@ public:
             // Validate the force calculation by comparing to numerical differentials
             const auto      x_orig = m_mesh.x;
             Eigen::VectorXd diff{6};
-            for (size_t i = 0; i < 6; ++i)
+            for (size_t i = 0; i < 3; ++i)
             {
-                constexpr double eps = 1e-06;
+                for (size_t j = 0; j < 2; ++j)
+                {
+                    constexpr double eps = 1e-06;
 
-                m_mesh.x[i] += eps;
-                const auto F_p = calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2).data(),
-                                                          m_mesh.x.segment(2 * indices[1], 2).data(),
-                                                          m_mesh.x.segment(2 * indices[2], 2).data(),
-                                                          m_mesh.x_rest.segment(2 * indices[0], 2).data(),
-                                                          m_mesh.x_rest.segment(2 * indices[1], 2).data(),
-                                                          m_mesh.x_rest.segment(2 * indices[2], 2).data());
-                const auto e_p = calcEnergy<double>(F_p);
+                    m_mesh.x[2 * indices[i] + j] += eps;
+                    const auto F_p = calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2).data(),
+                                                              m_mesh.x.segment(2 * indices[1], 2).data(),
+                                                              m_mesh.x.segment(2 * indices[2], 2).data(),
+                                                              m_mesh.x_rest.segment(2 * indices[0], 2).data(),
+                                                              m_mesh.x_rest.segment(2 * indices[1], 2).data(),
+                                                              m_mesh.x_rest.segment(2 * indices[2], 2).data());
+                    const auto e_p = calcEnergy<double>(F_p);
 
-                m_mesh.x = x_orig;
+                    m_mesh.x = x_orig;
 
-                m_mesh.x[i] -= eps;
-                const auto F_m = calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2).data(),
-                                                          m_mesh.x.segment(2 * indices[1], 2).data(),
-                                                          m_mesh.x.segment(2 * indices[2], 2).data(),
-                                                          m_mesh.x_rest.segment(2 * indices[0], 2).data(),
-                                                          m_mesh.x_rest.segment(2 * indices[1], 2).data(),
-                                                          m_mesh.x_rest.segment(2 * indices[2], 2).data());
-                const auto e_m = calcEnergy<double>(F_m);
+                    m_mesh.x[2 * indices[i] + j] -= eps;
+                    const auto F_m = calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2).data(),
+                                                              m_mesh.x.segment(2 * indices[1], 2).data(),
+                                                              m_mesh.x.segment(2 * indices[2], 2).data(),
+                                                              m_mesh.x_rest.segment(2 * indices[0], 2).data(),
+                                                              m_mesh.x_rest.segment(2 * indices[1], 2).data(),
+                                                              m_mesh.x_rest.segment(2 * indices[2], 2).data());
+                    const auto e_m = calcEnergy<double>(F_m);
 
-                m_mesh.x = x_orig;
+                    m_mesh.x = x_orig;
 
-                diff[i] = (e_p - e_m) / (2.0 * eps);
+                    diff[2 * i + j] = (e_p - e_m) / (2.0 * eps);
+                }
             }
             assert(std::abs(PPsiPx.norm() - diff.norm()) < 1e-04);
         }
@@ -323,23 +326,23 @@ public:
         m_mesh.x = m_mesh.x + m_delta_physics_time * m_mesh.v;
 
         // Naive damping
-        m_mesh.v *= 0.995;
+        m_mesh.v *= 0.99;
     }
 
     void initializeScene()
     {
-        constexpr size_t num_verts = 3;
-        constexpr size_t num_elems = 1;
+        constexpr size_t num_verts = 4;
+        constexpr size_t num_elems = 2;
 
         m_mesh.elems.resize(num_elems, 3);
-        m_mesh.elems(0, 0) = 0;
-        m_mesh.elems(0, 1) = 1;
-        m_mesh.elems(0, 2) = 2;
+        m_mesh.elems.row(0) << 0, 1, 2;
+        m_mesh.elems.row(1) << 1, 3, 2;
 
         m_mesh.x_rest.resize(num_verts * k_num_dims);
         m_mesh.x_rest.segment(k_num_dims * 0, k_num_dims) = Eigen::Vector2d{0.0, 0.0};
         m_mesh.x_rest.segment(k_num_dims * 1, k_num_dims) = Eigen::Vector2d{1.0, 0.0};
         m_mesh.x_rest.segment(k_num_dims * 2, k_num_dims) = Eigen::Vector2d{0.0, 1.0};
+        m_mesh.x_rest.segment(k_num_dims * 3, k_num_dims) = Eigen::Vector2d{1.0, 1.0};
 
         m_mesh.x = m_mesh.x_rest;
         m_mesh.v = Eigen::VectorXd::Random(k_num_dims * num_verts);
