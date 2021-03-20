@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #include <elasty/constraint.hpp>
+#include <elasty/fem.hpp>
 #include <elasty/particle.hpp>
 
 namespace
@@ -139,8 +140,8 @@ elasty::ContinuumTriangleConstraint::ContinuumTriangleConstraint(const std::shar
                                  stiffness,
                                  compliance,
                                  delta_time),
-      m_first_lame(youngs_modulus * poisson_ratio / ((1.0 + poisson_ratio) * (1.0 - 2.0 * poisson_ratio))),
-      m_second_lame(youngs_modulus / (2.0 * (1.0 + poisson_ratio)))
+      m_first_lame(fem::calcFirstLame(youngs_modulus, poisson_ratio)),
+      m_second_lame(fem::calcSecondLame(youngs_modulus, poisson_ratio))
 {
     const Eigen::Vector3d& x_0 = m_particles[0]->x;
     const Eigen::Vector3d& x_1 = m_particles[1]->x;

@@ -14,9 +14,8 @@ namespace
     constexpr double k_poisson_ratio  = 0.45;
 
     // Reference: https://encyclopediaofmath.org/wiki/Lam%C3%A9_constants
-    constexpr double k_first_lame =
-        k_youngs_modulus * k_poisson_ratio / ((1.0 + k_poisson_ratio) * (1.0 - 2.0 * k_poisson_ratio));
-    constexpr double k_second_lame = k_youngs_modulus / (2.0 * (1.0 + k_poisson_ratio));
+    constexpr double k_first_lame  = elasty::fem::calcFirstLame(k_youngs_modulus, k_poisson_ratio);
+    constexpr double k_second_lame = elasty::fem::calcSecondLame(k_youngs_modulus, k_poisson_ratio);
 } // namespace
 
 struct TriangleMesh
