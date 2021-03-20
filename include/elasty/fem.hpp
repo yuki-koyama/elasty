@@ -36,7 +36,7 @@ namespace elasty::fem
     /// \param x_2 A 2D vector.
     ///
     /// \details Reference: [1]
-    template <class Derived>
+    template <typename Derived>
     Eigen::Matrix<typename Derived::Scalar, 2, 2> calc2dShapeMatrix(const Eigen::MatrixBase<Derived>& x_0,
                                                                     const Eigen::MatrixBase<Derived>& x_1,
                                                                     const Eigen::MatrixBase<Derived>& x_2)
@@ -48,6 +48,17 @@ namespace elasty::fem
         shape_matrix.col(1) = x_2 - x_0;
 
         return shape_matrix;
+    }
+
+    /// \brief Calculate the Green strain tensor for a 2D element.
+    ///
+    /// \param deform_grad The deformation gradient, which is a 2x2 matrix.
+    template <typename Derived>
+    Eigen::Matrix<typename Derived::Scalar, 2, 2> calc2dGreenStrain(const Eigen::MatrixBase<Derived>& deform_grad)
+    {
+        using Mat = Eigen::Matrix<typename Derived::Scalar, 2, 2>;
+
+        return 0.5 * (deform_grad.transpose() * deform_grad - Mat::Identity());
     }
 } // namespace elasty::fem
 

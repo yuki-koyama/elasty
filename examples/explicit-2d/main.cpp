@@ -117,25 +117,21 @@ Scalar calc2dTriangleArea(const Scalar* x_0_data, const Scalar* x_1_data, const 
     return 0.5 * std::abs(r_1(0) * r_2(1) - r_2(0) * r_1(1));
 }
 
-template <class Scalar> Eigen::Matrix<Scalar, 2, 2> calcGreenStrain(const Eigen::Matrix<Scalar, 2, 2>& F)
-{
-    return 0.5 * (F.transpose() * F - Eigen::Matrix<Scalar, 2, 2>::Identity());
-}
-
 // StVK
-template <class Scalar, class Derived> Scalar calcEnergy(const Eigen::MatrixBase<Derived>& deform_grad)
+template <typename Derived> typename Derived::Scalar calcEnergy(const Eigen::MatrixBase<Derived>& deform_grad)
 {
-    const auto   E     = calcGreenStrain<Scalar>(deform_grad);
-    const Scalar trace = E.trace();
+    const auto                     E     = elasty::fem::calc2dGreenStrain(deform_grad);
+    const typename Derived::Scalar trace = E.trace();
 
     return k_first_lame * E.squaredNorm() + 0.5 * k_second_lame * trace * trace;
 }
 
 // StVK
-template <class Scalar, class Derived>
-Eigen::Matrix<Scalar, 2, 2> calcFirstPiolaKirchhoffStressTensor(const Eigen::MatrixBase<Derived>& deform_grad)
+template <typename Derived>
+Eigen::Matrix<typename Derived::Scalar, 2, 2>
+calcFirstPiolaKirchhoffStressTensor(const Eigen::MatrixBase<Derived>& deform_grad)
 {
-    const auto E = calcGreenStrain<Scalar>(deform_grad);
+    const auto E = elasty::fem::calc2dGreenStrain(deform_grad);
 
     return 2.0 * k_first_lame * deform_grad * E + k_second_lame * E.trace() * deform_grad;
 }
@@ -250,7 +246,7 @@ public:
             const auto flattened_PFPx = calcFlattenedPartDeformGradPartPos(D_m_inv);
 
             // TODO: Assign a better name
-            const Eigen::Matrix2d pk1 = calcFirstPiolaKirchhoffStressTensor<double>(F);
+            const Eigen::Matrix2d pk1 = calcFirstPiolaKirchhoffStressTensor(F);
 
             // TODO: Assign a better name
             const auto PPsiPx = flattened_PFPx.transpose() * Eigen::Map<const Eigen::Vector4d>(pk1.data(), pk1.size());
@@ -281,7 +277,7 @@ public:
                                                               m_mesh.x_rest.segment(2 * indices[0], 2).data(),
                                                               m_mesh.x_rest.segment(2 * indices[1], 2).data(),
                                                               m_mesh.x_rest.segment(2 * indices[2], 2).data());
-                    const auto e_p = calcEnergy<double>(F_p);
+                    const auto e_p = calcEnergy(F_p);
 
                     m_mesh.x = x_orig;
 
@@ -292,7 +288,7 @@ public:
                                                               m_mesh.x_rest.segment(2 * indices[0], 2).data(),
                                                               m_mesh.x_rest.segment(2 * indices[1], 2).data(),
                                                               m_mesh.x_rest.segment(2 * indices[2], 2).data());
-                    const auto e_m = calcEnergy<double>(F_m);
+                    const auto e_m = calcEnergy(F_m);
 
                     m_mesh.x = x_orig;
 
