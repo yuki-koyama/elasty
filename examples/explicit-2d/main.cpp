@@ -2,6 +2,7 @@
 #include <Alembic/AbcGeom/All.h>
 #include <Eigen/Core>
 #include <Eigen/LU>
+#include <elasty/fem.hpp>
 #include <timer.hpp>
 #include <vector>
 
