@@ -29,6 +29,12 @@ namespace elasty::fem
 
     /// \brief Calculate either the "deformed" shape matrix (D_s) or "reference" shape matrix (D_m) of a triangle.
     ///
+    /// \param x_0 A 2D vector.
+    ///
+    /// \param x_1 A 2D vector.
+    ///
+    /// \param x_2 A 2D vector.
+    ///
     /// \details Reference: [1]
     template <class Derived>
     Eigen::Matrix<typename Derived::Scalar, 2, 2> calc2dShapeMatrix(const Eigen::MatrixBase<Derived>& x_0,
