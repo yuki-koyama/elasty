@@ -15,16 +15,33 @@
 
 namespace elasty::fem
 {
-    // Reference: [1]
+    /// \details Reference: [1]
     template <typename Scalar> constexpr Scalar calcFirstLame(const Scalar youngs_modulus, const Scalar poisson_ratio)
     {
         return youngs_modulus * poisson_ratio / ((1.0 + poisson_ratio) * (1.0 - 2.0 * poisson_ratio));
     }
 
-    // Reference: [1]
+    /// \details Reference: [1]
     template <typename Scalar> constexpr Scalar calcSecondLame(const Scalar youngs_modulus, const Scalar poisson_ratio)
     {
         return youngs_modulus / (2.0 * (1.0 + poisson_ratio));
+    }
+
+    /// \brief Calculate either the "deformed" shape matrix (D_s) or "reference" shape matrix (D_m) of a triangle.
+    ///
+    /// \details Reference: [1]
+    template <class Derived>
+    Eigen::Matrix<typename Derived::Scalar, 2, 2> calc2dShapeMatrix(const Eigen::MatrixBase<Derived>& x_0,
+                                                                    const Eigen::MatrixBase<Derived>& x_1,
+                                                                    const Eigen::MatrixBase<Derived>& x_2)
+    {
+        using Mat = Eigen::Matrix<typename Derived::Scalar, 2, 2>;
+
+        Mat shape_matrix;
+        shape_matrix.col(0) = x_1 - x_0;
+        shape_matrix.col(1) = x_2 - x_0;
+
+        return shape_matrix;
     }
 } // namespace elasty::fem
 

@@ -186,7 +186,6 @@ Eigen::Matrix<Scalar, 2, 2> calc2dTriangleDeformGrad(const Scalar* x_0_data,
                                                      const Scalar* x_rest_2_data)
 {
     using Vec = Eigen::Matrix<Scalar, 2, 1>;
-    using Mat = Eigen::Matrix<Scalar, 2, 2>;
 
     const auto x_0      = Eigen::Map<const Vec>(x_0_data);
     const auto x_1      = Eigen::Map<const Vec>(x_1_data);
@@ -195,21 +194,11 @@ Eigen::Matrix<Scalar, 2, 2> calc2dTriangleDeformGrad(const Scalar* x_0_data,
     const auto x_rest_1 = Eigen::Map<const Vec>(x_rest_1_data);
     const auto x_rest_2 = Eigen::Map<const Vec>(x_rest_2_data);
 
-    const auto o_1 = x_1 - x_0;
-    const auto o_2 = x_2 - x_0;
-
-    const auto o_rest_1 = x_rest_1 - x_rest_0;
-    const auto o_rest_2 = x_rest_2 - x_rest_0;
+    // Note: "s" denotes spatial (i.e., deformed)
+    const auto D_s = elasty::fem::calc2dShapeMatrix(x_0, x_1, x_2);
 
     // Note: "m" denotes material (i.e., rest)
-    Mat D_m;
-    D_m.col(0) = o_rest_1;
-    D_m.col(1) = o_rest_2;
-
-    // Note: "s" denotes spatial (i.e., deformed)
-    Mat D_s;
-    D_s.col(0) = o_1;
-    D_s.col(1) = o_2;
+    const auto D_m = elasty::fem::calc2dShapeMatrix(x_rest_0, x_rest_1, x_rest_2);
 
     const auto F = D_s * D_m.inverse();
 
@@ -252,18 +241,10 @@ public:
                                                  m_mesh.x_rest.segment(2 * indices[2], 2).data());
 
             // TODO: Precompute this value
-            const Eigen::Matrix2d D_m_inv = [&]() {
-                const auto o_rest_1 =
-                    m_mesh.x_rest.segment(2 * indices[1], 2) - m_mesh.x_rest.segment(2 * indices[0], 2);
-                const auto o_rest_2 =
-                    m_mesh.x_rest.segment(2 * indices[2], 2) - m_mesh.x_rest.segment(2 * indices[0], 2);
-
-                Eigen::Matrix2d D_m;
-                D_m.col(0) = o_rest_1;
-                D_m.col(1) = o_rest_2;
-
-                return D_m.inverse().eval();
-            }();
+            const Eigen::Matrix2d D_m_inv = elasty::fem::calc2dShapeMatrix(m_mesh.x_rest.segment(2 * indices[0], 2),
+                                                                           m_mesh.x_rest.segment(2 * indices[1], 2),
+                                                                           m_mesh.x_rest.segment(2 * indices[2], 2))
+                                                .inverse();
 
             // TODO: Assign a better name
             const auto flattened_PFPx = calcFlattenedPartDeformGradPartPos(D_m_inv);
