@@ -173,34 +173,6 @@ Eigen::Matrix<Scalar, 4, 6> calcFlattenedPartDeformGradPartPos(const Eigen::Matr
     return vec_PFPx;
 }
 
-template <class Scalar>
-Eigen::Matrix<Scalar, 2, 2> calc2dTriangleDeformGrad(const Scalar* x_0_data,
-                                                     const Scalar* x_1_data,
-                                                     const Scalar* x_2_data,
-                                                     const Scalar* x_rest_0_data,
-                                                     const Scalar* x_rest_1_data,
-                                                     const Scalar* x_rest_2_data)
-{
-    using Vec = Eigen::Matrix<Scalar, 2, 1>;
-
-    const auto x_0      = Eigen::Map<const Vec>(x_0_data);
-    const auto x_1      = Eigen::Map<const Vec>(x_1_data);
-    const auto x_2      = Eigen::Map<const Vec>(x_2_data);
-    const auto x_rest_0 = Eigen::Map<const Vec>(x_rest_0_data);
-    const auto x_rest_1 = Eigen::Map<const Vec>(x_rest_1_data);
-    const auto x_rest_2 = Eigen::Map<const Vec>(x_rest_2_data);
-
-    // Note: "s" denotes spatial (i.e., deformed)
-    const auto D_s = elasty::fem::calc2dShapeMatrix(x_0, x_1, x_2);
-
-    // Note: "m" denotes material (i.e., rest)
-    const auto D_m = elasty::fem::calc2dShapeMatrix(x_rest_0, x_rest_1, x_rest_2);
-
-    const auto F = D_s * D_m.inverse();
-
-    return F;
-}
-
 class Explicit2dEngine
 {
 public:
@@ -223,24 +195,22 @@ public:
         {
             const auto indices = m_mesh.elems.row(i);
 
-            // TODO: Precompute a part of this process
-            const auto F = calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2).data(),
-                                                    m_mesh.x.segment(2 * indices[1], 2).data(),
-                                                    m_mesh.x.segment(2 * indices[2], 2).data(),
-                                                    m_mesh.x_rest.segment(2 * indices[0], 2).data(),
-                                                    m_mesh.x_rest.segment(2 * indices[1], 2).data(),
-                                                    m_mesh.x_rest.segment(2 * indices[2], 2).data());
-
-            // TODO: Precompute this value
-            const auto area = calc2dTriangleArea(m_mesh.x_rest.segment(2 * indices[0], 2).data(),
-                                                 m_mesh.x_rest.segment(2 * indices[1], 2).data(),
-                                                 m_mesh.x_rest.segment(2 * indices[2], 2).data());
-
             // TODO: Precompute this value
             const Eigen::Matrix2d D_m_inv = elasty::fem::calc2dShapeMatrix(m_mesh.x_rest.segment(2 * indices[0], 2),
                                                                            m_mesh.x_rest.segment(2 * indices[1], 2),
                                                                            m_mesh.x_rest.segment(2 * indices[2], 2))
                                                 .inverse();
+
+            // TODO: Precompute a part of this process
+            const auto F = elasty::fem::calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2),
+                                                                 m_mesh.x.segment(2 * indices[1], 2),
+                                                                 m_mesh.x.segment(2 * indices[2], 2),
+                                                                 D_m_inv);
+
+            // TODO: Precompute this value
+            const auto area = calc2dTriangleArea(m_mesh.x_rest.segment(2 * indices[0], 2).data(),
+                                                 m_mesh.x_rest.segment(2 * indices[1], 2).data(),
+                                                 m_mesh.x_rest.segment(2 * indices[2], 2).data());
 
             // TODO: Assign a better name
             const auto flattened_PFPx = calcFlattenedPartDeformGradPartPos(D_m_inv);
@@ -271,23 +241,19 @@ public:
                     constexpr double eps = 1e-06;
 
                     m_mesh.x[2 * indices[i] + j] += eps;
-                    const auto F_p = calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2).data(),
-                                                              m_mesh.x.segment(2 * indices[1], 2).data(),
-                                                              m_mesh.x.segment(2 * indices[2], 2).data(),
-                                                              m_mesh.x_rest.segment(2 * indices[0], 2).data(),
-                                                              m_mesh.x_rest.segment(2 * indices[1], 2).data(),
-                                                              m_mesh.x_rest.segment(2 * indices[2], 2).data());
+                    const auto F_p = elasty::fem::calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2),
+                                                                           m_mesh.x.segment(2 * indices[1], 2),
+                                                                           m_mesh.x.segment(2 * indices[2], 2),
+                                                                           D_m_inv);
                     const auto e_p = calcEnergy(F_p);
 
                     m_mesh.x = x_orig;
 
                     m_mesh.x[2 * indices[i] + j] -= eps;
-                    const auto F_m = calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2).data(),
-                                                              m_mesh.x.segment(2 * indices[1], 2).data(),
-                                                              m_mesh.x.segment(2 * indices[2], 2).data(),
-                                                              m_mesh.x_rest.segment(2 * indices[0], 2).data(),
-                                                              m_mesh.x_rest.segment(2 * indices[1], 2).data(),
-                                                              m_mesh.x_rest.segment(2 * indices[2], 2).data());
+                    const auto F_m = elasty::fem::calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2),
+                                                                           m_mesh.x.segment(2 * indices[1], 2),
+                                                                           m_mesh.x.segment(2 * indices[2], 2),
+                                                                           D_m_inv);
                     const auto e_m = calcEnergy(F_m);
 
                     m_mesh.x = x_orig;

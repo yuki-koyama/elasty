@@ -60,6 +60,19 @@ namespace elasty::fem
 
         return 0.5 * (deform_grad.transpose() * deform_grad - Mat::Identity());
     }
+
+    template <typename DerivedVec, typename DerivedMat>
+    Eigen::Matrix<typename DerivedVec::Scalar, 2, 2>
+    calc2dTriangleDeformGrad(const Eigen::MatrixBase<DerivedVec>& x_0,
+                             const Eigen::MatrixBase<DerivedVec>& x_1,
+                             const Eigen::MatrixBase<DerivedVec>& x_2,
+                             const Eigen::MatrixBase<DerivedMat>& rest_shape_mat_inv)
+    {
+        const auto D_s = elasty::fem::calc2dShapeMatrix(x_0, x_1, x_2);
+        const auto F   = D_s * rest_shape_mat_inv;
+
+        return F;
+    }
 } // namespace elasty::fem
 
 #endif // ELASTY_FEM_HPP
