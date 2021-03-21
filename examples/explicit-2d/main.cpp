@@ -170,7 +170,7 @@ public:
 
             assert(indices.size() == 3);
             assert(F.rows() == 2 && F.cols() == 2);
-            assert(flattened_PFPx.rows() == 4 && flattened_PFPx.cols() == 6);
+            assert(vec_PFPx.rows() == 4 && vec_PFPx.cols() == 6);
             assert(PPsiPx.rows() == 6 && PPsiPx.cols() == 1);
 
             // Accumulate forces
