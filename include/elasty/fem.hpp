@@ -62,6 +62,51 @@ namespace elasty::fem
         return 0.5 * std::abs(r_1(0) * r_2(1) - r_2(0) * r_1(1));
     }
 
+    /// \brief Calculate the diagonal elements of the lumped mass matrix.
+    ///
+    /// \details This function takes the "barycentric" approach. See https://www.alecjacobson.com/weblog/?p=1146 .
+    template <typename DerivedV, typename DerivedF>
+    Eigen::Matrix<typename DerivedV::Scalar, Eigen::Dynamic, 1>
+    calcLumpedMasses(const Eigen::MatrixBase<DerivedV>& verts,
+                     const Eigen::MatrixBase<DerivedF>& elems,
+                     const typename DerivedV::Scalar    total_mass)
+    {
+        using Scalar = typename DerivedV::Scalar;
+        using Vec    = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
+
+        assert(verts.cols() == 1);
+        assert(verts.size() % 2 == 0);
+        assert(elems.cols() == 3);
+
+        const auto num_verts = verts.size() / 2;
+
+        Scalar total_area = 0;
+        Vec    masses     = Vec::Zero(verts.size());
+
+        for (size_t row = 0; row < elems.rows(); ++row)
+        {
+            const Scalar area = calc2dTriangleArea(verts.segment(2 * elems(row, 0), 2),
+                                                   verts.segment(2 * elems(row, 1), 2),
+                                                   verts.segment(2 * elems(row, 2), 2));
+
+            const Scalar one_third_area = (1.0 / 3.0) * area;
+
+            masses(2 * elems(row, 0) + 0) += one_third_area;
+            masses(2 * elems(row, 0) + 1) += one_third_area;
+            masses(2 * elems(row, 1) + 0) += one_third_area;
+            masses(2 * elems(row, 1) + 1) += one_third_area;
+            masses(2 * elems(row, 2) + 0) += one_third_area;
+            masses(2 * elems(row, 2) + 1) += one_third_area;
+
+            total_area += area;
+        }
+
+        assert(total_mass > 0);
+        assert(total_area > 0);
+
+        return (total_mass / total_area) * masses;
+    }
+
     /// \brief Calculate the Green strain tensor for a 2D element.
     ///
     /// \param deform_grad The deformation gradient, which is a 2x2 matrix.

@@ -153,23 +153,6 @@ Eigen::Matrix<Scalar, 4, 6> calcFlattenedPartDeformGradPartPos(const Eigen::Matr
     return vec_PFPx;
 }
 
-template <typename DerivedV, typename DerivedF>
-Eigen::Matrix<typename DerivedV::Scalar, Eigen::Dynamic, 1> calcLumpedMasses(const Eigen::MatrixBase<DerivedV>& verts,
-                                                                             const Eigen::MatrixBase<DerivedF>& elems,
-                                                                             const typename DerivedV::Scalar total_mass)
-{
-    using Scalar = typename DerivedV::Scalar;
-    using Vec    = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
-
-    assert(verts.cols() == 1);
-    assert(verts.size() % 2 == 0);
-
-    const auto num_verts   = verts.size() / 2;
-    const auto diag_coeffs = (total_mass / static_cast<Scalar>(num_verts)) * Vec::Ones(verts.size());
-
-    return diag_coeffs;
-}
-
 class Explicit2dEngine
 {
 public:
@@ -181,7 +164,7 @@ public:
         const std::vector<size_t> constrained_verts = {0, 1, 2, 3, 4};
 
         // TODO: Precompute this value
-        const Eigen::VectorXd lumped_masses = calcLumpedMasses(m_mesh.x_rest, m_mesh.elems, m_mesh.mass);
+        const Eigen::VectorXd lumped_masses = elasty::fem::calcLumpedMasses(m_mesh.x_rest, m_mesh.elems, m_mesh.mass);
 
         // Prepare the lumped mass matrix
         const auto M = lumped_masses.asDiagonal();
