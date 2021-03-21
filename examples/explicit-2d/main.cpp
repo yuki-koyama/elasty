@@ -10,11 +10,14 @@ namespace
 {
     constexpr size_t k_num_dims = 2;
 
-    constexpr double k_youngs_modulus = 100.0;
+    constexpr double k_youngs_modulus = 200.0;
     constexpr double k_poisson_ratio  = 0.45;
 
     constexpr double k_first_lame  = elasty::fem::calcFirstLame(k_youngs_modulus, k_poisson_ratio);
     constexpr double k_second_lame = elasty::fem::calcSecondLame(k_youngs_modulus, k_poisson_ratio);
+
+    constexpr unsigned k_num_substeps = 10;
+    constexpr double   k_delta_time   = 1.0 / 60.0;
 } // namespace
 
 struct TriangleMesh
@@ -166,7 +169,7 @@ public:
     void proceedFrame()
     {
         const size_t              num_verts         = m_mesh.x_rest.size() / k_num_dims;
-        const std::vector<size_t> constrained_verts = {0, 1, 2, 3};
+        const std::vector<size_t> constrained_verts = {0, 1, 2, 3, 4};
 
         // TODO
         const auto M =
@@ -270,8 +273,10 @@ public:
         // Note: Explicit Euler integration (for positions)
         m_mesh.x = m_mesh.x + m_delta_physics_time * m_mesh.v;
 
-        // Naive damping
-        m_mesh.v *= 0.995;
+        // Apply naive damping
+        constexpr double damping_factor = 0.5;
+
+        m_mesh.v *= std::exp(-damping_factor * m_delta_physics_time);
     }
 
     void initializeScene()
@@ -301,10 +306,11 @@ public:
         {
             // A simple cantilever
 
-            constexpr size_t num_cols  = 15;
-            constexpr size_t num_rows  = 3;
+            constexpr size_t num_cols  = 20;
+            constexpr size_t num_rows  = 4;
             constexpr size_t num_verts = (num_cols + 1) * (num_rows + 1);
             constexpr size_t num_elems = (num_cols * num_rows) * 2;
+            constexpr double size      = 1.0;
 
             m_mesh.elems.resize(num_elems, 3);
             m_mesh.x_rest.resize(num_verts * k_num_dims);
@@ -334,15 +340,17 @@ public:
             m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + num_rows), k_num_dims) =
                 Eigen::Vector2d{col * 1.0, -1.0 * num_rows};
 
-            // Transform
+            // Set transform
             m_mesh.x_rest *= 1.0 / static_cast<double>(num_rows);
             for (size_t vert = 0; vert < num_verts; ++vert)
             {
                 m_mesh.x_rest[2 * vert + 1] += 0.5;
             }
+            m_mesh.x_rest *= size;
 
+            // Initialize other values
             m_mesh.x = m_mesh.x_rest;
-            m_mesh.v = Eigen::VectorXd::Random(k_num_dims * num_verts);
+            m_mesh.v = Eigen::VectorXd::Zero(k_num_dims * num_verts);
             m_mesh.f = Eigen::VectorXd::Zero(k_num_dims * num_verts);
         }
     }
@@ -352,12 +360,12 @@ public:
     /// \details The value equals to the delta frame time devided by the number of substeps.
     double getDeltaPhysicsTime() const { return m_delta_physics_time; }
 
+    void setDeltaPhysicsTime(const double delta_physics_time) { m_delta_physics_time = delta_physics_time; }
+
     const TriangleMesh* getMesh() const { return &m_mesh; }
 
 private:
-    const double m_delta_physics_time = 1.0 / (5 * 60.0);
-
-    double m_current_physics_time = 0.0;
+    double m_delta_physics_time = 1.0 / 60.0;
 
     TriangleMesh m_mesh;
 };
@@ -367,15 +375,17 @@ int main(int argc, char** argv)
     Explicit2dEngine engine;
     engine.initializeScene();
 
-    auto alembic_manager = AlembicManager("./out.abc", engine.getMesh(), engine.getDeltaPhysicsTime());
+    engine.setDeltaPhysicsTime(k_delta_time / static_cast<double>(k_num_substeps));
 
-    for (unsigned int frame = 0; frame < 480; ++frame)
+    auto alembic_manager = AlembicManager("./out.abc", engine.getMesh(), k_delta_time);
+
+    for (unsigned int frame = 0; frame < 240; ++frame)
     {
         timer::Timer t(std::to_string(frame));
 
         alembic_manager.submitCurrentStatus();
 
-        for (int i = 0; i < 5; ++i)
+        for (int i = 0; i < k_num_substeps; ++i)
         {
             engine.proceedFrame();
         }
