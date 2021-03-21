@@ -18,6 +18,8 @@ namespace
 
     constexpr unsigned k_num_substeps = 10;
     constexpr double   k_delta_time   = 1.0 / 60.0;
+
+    constexpr double k_damping_factor = 0.5;
 } // namespace
 
 struct TriangleMesh
@@ -138,9 +140,6 @@ public:
         const size_t              num_verts         = m_mesh.x_rest.size() / k_num_dims;
         const std::vector<size_t> constrained_verts = {0, 1, 2, 3, 4};
 
-        // Prepare the lumped mass matrix
-        const auto M = m_mesh.lumped_mass.asDiagonal();
-
         // Reset forces
         m_mesh.f = Eigen::VectorXd::Zero(2 * num_verts);
 
@@ -214,25 +213,25 @@ public:
         // Apply gravity force
         for (size_t i = 0; i < num_verts; ++i)
         {
-            m_mesh.f[i * 2 + 1] += M.diagonal()(i * 2 + 1) * (-9.80665);
+            m_mesh.f[i * 2 + 1] += m_mesh.lumped_mass(i * 2 + 1) * (-9.80665);
         }
 
-        // Note: Explicit Euler integration (for velocities)
-        m_mesh.v = m_mesh.v + m_delta_physics_time * M.inverse() * m_mesh.f;
-
-        // Naive constraints
+        // Calculate the "modified" inverse lumped mass matrix
+        Eigen::VectorXd W_diags = m_mesh.lumped_mass.cwiseInverse();
         for (size_t i : constrained_verts)
         {
-            m_mesh.v.segment(i * 2, 2) = Eigen::Vector2d::Zero();
+            W_diags.segment(i * 2, 2) = Eigen::Vector2d::Zero();
         }
+        const auto W = W_diags.asDiagonal();
+
+        // Note: Explicit Euler integration (for velocities)
+        m_mesh.v = m_mesh.v + m_delta_physics_time * W * m_mesh.f;
 
         // Note: Explicit Euler integration (for positions)
         m_mesh.x = m_mesh.x + m_delta_physics_time * m_mesh.v;
 
         // Apply naive damping
-        constexpr double damping_factor = 0.5;
-
-        m_mesh.v *= std::exp(-damping_factor * m_delta_physics_time);
+        m_mesh.v *= std::exp(-k_damping_factor * m_delta_physics_time);
     }
 
     void initializeScene()
