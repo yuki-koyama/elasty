@@ -32,6 +32,18 @@ struct TriangleMesh
     Eigen::VectorXd f;
 
     double mass = 1.0;
+
+    /// \details Should be precomputed
+    Eigen::VectorXd lumped_mass;
+
+    /// \details Should be precomputed
+    std::vector<double> area_array;
+
+    /// \details Should be precomputed
+    std::vector<Eigen::Matrix2d> rest_shape_mat_inv_array;
+
+    /// \details Should be precomputed
+    std::vector<Eigen::Matrix<double, 4, 6>> vec_PFPx_array;
 };
 
 class AlembicManager
@@ -126,11 +138,8 @@ public:
         const size_t              num_verts         = m_mesh.x_rest.size() / k_num_dims;
         const std::vector<size_t> constrained_verts = {0, 1, 2, 3, 4};
 
-        // TODO: Precompute this value
-        const Eigen::VectorXd lumped_masses = elasty::fem::calcLumpedMasses(m_mesh.x_rest, m_mesh.elems, m_mesh.mass);
-
         // Prepare the lumped mass matrix
-        const auto M = lumped_masses.asDiagonal();
+        const auto M = m_mesh.lumped_mass.asDiagonal();
 
         // Reset forces
         m_mesh.f = Eigen::VectorXd::Zero(2 * num_verts);
@@ -140,25 +149,16 @@ public:
         {
             const auto& indices = m_mesh.elems.row(i);
 
-            // TODO: Precompute this value
-            const Eigen::Matrix2d D_m_inv = elasty::fem::calc2dShapeMatrix(m_mesh.x_rest.segment(2 * indices[0], 2),
-                                                                           m_mesh.x_rest.segment(2 * indices[1], 2),
-                                                                           m_mesh.x_rest.segment(2 * indices[2], 2))
-                                                .inverse();
+            // Retrieve precomputed values
+            const auto& D_m_inv  = m_mesh.rest_shape_mat_inv_array[i];
+            const auto& area     = m_mesh.area_array[i];
+            const auto& vec_PFPx = m_mesh.vec_PFPx_array[i];
 
-            // TODO: Precompute a part of this process
+            // Calculate the deformation gradient $\mathbf{F}$
             const auto F = elasty::fem::calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2),
                                                                  m_mesh.x.segment(2 * indices[1], 2),
                                                                  m_mesh.x.segment(2 * indices[2], 2),
                                                                  D_m_inv);
-
-            // TODO: Precompute this value
-            const auto area = elasty::fem::calc2dTriangleArea(m_mesh.x_rest.segment(2 * indices[0], 2),
-                                                              m_mesh.x_rest.segment(2 * indices[1], 2),
-                                                              m_mesh.x_rest.segment(2 * indices[2], 2));
-
-            // TODO: Precompute this value
-            const auto vec_PFPx = elasty::fem::calcFlattenedPartDeformGradPartPos(D_m_inv);
 
             // Calculate $\frac{\partial \Phi}{\partial \mathbf{x}}$ and related values
             const auto P      = calcPiolaStress(F);
@@ -309,6 +309,27 @@ public:
             m_mesh.v = Eigen::VectorXd::Zero(k_num_dims * num_verts);
             m_mesh.f = Eigen::VectorXd::Zero(k_num_dims * num_verts);
         }
+
+        // Perform precomputation
+        m_mesh.area_array.resize(m_mesh.elems.rows());
+        m_mesh.rest_shape_mat_inv_array.resize(m_mesh.elems.rows());
+        m_mesh.vec_PFPx_array.resize(m_mesh.elems.rows());
+        for (size_t row = 0; row < m_mesh.elems.rows(); ++row)
+        {
+            const auto& indices = m_mesh.elems.row(row);
+
+            m_mesh.area_array[row] = elasty::fem::calc2dTriangleArea(m_mesh.x_rest.segment(2 * indices[0], 2),
+                                                                     m_mesh.x_rest.segment(2 * indices[1], 2),
+                                                                     m_mesh.x_rest.segment(2 * indices[2], 2));
+            m_mesh.rest_shape_mat_inv_array[row] =
+                elasty::fem::calc2dShapeMatrix(m_mesh.x_rest.segment(2 * indices[0], 2),
+                                               m_mesh.x_rest.segment(2 * indices[1], 2),
+                                               m_mesh.x_rest.segment(2 * indices[2], 2))
+                    .inverse();
+            m_mesh.vec_PFPx_array[row] =
+                elasty::fem::calcFlattenedPartDeformGradPartPos(m_mesh.rest_shape_mat_inv_array[row]);
+        }
+        m_mesh.lumped_mass = elasty::fem::calcLumpedMasses(m_mesh.x_rest, m_mesh.elems, m_mesh.mass);
     }
 
     /// \brief Getter of the delta physics time.
