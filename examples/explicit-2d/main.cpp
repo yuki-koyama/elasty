@@ -153,6 +153,23 @@ Eigen::Matrix<Scalar, 4, 6> calcFlattenedPartDeformGradPartPos(const Eigen::Matr
     return vec_PFPx;
 }
 
+template <typename DerivedV, typename DerivedF>
+Eigen::Matrix<typename DerivedV::Scalar, Eigen::Dynamic, 1> calcLumpedMasses(const Eigen::MatrixBase<DerivedV>& verts,
+                                                                             const Eigen::MatrixBase<DerivedF>& elems,
+                                                                             const typename DerivedV::Scalar total_mass)
+{
+    using Scalar = typename DerivedV::Scalar;
+    using Vec    = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
+
+    assert(verts.cols() == 1);
+    assert(verts.size() % 2 == 0);
+
+    const auto num_verts   = verts.size() / 2;
+    const auto diag_coeffs = (total_mass / static_cast<Scalar>(num_verts)) * Vec::Ones(verts.size());
+
+    return diag_coeffs;
+}
+
 class Explicit2dEngine
 {
 public:
@@ -163,9 +180,11 @@ public:
         const size_t              num_verts         = m_mesh.x_rest.size() / k_num_dims;
         const std::vector<size_t> constrained_verts = {0, 1, 2, 3, 4};
 
-        // TODO
-        const auto M =
-            (m_mesh.mass / static_cast<double>(num_verts)) * Eigen::VectorXd::Ones(k_num_dims * num_verts).asDiagonal();
+        // TODO: Precompute this value
+        const Eigen::VectorXd lumped_masses = calcLumpedMasses(m_mesh.x_rest, m_mesh.elems, m_mesh.mass);
+
+        // Prepare the lumped mass matrix
+        const auto M = lumped_masses.asDiagonal();
 
         // Reset forces
         m_mesh.f = Eigen::VectorXd::Zero(2 * num_verts);
@@ -307,6 +326,7 @@ public:
             m_mesh.elems.resize(num_elems, 3);
             m_mesh.x_rest.resize(num_verts * k_num_dims);
 
+            // Generate a triangle mesh
             for (size_t col = 0; col < num_cols; ++col)
             {
                 for (size_t row = 0; row < num_rows; ++row)
@@ -323,14 +343,13 @@ public:
                 m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + num_rows), k_num_dims) =
                     Eigen::Vector2d{col * 1.0, -1.0 * num_rows};
             }
-            size_t col = num_cols;
             for (size_t row = 0; row < num_rows; ++row)
             {
-                m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + row), k_num_dims) =
-                    Eigen::Vector2d{col * 1.0, -1.0 * row};
+                m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * num_cols + row), k_num_dims) =
+                    Eigen::Vector2d{num_cols * 1.0, -1.0 * row};
             }
-            m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + num_rows), k_num_dims) =
-                Eigen::Vector2d{col * 1.0, -1.0 * num_rows};
+            m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * num_cols + num_rows), k_num_dims) =
+                Eigen::Vector2d{num_cols * 1.0, -1.0 * num_rows};
 
             // Set transform
             m_mesh.x_rest *= 1.0 / static_cast<double>(num_rows);
