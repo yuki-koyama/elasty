@@ -217,6 +217,7 @@ public:
         }
 
         // Calculate the "modified" inverse lumped mass matrix
+        // Note: This "mass modification" is described in "Large Steps in Cloth Simulation" (SIGGRAPH '98)
         Eigen::VectorXd W_diags = m_mesh.lumped_mass.cwiseInverse();
         for (size_t i : constrained_verts)
         {
