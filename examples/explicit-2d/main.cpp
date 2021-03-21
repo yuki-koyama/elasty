@@ -102,21 +102,6 @@ private:
     Alembic::AbcGeom::OPolyMesh m_mesh_obj;
 };
 
-template <class Scalar>
-Scalar calc2dTriangleArea(const Scalar* x_0_data, const Scalar* x_1_data, const Scalar* x_2_data)
-{
-    using Vec = Eigen::Matrix<Scalar, 2, 1>;
-
-    const auto x_0 = Eigen::Map<const Vec>(x_0_data);
-    const auto x_1 = Eigen::Map<const Vec>(x_1_data);
-    const auto x_2 = Eigen::Map<const Vec>(x_2_data);
-
-    const auto r_1 = x_1 - x_0;
-    const auto r_2 = x_2 - x_0;
-
-    return 0.5 * std::abs(r_1(0) * r_2(1) - r_2(0) * r_1(1));
-}
-
 // StVK
 template <typename Derived> typename Derived::Scalar calcEnergy(const Eigen::MatrixBase<Derived>& deform_grad)
 {
@@ -193,7 +178,7 @@ public:
         // Calculate forces
         for (size_t i = 0; i < m_mesh.elems.rows(); ++i)
         {
-            const auto indices = m_mesh.elems.row(i);
+            const auto& indices = m_mesh.elems.row(i);
 
             // TODO: Precompute this value
             const Eigen::Matrix2d D_m_inv = elasty::fem::calc2dShapeMatrix(m_mesh.x_rest.segment(2 * indices[0], 2),
@@ -208,18 +193,21 @@ public:
                                                                  D_m_inv);
 
             // TODO: Precompute this value
-            const auto area = calc2dTriangleArea(m_mesh.x_rest.segment(2 * indices[0], 2).data(),
-                                                 m_mesh.x_rest.segment(2 * indices[1], 2).data(),
-                                                 m_mesh.x_rest.segment(2 * indices[2], 2).data());
+            const auto area = elasty::fem::calc2dTriangleArea(m_mesh.x_rest.segment(2 * indices[0], 2),
+                                                              m_mesh.x_rest.segment(2 * indices[1], 2),
+                                                              m_mesh.x_rest.segment(2 * indices[2], 2));
 
+            // TODO: Precompute this value
             // TODO: Assign a better name
             const auto flattened_PFPx = calcFlattenedPartDeformGradPartPos(D_m_inv);
 
             // TODO: Assign a better name
-            const Eigen::Matrix2d pk1 = calcFirstPiolaKirchhoffStressTensor(F);
+            const auto pk1 = calcFirstPiolaKirchhoffStressTensor(F);
 
             // TODO: Assign a better name
             const auto PPsiPx = flattened_PFPx.transpose() * Eigen::Map<const Eigen::Vector4d>(pk1.data(), pk1.size());
+
+            const auto force = -area * PPsiPx;
 
             assert(indices.size() == 3);
             assert(F.rows() == 2 && F.cols() == 2);
@@ -227,9 +215,9 @@ public:
             assert(PPsiPx.rows() == 6 && PPsiPx.cols() == 1);
 
             // Accumulate forces
-            m_mesh.f.segment(2 * indices[0], 2) += -area * PPsiPx.segment(2 * 0, 2);
-            m_mesh.f.segment(2 * indices[1], 2) += -area * PPsiPx.segment(2 * 1, 2);
-            m_mesh.f.segment(2 * indices[2], 2) += -area * PPsiPx.segment(2 * 2, 2);
+            m_mesh.f.segment(2 * indices[0], 2) += force.segment(2 * 0, 2);
+            m_mesh.f.segment(2 * indices[1], 2) += force.segment(2 * 1, 2);
+            m_mesh.f.segment(2 * indices[2], 2) += force.segment(2 * 2, 2);
 
             // Validate the force calculation by comparing to numerical differentials
             const auto      x_orig = m_mesh.x;

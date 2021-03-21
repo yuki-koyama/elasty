@@ -50,6 +50,18 @@ namespace elasty::fem
         return shape_matrix;
     }
 
+    /// \brief Calculate the area of a 2D triangle
+    template <typename Derived>
+    typename Derived::Scalar calc2dTriangleArea(const Eigen::MatrixBase<Derived>& x_0,
+                                                const Eigen::MatrixBase<Derived>& x_1,
+                                                const Eigen::MatrixBase<Derived>& x_2)
+    {
+        const auto r_1 = x_1 - x_0;
+        const auto r_2 = x_2 - x_0;
+
+        return 0.5 * std::abs(r_1(0) * r_2(1) - r_2(0) * r_1(1));
+    }
+
     /// \brief Calculate the Green strain tensor for a 2D element.
     ///
     /// \param deform_grad The deformation gradient, which is a 2x2 matrix.
