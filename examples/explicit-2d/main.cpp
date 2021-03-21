@@ -105,23 +105,15 @@ private:
     Alembic::AbcGeom::OPolyMesh m_mesh_obj;
 };
 
-// StVK
-template <typename Derived> typename Derived::Scalar calcEnergy(const Eigen::MatrixBase<Derived>& deform_grad)
+template <typename Derived> typename Derived::Scalar calcEnergyDensity(const Eigen::MatrixBase<Derived>& deform_grad)
 {
-    const auto                     E     = elasty::fem::calc2dGreenStrain(deform_grad);
-    const typename Derived::Scalar trace = E.trace();
-
-    return k_first_lame * E.squaredNorm() + 0.5 * k_second_lame * trace * trace;
+    return elasty::fem::calcStVenantKirchhoffEnergyDensity(deform_grad, k_first_lame, k_second_lame);
 }
 
-// StVK
 template <typename Derived>
-Eigen::Matrix<typename Derived::Scalar, 2, 2>
-calcFirstPiolaKirchhoffStressTensor(const Eigen::MatrixBase<Derived>& deform_grad)
+Eigen::Matrix<typename Derived::Scalar, 2, 2> calcPiolaStress(const Eigen::MatrixBase<Derived>& deform_grad)
 {
-    const auto E = elasty::fem::calc2dGreenStrain(deform_grad);
-
-    return 2.0 * k_first_lame * deform_grad * E + k_second_lame * E.trace() * deform_grad;
+    return elasty::fem::calcStVenantKirchhoffPiolaStress(deform_grad, k_first_lame, k_second_lame);
 }
 
 // Reference:
@@ -205,7 +197,7 @@ public:
             const auto flattened_PFPx = calcFlattenedPartDeformGradPartPos(D_m_inv);
 
             // TODO: Assign a better name
-            const auto pk1 = calcFirstPiolaKirchhoffStressTensor(F);
+            const auto pk1 = calcPiolaStress(F);
 
             // TODO: Assign a better name
             const auto PPsiPx = flattened_PFPx.transpose() * Eigen::Map<const Eigen::Vector4d>(pk1.data(), pk1.size());
@@ -236,7 +228,7 @@ public:
                                                                            m_mesh.x.segment(2 * indices[1], 2),
                                                                            m_mesh.x.segment(2 * indices[2], 2),
                                                                            D_m_inv);
-                    const auto e_p = calcEnergy(F_p);
+                    const auto e_p = calcEnergyDensity(F_p);
 
                     m_mesh.x = x_orig;
 
@@ -245,7 +237,7 @@ public:
                                                                            m_mesh.x.segment(2 * indices[1], 2),
                                                                            m_mesh.x.segment(2 * indices[2], 2),
                                                                            D_m_inv);
-                    const auto e_m = calcEnergy(F_m);
+                    const auto e_m = calcEnergyDensity(F_m);
 
                     m_mesh.x = x_orig;
 
@@ -373,8 +365,8 @@ private:
 int main(int argc, char** argv)
 {
     Explicit2dEngine engine;
-    engine.initializeScene();
 
+    engine.initializeScene();
     engine.setDeltaPhysicsTime(k_delta_time / static_cast<double>(k_num_substeps));
 
     auto alembic_manager = AlembicManager("./out.abc", engine.getMesh(), k_delta_time);

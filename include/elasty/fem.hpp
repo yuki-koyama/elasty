@@ -73,6 +73,28 @@ namespace elasty::fem
         return 0.5 * (deform_grad.transpose() * deform_grad - Mat::Identity());
     }
 
+    template <typename Derived>
+    typename Derived::Scalar calcStVenantKirchhoffEnergyDensity(const Eigen::MatrixBase<Derived>& deform_grad,
+                                                                const typename Derived::Scalar    first_lame,
+                                                                const typename Derived::Scalar    second_lame)
+    {
+        const auto E     = calc2dGreenStrain(deform_grad);
+        const auto trace = E.trace();
+
+        return first_lame * E.squaredNorm() + 0.5 * second_lame * trace * trace;
+    }
+
+    template <typename Derived>
+    Eigen::Matrix<typename Derived::Scalar, 2, 2>
+    calcStVenantKirchhoffPiolaStress(const Eigen::MatrixBase<Derived>& deform_grad,
+                                     const typename Derived::Scalar    first_lame,
+                                     const typename Derived::Scalar    second_lame)
+    {
+        const auto E = calc2dGreenStrain(deform_grad);
+
+        return 2.0 * first_lame * deform_grad * E + second_lame * E.trace() * deform_grad;
+    }
+
     template <typename DerivedVec, typename DerivedMat>
     Eigen::Matrix<typename DerivedVec::Scalar, 2, 2>
     calc2dTriangleDeformGrad(const Eigen::MatrixBase<DerivedVec>& x_0,
