@@ -152,6 +152,51 @@ namespace elasty::fem
 
         return F;
     }
+
+    /// \brief Calculate analytic partial derivatives of the deformation gradient $\mathbf{F}$ with respect to the
+    /// vertex positions $\mathbf{x}$ (i.e., $\frac{\partial \mathbf{F}}{\partial \mathbf{x}}$) and return it in the
+    /// "flattened" format.
+    ///
+    /// \details The result is a 2-by-2-by-6 third-order tensor but flattened into a 4-by-6 matrix.
+    ///
+    /// Reference: [2, Appendix D]
+    template <typename Derived>
+    Eigen::Matrix<typename Derived::Scalar, 4, 6>
+    calcFlattenedPartDeformGradPartPos(const Eigen::MatrixBase<Derived>& rest_shape_mat_inv)
+    {
+        using Scalar = typename Derived::Scalar;
+
+        // Analytics partial derivatives $\frac{\partial \mathbf{D}_\text{s}{\partial x_{i}}$
+        Eigen::Matrix<Scalar, 2, 2> PDsPx[6];
+
+        // x[0] (= x_0)
+        PDsPx[0] << -1.0, -1.0, 0.0, 0.0;
+
+        // x[1] (= y_0)
+        PDsPx[1] << 0.0, 0.0, -1.0, -1.0;
+
+        // x[2] (= x_1)
+        PDsPx[2] << 1.0, 0.0, 0.0, 0.0;
+
+        // x[3] (= y_1)
+        PDsPx[3] << 0.0, 0.0, 1.0, 0.0;
+
+        // x[4] (= x_2)
+        PDsPx[4] << 0.0, 1.0, 0.0, 0.0;
+
+        // x[5] (= y_2)
+        PDsPx[5] << 0.0, 0.0, 0.0, 1.0;
+
+        Eigen::Matrix<Scalar, 4, 6> vec_PFPx;
+        for (size_t i = 0; i < 6; ++i)
+        {
+            const Eigen::Matrix<Scalar, 2, 2> PFPx_i = PDsPx[i] * rest_shape_mat_inv;
+
+            vec_PFPx.col(i) = Eigen::Map<const Eigen::Matrix<Scalar, 4, 1>>(PFPx_i.data(), PFPx_i.size());
+        }
+
+        return vec_PFPx;
+    }
 } // namespace elasty::fem
 
 #endif // ELASTY_FEM_HPP

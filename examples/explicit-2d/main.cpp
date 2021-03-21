@@ -116,43 +116,6 @@ Eigen::Matrix<typename Derived::Scalar, 2, 2> calcPiolaStress(const Eigen::Matri
     return elasty::fem::calcStVenantKirchhoffPiolaStress(deform_grad, k_first_lame, k_second_lame);
 }
 
-// Reference:
-// Dynamic Deformables: Implementation and Production Practicalities (Appendix D)
-template <class Scalar>
-Eigen::Matrix<Scalar, 4, 6> calcFlattenedPartDeformGradPartPos(const Eigen::Matrix<Scalar, 2, 2>& D_m_inv)
-{
-    // Analytics partial derivatives $\frac{\partial \mathbf{D}_\text{s}{\partial x_{i}}$
-    Eigen::Matrix<Scalar, 2, 2> PDsPx[6];
-
-    // x[0] (= x_0)
-    PDsPx[0] << -1.0, -1.0, 0.0, 0.0;
-
-    // x[1] (= y_0)
-    PDsPx[1] << 0.0, 0.0, -1.0, -1.0;
-
-    // x[2] (= x_1)
-    PDsPx[2] << 1.0, 0.0, 0.0, 0.0;
-
-    // x[3] (= y_1)
-    PDsPx[3] << 0.0, 0.0, 1.0, 0.0;
-
-    // x[4] (= x_2)
-    PDsPx[4] << 0.0, 1.0, 0.0, 0.0;
-
-    // x[5] (= y_2)
-    PDsPx[5] << 0.0, 0.0, 0.0, 1.0;
-
-    Eigen::Matrix<Scalar, 4, 6> vec_PFPx;
-    for (size_t i = 0; i < 6; ++i)
-    {
-        const Eigen::Matrix<Scalar, 2, 2> temp = PDsPx[i] * D_m_inv;
-
-        vec_PFPx.col(i) = Eigen::Map<const Eigen::Matrix<Scalar, 4, 1>>(temp.data(), temp.size());
-    }
-
-    return vec_PFPx;
-}
-
 class Explicit2dEngine
 {
 public:
@@ -195,15 +158,14 @@ public:
                                                               m_mesh.x_rest.segment(2 * indices[2], 2));
 
             // TODO: Precompute this value
-            // TODO: Assign a better name
-            const auto flattened_PFPx = calcFlattenedPartDeformGradPartPos(D_m_inv);
+            const auto vec_PFPx = elasty::fem::calcFlattenedPartDeformGradPartPos(D_m_inv);
 
-            // TODO: Assign a better name
-            const auto pk1 = calcPiolaStress(F);
+            // Calculate $\frac{\partial \Phi}{\partial \mathbf{x}}$ and related values
+            const auto P      = calcPiolaStress(F);
+            const auto vec_P  = Eigen::Map<const Eigen::Vector4d>(P.data(), P.size());
+            const auto PPsiPx = vec_PFPx.transpose() * vec_P;
 
-            // TODO: Assign a better name
-            const auto PPsiPx = flattened_PFPx.transpose() * Eigen::Map<const Eigen::Vector4d>(pk1.data(), pk1.size());
-
+            // Calculate the internal force
             const auto force = -area * PPsiPx;
 
             assert(indices.size() == 3);
