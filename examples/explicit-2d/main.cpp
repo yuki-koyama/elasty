@@ -20,6 +20,14 @@ namespace
     constexpr double   k_delta_time   = 1.0 / 60.0;
 
     constexpr double k_damping_factor = 0.5;
+
+    enum class Model
+    {
+        CoRotational,
+        StVenantKirchhoff
+    };
+
+    constexpr Model k_model = Model::CoRotational;
 } // namespace
 
 struct TriangleMesh
@@ -121,13 +129,25 @@ private:
 
 template <typename Derived> typename Derived::Scalar calcEnergyDensity(const Eigen::MatrixBase<Derived>& deform_grad)
 {
-    return elasty::fem::calcStVenantKirchhoffEnergyDensity(deform_grad, k_first_lame, k_second_lame);
+    switch (k_model)
+    {
+        case Model::StVenantKirchhoff:
+            return elasty::fem::calcStVenantKirchhoffEnergyDensity(deform_grad, k_first_lame, k_second_lame);
+        case Model::CoRotational:
+            return elasty::fem::calcCoRotationalEnergyDensity(deform_grad, k_first_lame, k_second_lame);
+    }
 }
 
 template <typename Derived>
 Eigen::Matrix<typename Derived::Scalar, 2, 2> calcPiolaStress(const Eigen::MatrixBase<Derived>& deform_grad)
 {
-    return elasty::fem::calcStVenantKirchhoffPiolaStress(deform_grad, k_first_lame, k_second_lame);
+    switch (k_model)
+    {
+        case Model::StVenantKirchhoff:
+            return elasty::fem::calcStVenantKirchhoffPiolaStress(deform_grad, k_first_lame, k_second_lame);
+        case Model::CoRotational:
+            return elasty::fem::calcCoRotationalPiolaStress(deform_grad, k_first_lame, k_second_lame);
+    }
 }
 
 class Explicit2dEngine
