@@ -2,6 +2,7 @@
 #define ELASTY_FEM_HPP
 
 #include <Eigen/Core>
+#include <Eigen/SVD>
 
 // References:
 //
@@ -15,6 +16,22 @@
 
 namespace elasty::fem
 {
+    /// \brief Extract the rotational part of the given square matrix by performing polar decomposion.
+    ///
+    /// \details This implementation is based on SVD. It checks the determinant to avoid any reflection.
+    template <typename Derived>
+    Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>
+    extractRotation(const Eigen::MatrixBase<Derived>& F)
+    {
+        const auto svd   = F.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV);
+        const auto Sigma = svd.singularValues();
+        const auto U     = svd.matrixU();
+        const auto V     = svd.matrixV();
+        const auto R     = (U * V.transpose()).eval();
+
+        return (R.determinant() > 0) ? R : -R;
+    }
+
     /// \details Reference: [1]
     template <typename Scalar> constexpr Scalar calcFirstLame(const Scalar youngs_modulus, const Scalar poisson_ratio)
     {
