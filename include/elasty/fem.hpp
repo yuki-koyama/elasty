@@ -135,6 +135,49 @@ namespace elasty::fem
         return 0.5 * (deform_grad.transpose() * deform_grad - Mat::Identity());
     }
 
+    /// \details Eq. 3.4 in [1]
+    template <typename Derived>
+    typename Derived::Scalar calcCoRotationalEnergyDensity(const Eigen::MatrixBase<Derived>& deform_grad,
+                                                           const typename Derived::Scalar    first_lame,
+                                                           const typename Derived::Scalar    second_lame)
+    {
+        using Matrix = Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>;
+
+        const auto R     = extractRotation(deform_grad);
+        const auto S     = R.transpose() * deform_grad;
+        const auto I     = Matrix::Identity();
+        const auto trace = (S - I).trace();
+
+        assert((R * R.transpose()).isApprox(I));
+        assert(deform_grad.isApprox(R * S));
+        assert(R.determinant() > 0);
+        assert(std::abs(R.determinant() - 1.0) < 1e-02);
+
+        return first_lame * (deform_grad - R).squaredNorm() + 0.5 * second_lame * trace * trace;
+    }
+
+    /// \details Eq. 3.5 in [1]
+    template <typename Derived>
+    Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>
+    calcCoRotationalPiolaStress(const Eigen::MatrixBase<Derived>& deform_grad,
+                                const typename Derived::Scalar    first_lame,
+                                const typename Derived::Scalar    second_lame)
+    {
+        using Matrix = Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>;
+
+        const auto R     = extractRotation(deform_grad);
+        const auto S     = R.transpose() * deform_grad;
+        const auto I     = Matrix::Identity();
+        const auto trace = (S - I).trace();
+
+        assert((R * R.transpose()).isApprox(I));
+        assert(deform_grad.isApprox(R * S));
+        assert(R.determinant() > 0);
+        assert(std::abs(R.determinant() - 1.0) < 1e-02);
+
+        return 2.0 * first_lame * (deform_grad - R) + second_lame * trace * R;
+    }
+
     template <typename Derived>
     typename Derived::Scalar calcStVenantKirchhoffEnergyDensity(const Eigen::MatrixBase<Derived>& deform_grad,
                                                                 const typename Derived::Scalar    first_lame,
