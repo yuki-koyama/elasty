@@ -32,12 +32,16 @@ namespace elasty::fem
         return (R.determinant() > 0) ? R : -R;
     }
 
+    /// \brief Calculate the first Lame parameter, $\lambda$.
+    ///
     /// \details Reference: [1]
     template <typename Scalar> constexpr Scalar calcFirstLame(const Scalar youngs_modulus, const Scalar poisson_ratio)
     {
         return youngs_modulus * poisson_ratio / ((1.0 + poisson_ratio) * (1.0 - 2.0 * poisson_ratio));
     }
 
+    /// \brief Calculate the second Lame parameter, $\mu$.
+    ///
     /// \details Reference: [1]
     template <typename Scalar> constexpr Scalar calcSecondLame(const Scalar youngs_modulus, const Scalar poisson_ratio)
     {
@@ -154,7 +158,7 @@ namespace elasty::fem
         assert(R.determinant() > 0);
         assert(std::abs(R.determinant() - 1.0) < 1e-02);
 
-        return first_lame * (deform_grad - R).squaredNorm() + 0.5 * second_lame * trace * trace;
+        return second_lame * (deform_grad - R).squaredNorm() + 0.5 * first_lame * trace * trace;
     }
 
     /// \details Eq. 3.5 in [1]
@@ -176,7 +180,7 @@ namespace elasty::fem
         assert(R.determinant() > 0);
         assert(std::abs(R.determinant() - 1.0) < 1e-02);
 
-        return 2.0 * first_lame * (deform_grad - R) + second_lame * trace * R;
+        return 2.0 * second_lame * (deform_grad - R) + first_lame * trace * R;
     }
 
     template <typename Derived>
@@ -187,7 +191,7 @@ namespace elasty::fem
         const auto E     = calcGreenStrain(deform_grad);
         const auto trace = E.trace();
 
-        return first_lame * E.squaredNorm() + 0.5 * second_lame * trace * trace;
+        return second_lame * E.squaredNorm() + 0.5 * first_lame * trace * trace;
     }
 
     template <typename Derived>
@@ -198,7 +202,7 @@ namespace elasty::fem
     {
         const auto E = calcGreenStrain(deform_grad);
 
-        return 2.0 * first_lame * deform_grad * E + second_lame * E.trace() * deform_grad;
+        return 2.0 * second_lame * deform_grad * E + first_lame * E.trace() * deform_grad;
     }
 
     template <typename DerivedVec, typename DerivedMat>
