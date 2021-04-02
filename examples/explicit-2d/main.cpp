@@ -10,7 +10,7 @@ namespace
 {
     constexpr size_t k_num_dims = 2;
 
-    constexpr double k_youngs_modulus = 300.0;
+    constexpr double k_youngs_modulus = 800.0;
     constexpr double k_poisson_ratio  = 0.40;
 
     constexpr double k_first_lame  = elasty::fem::calcFirstLame(k_youngs_modulus, k_poisson_ratio);
