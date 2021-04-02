@@ -124,13 +124,14 @@ namespace elasty::fem
         return (total_mass / total_area) * masses;
     }
 
-    /// \brief Calculate the Green strain tensor for a 2D element.
+    /// \brief Calculate the Green strain tensor for a finite element.
     ///
-    /// \param deform_grad The deformation gradient, which is a 2x2 matrix.
+    /// \param deform_grad The deformation gradient matrix, which should be either 2-by-2 or 3-by-3.
     template <typename Derived>
-    Eigen::Matrix<typename Derived::Scalar, 2, 2> calc2dGreenStrain(const Eigen::MatrixBase<Derived>& deform_grad)
+    Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>
+    calcGreenStrain(const Eigen::MatrixBase<Derived>& deform_grad)
     {
-        using Mat = Eigen::Matrix<typename Derived::Scalar, 2, 2>;
+        using Mat = Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>;
 
         return 0.5 * (deform_grad.transpose() * deform_grad - Mat::Identity());
     }
@@ -183,19 +184,19 @@ namespace elasty::fem
                                                                 const typename Derived::Scalar    first_lame,
                                                                 const typename Derived::Scalar    second_lame)
     {
-        const auto E     = calc2dGreenStrain(deform_grad);
+        const auto E     = calcGreenStrain(deform_grad);
         const auto trace = E.trace();
 
         return first_lame * E.squaredNorm() + 0.5 * second_lame * trace * trace;
     }
 
     template <typename Derived>
-    Eigen::Matrix<typename Derived::Scalar, 2, 2>
+    Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>
     calcStVenantKirchhoffPiolaStress(const Eigen::MatrixBase<Derived>& deform_grad,
                                      const typename Derived::Scalar    first_lame,
                                      const typename Derived::Scalar    second_lame)
     {
-        const auto E = calc2dGreenStrain(deform_grad);
+        const auto E = calcGreenStrain(deform_grad);
 
         return 2.0 * first_lame * deform_grad * E + second_lame * E.trace() * deform_grad;
     }
