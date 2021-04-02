@@ -147,7 +147,7 @@ namespace elasty::fem
                                                            const typename Derived::Scalar    first_lame,
                                                            const typename Derived::Scalar    second_lame)
     {
-        using Mat = Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>;
+        using Mat = Eigen::Matrix<typename Derived::Scalar, Derived::ColsAtCompileTime, Derived::ColsAtCompileTime>;
 
         const auto R     = extractRotation(deform_grad);
         const auto S     = R.transpose() * deform_grad;
@@ -167,7 +167,7 @@ namespace elasty::fem
                                 const typename Derived::Scalar    first_lame,
                                 const typename Derived::Scalar    second_lame)
     {
-        using Mat = Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>;
+        using Mat = Eigen::Matrix<typename Derived::Scalar, Derived::ColsAtCompileTime, Derived::ColsAtCompileTime>;
 
         const auto R     = extractRotation(deform_grad);
         const auto S     = R.transpose() * deform_grad;
