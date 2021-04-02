@@ -10,8 +10,8 @@ namespace
 {
     constexpr size_t k_num_dims = 2;
 
-    constexpr double k_youngs_modulus = 200.0;
-    constexpr double k_poisson_ratio  = 0.45;
+    constexpr double k_youngs_modulus = 300.0;
+    constexpr double k_poisson_ratio  = 0.40;
 
     constexpr double k_first_lame  = elasty::fem::calcFirstLame(k_youngs_modulus, k_poisson_ratio);
     constexpr double k_second_lame = elasty::fem::calcSecondLame(k_youngs_modulus, k_poisson_ratio);
@@ -19,7 +19,7 @@ namespace
     constexpr unsigned k_num_substeps = 10;
     constexpr double   k_delta_time   = 1.0 / 60.0;
 
-    constexpr double k_damping_factor = 0.5;
+    constexpr double k_damping_factor = 0.1;
 
     enum class Model
     {
