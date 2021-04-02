@@ -146,16 +146,14 @@ namespace elasty::fem
                                                            const typename Derived::Scalar    first_lame,
                                                            const typename Derived::Scalar    second_lame)
     {
-        using Matrix = Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>;
+        using Mat = Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>;
 
         const auto R     = extractRotation(deform_grad);
         const auto S     = R.transpose() * deform_grad;
-        const auto I     = Matrix::Identity();
+        const auto I     = Mat::Identity();
         const auto trace = (S - I).trace();
 
-        assert((R * R.transpose()).isApprox(I));
         assert(deform_grad.isApprox(R * S));
-        assert(R.determinant() > 0);
         assert(std::abs(R.determinant() - 1.0) < 1e-02);
 
         return second_lame * (deform_grad - R).squaredNorm() + 0.5 * first_lame * trace * trace;
@@ -168,16 +166,14 @@ namespace elasty::fem
                                 const typename Derived::Scalar    first_lame,
                                 const typename Derived::Scalar    second_lame)
     {
-        using Matrix = Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>;
+        using Mat = Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>;
 
         const auto R     = extractRotation(deform_grad);
         const auto S     = R.transpose() * deform_grad;
-        const auto I     = Matrix::Identity();
+        const auto I     = Mat::Identity();
         const auto trace = (S - I).trace();
 
-        assert((R * R.transpose()).isApprox(I));
         assert(deform_grad.isApprox(R * S));
-        assert(R.determinant() > 0);
         assert(std::abs(R.determinant() - 1.0) < 1e-02);
 
         return 2.0 * second_lame * (deform_grad - R) + first_lame * trace * R;
