@@ -180,6 +180,7 @@ namespace elasty::fem
         return 2.0 * second_lame * (deform_grad - R) + first_lame * trace * R;
     }
 
+    /// \details The first equation in Sec. 3.3 in [1]
     template <typename Derived>
     typename Derived::Scalar calcStVenantKirchhoffEnergyDensity(const Eigen::MatrixBase<Derived>& deform_grad,
                                                                 const typename Derived::Scalar    first_lame,
@@ -191,6 +192,7 @@ namespace elasty::fem
         return second_lame * E.squaredNorm() + 0.5 * first_lame * trace * trace;
     }
 
+    /// \details Eq. 3.3 in [1]
     template <typename Derived>
     Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>
     calcStVenantKirchhoffPiolaStress(const Eigen::MatrixBase<Derived>& deform_grad,

@@ -183,18 +183,11 @@ double elasty::ContinuumTriangleConstraint::calculateValue()
     D.col(0) = x_1 - x_0;
     D.col(1) = x_2 - x_0;
 
-    // Calculate the deformation gradient
-    const Eigen::Matrix<double, 3, 2> F = D * m_rest_D_inv;
-
-    // Calculate the Green strain tensor
-    const Eigen::Matrix2d epsilon = fem::calcGreenStrain(F);
-
-    // Calculate the strain tensor based on the Saint Venant–Kirchhoff model
-    const Eigen::Matrix2d S =
-        m_first_lame * epsilon.trace() * Eigen::Matrix2d::Identity() + 2.0 * m_second_lame * epsilon;
+    // Calculate the deformation gradient (a 3-by-2 matrix)
+    const auto F = D * m_rest_D_inv;
 
     // Calculate the strain energy density
-    const double psi = 0.5 * (epsilon.transpose() * S).trace();
+    const double psi = fem::calcStVenantKirchhoffEnergyDensity(F, m_first_lame, m_second_lame);
 
     // Return the constraint value
     return m_rest_area * psi;
@@ -211,18 +204,11 @@ void elasty::ContinuumTriangleConstraint::calculateGrad(double* grad_C)
     D.col(0) = x_1 - x_0;
     D.col(1) = x_2 - x_0;
 
-    // Calculate the deformation gradient
-    const Eigen::Matrix<double, 3, 2> F = D * m_rest_D_inv;
+    // Calculate the deformation gradient (a 3-by-2 matrix)
+    const auto F = D * m_rest_D_inv;
 
-    // Calculate the Green strain tensor
-    const Eigen::Matrix2d epsilon = fem::calcGreenStrain(F);
-
-    // Calculate the strain tensor based on the Saint Venant–Kirchhoff model
-    const Eigen::Matrix2d S =
-        m_first_lame * epsilon.trace() * Eigen::Matrix2d::Identity() + 2.0 * m_second_lame * epsilon;
-
-    // Calculate the first Piola-Kirchhoff stress tensor
-    const Eigen::Matrix<double, 3, 2> P = F * S;
+    // Calculate the first Piola-Kirchhoff stress tensor (a 3-by-2 matrix)
+    const auto P = fem::calcStVenantKirchhoffPiolaStress(F, m_first_lame, m_second_lame);
 
     // Calculate the gradient of the constraint
     const Eigen::Matrix<double, 3, 2> grad_12 = m_rest_area * P * m_rest_D_inv.transpose();
