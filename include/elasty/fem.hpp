@@ -130,12 +130,13 @@ namespace elasty::fem
 
     /// \brief Calculate the Green strain tensor for a finite element.
     ///
-    /// \param deform_grad The deformation gradient matrix, which should be either 2-by-2 or 3-by-3.
+    /// \param deform_grad The deformation gradient matrix, which should be either 2-by-2 (2D element in 2D), 3-by-3 (3D
+    /// element in 3D), or 3-by-2 (2D element in 3D).
     template <typename Derived>
-    Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>
+    Eigen::Matrix<typename Derived::Scalar, Derived::ColsAtCompileTime, Derived::ColsAtCompileTime>
     calcGreenStrain(const Eigen::MatrixBase<Derived>& deform_grad)
     {
-        using Mat = Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>;
+        using Mat = Eigen::Matrix<typename Derived::Scalar, Derived::ColsAtCompileTime, Derived::ColsAtCompileTime>;
 
         return 0.5 * (deform_grad.transpose() * deform_grad - Mat::Identity());
     }

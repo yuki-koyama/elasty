@@ -187,7 +187,7 @@ double elasty::ContinuumTriangleConstraint::calculateValue()
     const Eigen::Matrix<double, 3, 2> F = D * m_rest_D_inv;
 
     // Calculate the Green strain tensor
-    const Eigen::Matrix2d epsilon = 0.5 * (F.transpose() * F - Eigen::Matrix2d::Identity());
+    const Eigen::Matrix2d epsilon = fem::calcGreenStrain(F);
 
     // Calculate the strain tensor based on the Saint Venant–Kirchhoff model
     const Eigen::Matrix2d S =
@@ -215,7 +215,7 @@ void elasty::ContinuumTriangleConstraint::calculateGrad(double* grad_C)
     const Eigen::Matrix<double, 3, 2> F = D * m_rest_D_inv;
 
     // Calculate the Green strain tensor
-    const Eigen::Matrix2d epsilon = 0.5 * (F.transpose() * F - Eigen::Matrix2d::Identity());
+    const Eigen::Matrix2d epsilon = fem::calcGreenStrain(F);
 
     // Calculate the strain tensor based on the Saint Venant–Kirchhoff model
     const Eigen::Matrix2d S =
