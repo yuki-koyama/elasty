@@ -107,12 +107,12 @@ int main(int argc, char** argv)
             SimpleEngine engine(num_iters, type);
             engine.initializeScene();
 
-            auto alembic_manager =
-                elasty::createAlembicManager(name + ".abc", engine.m_cloth_sim_object, engine.getDeltaPhysicsTime());
+            auto alembic_manager = elasty::createClothAlembicManager(
+                name + ".abc", engine.m_cloth_sim_object, engine.getDeltaPhysicsTime());
 
             for (unsigned int frame = 0; frame < 300; ++frame)
             {
-                elasty::submitCurrentStatus(alembic_manager);
+                alembic_manager->submitCurrentStatus();
 
                 engine.m_count = frame;
                 engine.proceedFrame();

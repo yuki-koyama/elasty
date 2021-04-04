@@ -139,11 +139,11 @@ int main(int argc, char** argv)
         engine.initializeScene();
 
         auto alembic_manager =
-            elasty::createAlembicManager(name + ".abc", engine.m_cloth_sim_object, engine.getDeltaFrameTime());
+            elasty::createClothAlembicManager(name + ".abc", engine.m_cloth_sim_object, engine.getDeltaFrameTime());
 
         for (unsigned int frame = 0; frame < 300; ++frame)
         {
-            elasty::submitCurrentStatus(alembic_manager);
+            alembic_manager->submitCurrentStatus();
             engine.proceedFrame();
         }
     }

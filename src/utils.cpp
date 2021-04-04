@@ -47,12 +47,12 @@ void elasty::generateFixedPointConstraints(const Eigen::Vector3d&               
     }
 }
 
-class elasty::AlembicManager
+class ClothAlembicManager : public elasty::AlembicManager
 {
 public:
-    AlembicManager(const std::string&                    output_file_path,
-                   const std::shared_ptr<ClothSimObject> cloth_sim_object,
-                   const double                          delta_time = 1.0 / 60.0)
+    ClothAlembicManager(const std::string&                            output_file_path,
+                        const std::shared_ptr<elasty::ClothSimObject> cloth_sim_object,
+                        const double                                  delta_time = 1.0 / 60.0)
         : m_cloth_sim_object(cloth_sim_object),
           m_archive(Alembic::AbcCoreOgawa::WriteArchive(), output_file_path.c_str())
     {
@@ -66,7 +66,7 @@ public:
         m_mesh_obj.getSchema().setTimeSampling(time_sampling_index);
     }
 
-    void submitCurrentStatus()
+    void submitCurrentStatus() override
     {
         using namespace Alembic::Abc;
         using namespace Alembic::AbcGeom;
@@ -118,23 +118,18 @@ public:
     }
 
 private:
-    bool                                  m_is_first = true;
-    const std::shared_ptr<ClothSimObject> m_cloth_sim_object;
-    Alembic::Abc::OArchive                m_archive;
-    Alembic::AbcGeom::OPolyMesh           m_mesh_obj;
+    bool                                          m_is_first = true;
+    const std::shared_ptr<elasty::ClothSimObject> m_cloth_sim_object;
+    Alembic::Abc::OArchive                        m_archive;
+    Alembic::AbcGeom::OPolyMesh                   m_mesh_obj;
 };
 
 std::shared_ptr<elasty::AlembicManager>
-elasty::createAlembicManager(const std::string&                    file_path,
-                             const std::shared_ptr<ClothSimObject> cloth_sim_object,
-                             const double                          delta_time)
+elasty::createClothAlembicManager(const std::string&                    file_path,
+                                  const std::shared_ptr<ClothSimObject> cloth_sim_object,
+                                  const double                          delta_time)
 {
-    return std::make_shared<AlembicManager>(file_path, cloth_sim_object, delta_time);
-}
-
-void elasty::submitCurrentStatus(const std::shared_ptr<AlembicManager> alembic_manager)
-{
-    alembic_manager->submitCurrentStatus();
+    return std::make_shared<ClothAlembicManager>(file_path, cloth_sim_object, delta_time);
 }
 
 void elasty::exportCurrentClothStateAsObj(const std::string&                    output_file_path,
