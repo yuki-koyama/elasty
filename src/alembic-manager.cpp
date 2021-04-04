@@ -40,16 +40,16 @@ public:
         using namespace Alembic::Abc;
         using namespace Alembic::AbcGeom;
 
-        const size_t             num_verts = m_cloth_sim_object->m_particles.size();
+        const std::size_t        num_verts = m_cloth_sim_object->m_particles.size();
         const std::vector<float> verts     = packParticlePositions(m_cloth_sim_object->m_particles);
 
         // If this is the first call, set a sample with full properties including vertex positions, indices, counts, and
         // UVs (if exists); otherwise, set a sample with only vertex positions.
         if (m_is_first)
         {
-            const size_t               num_indices = m_cloth_sim_object->m_triangle_list.size();
-            const std::vector<int32_t> indices     = [&]() {
-                std::vector<int32_t> indices;
+            const std::size_t               num_indices = m_cloth_sim_object->m_triangle_list.size();
+            const std::vector<std::int32_t> indices     = [&]() {
+                std::vector<std::int32_t> indices;
                 indices.reserve(num_indices);
                 for (unsigned int i = 0; i < m_cloth_sim_object->m_triangle_list.rows(); ++i)
                 {
@@ -59,8 +59,8 @@ public:
                 }
                 return indices;
             }();
-            const size_t               num_counts = m_cloth_sim_object->m_triangle_list.rows();
-            const std::vector<int32_t> counts(num_counts, 3);
+            const std::size_t               num_counts = m_cloth_sim_object->m_triangle_list.rows();
+            const std::vector<std::int32_t> counts(num_counts, 3);
 
             // If the model has UV info, include it into the geometry sample
             const OV2fGeomParam::Sample geom_param_sample =
