@@ -9,7 +9,6 @@
 #include <elasty/constraint.hpp>
 #include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
-#include <elasty/utils.hpp>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -18,6 +17,10 @@
 
 // #define CAPTURE_SCREEN
 // #define EXPORT_ALEMBIC
+
+#ifdef EXPORT_ALEMBIC
+#include <elasty/alembic-manager.hpp>
+#endif
 
 namespace
 {

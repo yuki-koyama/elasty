@@ -1,5 +1,3 @@
-#include <Alembic/AbcCoreOgawa/All.h>
-#include <Alembic/AbcGeom/All.h>
 #include <elasty/cloth-sim-object.hpp>
 #include <elasty/constraint.hpp>
 #include <elasty/particle.hpp>
@@ -45,91 +43,6 @@ void elasty::generateFixedPointConstraints(const Eigen::Vector3d&               
                 std::make_shared<elasty::FixedPointConstraint>(particle, 1.0, 0.0, dummy_delta_time, fixed_position));
         }
     }
-}
-
-class ClothAlembicManager : public elasty::AlembicManager
-{
-public:
-    ClothAlembicManager(const std::string&                            output_file_path,
-                        const std::shared_ptr<elasty::ClothSimObject> cloth_sim_object,
-                        const double                                  delta_time = 1.0 / 60.0)
-        : m_cloth_sim_object(cloth_sim_object),
-          m_archive(Alembic::AbcCoreOgawa::WriteArchive(), output_file_path.c_str())
-    {
-        using namespace Alembic::Abc;
-        using namespace Alembic::AbcGeom;
-
-        const TimeSampling time_sampling(delta_time, 0);
-        const uint32_t     time_sampling_index = m_archive.addTimeSampling(time_sampling);
-
-        m_mesh_obj = OPolyMesh(OObject(m_archive, kTop), "cloth");
-        m_mesh_obj.getSchema().setTimeSampling(time_sampling_index);
-    }
-
-    void submitCurrentStatus() override
-    {
-        using namespace Alembic::Abc;
-        using namespace Alembic::AbcGeom;
-
-        const size_t             num_verts = m_cloth_sim_object->m_particles.size();
-        const std::vector<float> verts     = packParticlePositions(m_cloth_sim_object->m_particles);
-
-        // If this is the first call, set a sample with full properties including vertex positions, indices, counts, and
-        // UVs (if exists); otherwise, set a sample with only vertex positions.
-        if (m_is_first)
-        {
-            const size_t               num_indices = m_cloth_sim_object->m_triangle_list.size();
-            const std::vector<int32_t> indices     = [&]() {
-                std::vector<int32_t> indices;
-                indices.reserve(num_indices);
-                for (unsigned int i = 0; i < m_cloth_sim_object->m_triangle_list.rows(); ++i)
-                {
-                    indices.push_back(m_cloth_sim_object->m_triangle_list(i, 0));
-                    indices.push_back(m_cloth_sim_object->m_triangle_list(i, 1));
-                    indices.push_back(m_cloth_sim_object->m_triangle_list(i, 2));
-                }
-                return indices;
-            }();
-            const size_t               num_counts = m_cloth_sim_object->m_triangle_list.rows();
-            const std::vector<int32_t> counts(num_counts, 3);
-
-            // If the model has UV info, include it into the geometry sample
-            const OV2fGeomParam::Sample geom_param_sample =
-                m_cloth_sim_object->hasUv()
-                    ? OV2fGeomParam::Sample(
-                          V2fArraySample((const V2f*) m_cloth_sim_object->m_uv_list.data(), num_indices),
-                          kFacevaryingScope)
-                    : OV2fGeomParam::Sample();
-
-            const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) verts.data(), num_verts),
-                                                 Int32ArraySample(indices.data(), num_indices),
-                                                 Int32ArraySample(counts.data(), num_counts),
-                                                 geom_param_sample);
-
-            m_mesh_obj.getSchema().set(sample);
-
-            m_is_first = false;
-        }
-        else
-        {
-            const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) verts.data(), num_verts));
-            m_mesh_obj.getSchema().set(sample);
-        }
-    }
-
-private:
-    bool                                          m_is_first = true;
-    const std::shared_ptr<elasty::ClothSimObject> m_cloth_sim_object;
-    Alembic::Abc::OArchive                        m_archive;
-    Alembic::AbcGeom::OPolyMesh                   m_mesh_obj;
-};
-
-std::shared_ptr<elasty::AlembicManager>
-elasty::createClothAlembicManager(const std::string&                    file_path,
-                                  const std::shared_ptr<ClothSimObject> cloth_sim_object,
-                                  const double                          delta_time)
-{
-    return std::make_shared<ClothAlembicManager>(file_path, cloth_sim_object, delta_time);
 }
 
 void elasty::exportCurrentClothStateAsObj(const std::string&                    output_file_path,
