@@ -1,7 +1,6 @@
-#include <Alembic/AbcCoreOgawa/All.h>
-#include <Alembic/AbcGeom/All.h>
 #include <Eigen/Core>
 #include <Eigen/LU>
+#include <elasty/alembic-manager.hpp>
 #include <elasty/fem.hpp>
 #include <timer.hpp>
 #include <vector>
@@ -32,7 +31,7 @@ namespace
 
 struct TriangleMesh
 {
-    using TriangleList = Eigen::Matrix<int32_t, Eigen::Dynamic, 3, Eigen::RowMajor>;
+    using TriangleList = Eigen::Matrix<std::int32_t, Eigen::Dynamic, 3, Eigen::RowMajor>;
 
     TriangleList elems;
 
@@ -54,77 +53,6 @@ struct TriangleMesh
 
     /// \details Should be precomputed
     std::vector<Eigen::Matrix<double, 4, 6>> vec_PFPx_array;
-};
-
-class AlembicManager
-{
-public:
-    AlembicManager(const std::string& output_file_path, const TriangleMesh* mesh, const double delta_time = 1.0 / 60.0)
-        : m_mesh(mesh), m_archive(Alembic::AbcCoreOgawa::WriteArchive(), output_file_path.c_str())
-    {
-        using namespace Alembic::Abc;
-        using namespace Alembic::AbcGeom;
-
-        const TimeSampling time_sampling(delta_time, 0);
-        const uint32_t     time_sampling_index = m_archive.addTimeSampling(time_sampling);
-
-        m_mesh_obj = OPolyMesh(OObject(m_archive, kTop), "mesh");
-        m_mesh_obj.getSchema().setTimeSampling(time_sampling_index);
-    }
-
-    void submitCurrentStatus()
-    {
-        using namespace Alembic::Abc;
-        using namespace Alembic::AbcGeom;
-
-        const size_t num_verts = m_mesh->x_rest.size() / k_num_dims;
-
-        const Eigen::VectorXf verts = [&]() {
-            assert(k_num_dims == 2);
-
-            Eigen::VectorXf temp = Eigen::VectorXf::Zero(3 * num_verts);
-
-            for (size_t i = 0; i < num_verts; ++i)
-            {
-                temp.segment(3 * i, 2) = m_mesh->x.segment(2 * i, 2).cast<float>();
-            }
-
-            return temp;
-        }();
-
-        // If this is the first call, set a sample with full properties including vertex positions, indices, counts, and
-        // UVs (if exists); otherwise, set a sample with only vertex positions.
-        if (m_is_first)
-        {
-            const size_t num_indices = m_mesh->elems.size();
-
-            const size_t               num_counts = num_indices / 3;
-            const std::vector<int32_t> counts(num_counts, 3);
-
-            // Ignore UV
-            const OV2fGeomParam::Sample geom_param_sample = OV2fGeomParam::Sample();
-
-            const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) verts.data(), num_verts),
-                                                 Int32ArraySample(m_mesh->elems.data(), num_indices),
-                                                 Int32ArraySample(counts.data(), num_counts),
-                                                 geom_param_sample);
-
-            m_mesh_obj.getSchema().set(sample);
-
-            m_is_first = false;
-        }
-        else
-        {
-            const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) verts.data(), num_verts));
-            m_mesh_obj.getSchema().set(sample);
-        }
-    }
-
-private:
-    bool                        m_is_first = true;
-    const TriangleMesh*         m_mesh;
-    Alembic::Abc::OArchive      m_archive;
-    Alembic::AbcGeom::OPolyMesh m_mesh_obj;
 };
 
 template <typename Derived> typename Derived::Scalar calcEnergyDensity(const Eigen::MatrixBase<Derived>& deform_grad)
@@ -377,13 +305,18 @@ int main(int argc, char** argv)
     engine.initializeScene();
     engine.setDeltaPhysicsTime(k_delta_time / static_cast<double>(k_num_substeps));
 
-    auto alembic_manager = AlembicManager("./out.abc", engine.getMesh(), k_delta_time);
+    const auto        mesh          = engine.getMesh();
+    const std::size_t num_verts     = mesh->x_rest.size() / 2;
+    const std::size_t num_triangles = mesh->elems.rows();
+
+    auto alembic_manager = elasty::createTriangleMesh2dAlembicManager(
+        "./out.abc", k_delta_time, num_verts, num_triangles, mesh->x.data(), mesh->elems.data());
 
     for (unsigned int frame = 0; frame < 240; ++frame)
     {
         timer::Timer t(std::to_string(frame));
 
-        alembic_manager.submitCurrentStatus();
+        alembic_manager->submitCurrentStatus();
 
         for (int i = 0; i < k_num_substeps; ++i)
         {
