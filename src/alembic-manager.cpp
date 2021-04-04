@@ -4,14 +4,11 @@
 #include <elasty/cloth-sim-object.hpp>
 #include <elasty/utils.hpp>
 
-class ClothAlembicManager : public elasty::AlembicManager
+class AlembicManagerBase : public elasty::AbstractAlembicManager
 {
 public:
-    ClothAlembicManager(const std::string&                            output_file_path,
-                        const std::shared_ptr<elasty::ClothSimObject> cloth_sim_object,
-                        const double                                  delta_time = 1.0 / 60.0)
-        : m_cloth_sim_object(cloth_sim_object),
-          m_archive(Alembic::AbcCoreOgawa::WriteArchive(), output_file_path.c_str())
+    AlembicManagerBase(const std::string& output_file_path, const double delta_time, const std::string& object_name)
+        : m_archive(Alembic::AbcCoreOgawa::WriteArchive(), output_file_path.c_str())
     {
         using namespace Alembic::Abc;
         using namespace Alembic::AbcGeom;
@@ -19,8 +16,23 @@ public:
         const TimeSampling time_sampling(delta_time, 0);
         const uint32_t     time_sampling_index = m_archive.addTimeSampling(time_sampling);
 
-        m_mesh_obj = OPolyMesh(OObject(m_archive, kTop), "cloth");
+        m_mesh_obj = OPolyMesh(OObject(m_archive, kTop), object_name.c_str());
         m_mesh_obj.getSchema().setTimeSampling(time_sampling_index);
+    }
+
+protected:
+    Alembic::Abc::OArchive      m_archive;
+    Alembic::AbcGeom::OPolyMesh m_mesh_obj;
+};
+
+class ClothAlembicManager : public AlembicManagerBase
+{
+public:
+    ClothAlembicManager(const std::string&                            output_file_path,
+                        const std::shared_ptr<elasty::ClothSimObject> cloth_sim_object,
+                        const double                                  delta_time = 1.0 / 60.0)
+        : AlembicManagerBase(output_file_path, delta_time, "Cloth"), m_cloth_sim_object(cloth_sim_object)
+    {
     }
 
     void submitCurrentStatus() override
@@ -75,13 +87,12 @@ public:
     }
 
 private:
-    bool                                          m_is_first = true;
+    bool m_is_first = true;
+
     const std::shared_ptr<elasty::ClothSimObject> m_cloth_sim_object;
-    Alembic::Abc::OArchive                        m_archive;
-    Alembic::AbcGeom::OPolyMesh                   m_mesh_obj;
 };
 
-std::shared_ptr<elasty::AlembicManager>
+std::shared_ptr<elasty::AbstractAlembicManager>
 elasty::createClothAlembicManager(const std::string&                    file_path,
                                   const std::shared_ptr<ClothSimObject> cloth_sim_object,
                                   const double                          delta_time)

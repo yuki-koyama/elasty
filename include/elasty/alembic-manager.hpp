@@ -10,7 +10,7 @@ namespace elasty
     class ClothSimObject;
 
     /// \brief An abstract class for making alembic export easier.
-    class AlembicManager
+    class AbstractAlembicManager
     {
     public:
         /// \brief Submit the current frame to the managed alembic file.
@@ -18,9 +18,10 @@ namespace elasty
     };
 
     /// \brief A utility function to instantiating an alembic manager tailered for cloth objects
-    std::shared_ptr<AlembicManager> createClothAlembicManager(const std::string&                    output_file_path,
-                                                              const std::shared_ptr<ClothSimObject> cloth_sim_object,
-                                                              const double                          delta_time);
+    std::shared_ptr<AbstractAlembicManager>
+    createClothAlembicManager(const std::string&                    output_file_path,
+                              const std::shared_ptr<ClothSimObject> cloth_sim_object,
+                              const double                          delta_time);
 } // namespace elasty
 
 #endif // ELASTY_ALEMBIC_MANAGER_HPP
