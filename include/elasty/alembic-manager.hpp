@@ -7,8 +7,6 @@
 
 namespace elasty
 {
-    //    struct Particle;
-    //    class AbstractConstraint;
     class ClothSimObject;
 
     /// \brief An abstract class for making alembic export easier.
