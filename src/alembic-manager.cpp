@@ -14,14 +14,44 @@ public:
         using namespace Alembic::Abc;
         using namespace Alembic::AbcGeom;
 
-        const TimeSampling time_sampling(delta_time, 0);
-        const uint32_t     time_sampling_index = m_archive.addTimeSampling(time_sampling);
+        const TimeSampling  time_sampling(delta_time, 0);
+        const std::uint32_t time_sampling_index = m_archive.addTimeSampling(time_sampling);
 
         m_mesh_obj = OPolyMesh(OObject(m_archive, kTop), object_name.c_str());
         m_mesh_obj.getSchema().setTimeSampling(time_sampling_index);
     }
 
+    void submitCurrentStatus()
+    {
+        using namespace Alembic::Abc;
+        using namespace Alembic::AbcGeom;
+
+        if (m_is_first)
+        {
+            submitCurrentStatusFirstTime();
+
+            m_is_first = false;
+
+            return;
+        }
+
+        const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) getAlembicPositionArray(), getNumVerts()));
+
+        m_mesh_obj.getSchema().set(sample);
+    }
+
+    /// \brief A function that is called at the first frame of the alembic export.
+    ///
+    /// \details At the first frame, the sample needs to include indices, UVs, etc., so special care is necessary for
+    /// each individual inherited class.
+    virtual void submitCurrentStatusFirstTime() = 0;
+
 protected:
+    virtual const float* getAlembicPositionArray() = 0;
+    virtual std::int32_t getNumVerts() const       = 0;
+
+    bool m_is_first = true;
+
     Alembic::Abc::OArchive      m_archive;
     Alembic::AbcGeom::OPolyMesh m_mesh_obj;
 };
@@ -41,54 +71,50 @@ public:
           m_positions(positions),
           m_indices(indices)
     {
+        m_alembic_position_buffer = Eigen::Matrix<float, 3, Eigen::Dynamic>::Zero(3, m_num_verts);
     }
 
-    void submitCurrentStatus()
+    void submitCurrentStatusFirstTime() override
     {
         using namespace Alembic::Abc;
         using namespace Alembic::AbcGeom;
 
-        // Extend the data into 3D by inserting zeros
-        Eigen::MatrixXf verts = Eigen::Map<const Eigen::MatrixXd>(m_positions, 2, m_num_verts).cast<float>();
-        verts.conservativeResize(3, Eigen::NoChange);
-        verts.block(2, 0, 1, m_num_verts) = Eigen::MatrixXf::Zero(1, m_num_verts);
+        const std::size_t               num_counts = m_num_triangles;
+        const std::vector<std::int32_t> counts(num_counts, 3);
 
-        // If this is the first call, set a sample with full properties including vertex positions, indices, counts;
-        // otherwise, set a sample with only vertex positions.
-        if (m_is_first)
-        {
-            const std::size_t               num_counts = m_num_triangles;
-            const std::vector<std::int32_t> counts(num_counts, 3);
+        // Ignore UV
+        const OV2fGeomParam::Sample geom_param_sample = OV2fGeomParam::Sample();
 
-            // Ignore UV
-            const OV2fGeomParam::Sample geom_param_sample = OV2fGeomParam::Sample();
+        const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) getAlembicPositionArray(), getNumVerts()),
+                                             Int32ArraySample(m_indices, m_num_triangles * 3),
+                                             Int32ArraySample(counts.data(), num_counts),
+                                             geom_param_sample);
 
-            const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) verts.data(), m_num_verts),
-                                                 Int32ArraySample(m_indices, m_num_triangles * 3),
-                                                 Int32ArraySample(counts.data(), num_counts),
-                                                 geom_param_sample);
-
-            m_mesh_obj.getSchema().set(sample);
-
-            m_is_first = false;
-        }
-        else
-        {
-            const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) verts.data(), m_num_verts));
-            m_mesh_obj.getSchema().set(sample);
-        }
+        m_mesh_obj.getSchema().set(sample);
     }
 
 private:
-    bool m_is_first = true;
+    const float* getAlembicPositionArray() override
+    {
+        m_alembic_position_buffer.block(0, 0, 2, m_num_verts) =
+            Eigen::Map<const Eigen::MatrixXd>(m_positions, 2, m_num_verts).cast<float>();
+
+        return m_alembic_position_buffer.data();
+    }
+
+    std::int32_t getNumVerts() const override { return m_num_verts; }
 
     const std::size_t m_num_verts;
     const std::size_t m_num_triangles;
 
     const double*       m_positions;
     const std::int32_t* m_indices;
+
+    /// \brief A buffer object to store the vertex position array in the alembic format.
+    Eigen::Matrix<float, 3, Eigen::Dynamic> m_alembic_position_buffer;
 };
 
+/// \details This manager assumes that the number of particles does not change during simulation
 class ClothAlembicManager : public AlembicManagerBase
 {
 public:
@@ -99,61 +125,46 @@ public:
     {
     }
 
-    void submitCurrentStatus() override
+    void submitCurrentStatusFirstTime() override
     {
         using namespace Alembic::Abc;
         using namespace Alembic::AbcGeom;
 
-        const std::size_t        num_verts = m_cloth_sim_object->m_particles.size();
-        const std::vector<float> verts     = packParticlePositions(m_cloth_sim_object->m_particles);
+        const std::size_t               num_indices = m_cloth_sim_object->m_triangle_list.size();
+        const std::size_t               num_counts  = m_cloth_sim_object->m_triangle_list.rows();
+        const std::vector<std::int32_t> counts(num_counts, 3);
 
-        // If this is the first call, set a sample with full properties including vertex positions, indices, counts, and
-        // UVs (if exists); otherwise, set a sample with only vertex positions.
-        if (m_is_first)
-        {
-            const std::size_t               num_indices = m_cloth_sim_object->m_triangle_list.size();
-            const std::vector<std::int32_t> indices     = [&]() {
-                std::vector<std::int32_t> indices;
-                indices.reserve(num_indices);
-                for (unsigned int i = 0; i < m_cloth_sim_object->m_triangle_list.rows(); ++i)
-                {
-                    indices.push_back(m_cloth_sim_object->m_triangle_list(i, 0));
-                    indices.push_back(m_cloth_sim_object->m_triangle_list(i, 1));
-                    indices.push_back(m_cloth_sim_object->m_triangle_list(i, 2));
-                }
-                return indices;
-            }();
-            const std::size_t               num_counts = m_cloth_sim_object->m_triangle_list.rows();
-            const std::vector<std::int32_t> counts(num_counts, 3);
+        // If the model has UV info, include it into the geometry sample
+        const OV2fGeomParam::Sample geom_param_sample =
+            m_cloth_sim_object->hasUv()
+                ? OV2fGeomParam::Sample(V2fArraySample((const V2f*) m_cloth_sim_object->m_uv_list.data(), num_indices),
+                                        kFacevaryingScope)
+                : OV2fGeomParam::Sample();
 
-            // If the model has UV info, include it into the geometry sample
-            const OV2fGeomParam::Sample geom_param_sample =
-                m_cloth_sim_object->hasUv()
-                    ? OV2fGeomParam::Sample(
-                          V2fArraySample((const V2f*) m_cloth_sim_object->m_uv_list.data(), num_indices),
-                          kFacevaryingScope)
-                    : OV2fGeomParam::Sample();
+        const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) getAlembicPositionArray(), getNumVerts()),
+                                             Int32ArraySample(m_cloth_sim_object->m_triangle_list.data(), num_indices),
+                                             Int32ArraySample(counts.data(), num_counts),
+                                             geom_param_sample);
 
-            const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) verts.data(), num_verts),
-                                                 Int32ArraySample(indices.data(), num_indices),
-                                                 Int32ArraySample(counts.data(), num_counts),
-                                                 geom_param_sample);
-
-            m_mesh_obj.getSchema().set(sample);
-
-            m_is_first = false;
-        }
-        else
-        {
-            const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) verts.data(), num_verts));
-            m_mesh_obj.getSchema().set(sample);
-        }
+        m_mesh_obj.getSchema().set(sample);
     }
 
 private:
+    const float* getAlembicPositionArray() override
+    {
+        m_alembic_position_buffer = packParticlePositions(m_cloth_sim_object->m_particles);
+
+        return m_alembic_position_buffer.data();
+    }
+
+    std::int32_t getNumVerts() const override { return m_cloth_sim_object->m_particles.size(); }
+
     bool m_is_first = true;
 
     const std::shared_ptr<elasty::ClothSimObject> m_cloth_sim_object;
+
+    /// \brief A buffer object to store the vertex position array in the alembic format.
+    std::vector<float> m_alembic_position_buffer;
 };
 
 std::shared_ptr<elasty::AbstractAlembicManager>
