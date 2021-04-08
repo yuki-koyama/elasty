@@ -100,7 +100,11 @@ if(ELASTY_TESTS)
   add_executable(constraint-test ${CMAKE_CURRENT_SOURCE_DIR}/tests/constraint-test.cpp)
   target_link_libraries(constraint-test elasty gtest_main)
 
+  add_executable(fem-test ${CMAKE_CURRENT_SOURCE_DIR}/tests/fem-test.cpp)
+  target_link_libraries(fem-test elasty gtest_main)
+
   add_test(NAME constraint-test COMMAND $<TARGET_FILE:constraint-test>)
+  add_test(NAME fem-test COMMAND $<TARGET_FILE:fem-test>)
 endif()
 
 # ------------------------------------------------------------------------------
