@@ -29,7 +29,19 @@ namespace elasty::fem
         const auto V     = svd.matrixV();
         const auto R     = (U * V.transpose()).eval();
 
-        return (R.determinant() > 0) ? R : -R;
+        assert(std::abs(std::abs(R.determinant()) - 1.0) < 1e-04);
+
+        if constexpr (Derived::RowsAtCompileTime == 2)
+        {
+            // Just ignore reflection (if any)
+            // TODO: Discuss whether this is a good strategy, or not
+            return R;
+        }
+        else if constexpr (Derived::RowsAtCompileTime == 3)
+        {
+            // Correct reflection (if any)
+            return (R.determinant() > 0) ? R : -R;
+        }
     }
 
     /// \brief Calculate the first Lame parameter, $\lambda$.
@@ -155,7 +167,6 @@ namespace elasty::fem
         const auto trace = (S - I).trace();
 
         assert(deform_grad.isApprox(R * S));
-        assert(std::abs(R.determinant() - 1.0) < 1e-02);
 
         return second_lame * (deform_grad - R).squaredNorm() + 0.5 * first_lame * trace * trace;
     }
@@ -175,7 +186,6 @@ namespace elasty::fem
         const auto trace = (S - I).trace();
 
         assert(deform_grad.isApprox(R * S));
-        assert(std::abs(R.determinant() - 1.0) < 1e-02);
 
         return 2.0 * second_lame * (deform_grad - R) + first_lame * trace * R;
     }
