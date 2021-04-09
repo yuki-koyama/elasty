@@ -124,41 +124,6 @@ public:
             m_mesh.f.segment(2 * indices[0], 2) += force.segment(2 * 0, 2);
             m_mesh.f.segment(2 * indices[1], 2) += force.segment(2 * 1, 2);
             m_mesh.f.segment(2 * indices[2], 2) += force.segment(2 * 2, 2);
-
-            if constexpr (false)
-            {
-                // Validate the force calculation by comparing to numerical differentials
-                const auto      x_orig = m_mesh.x;
-                Eigen::VectorXd diff{6};
-                for (size_t i = 0; i < 3; ++i)
-                {
-                    for (size_t j = 0; j < 2; ++j)
-                    {
-                        constexpr double eps = 1e-06;
-
-                        m_mesh.x[2 * indices[i] + j] += eps;
-                        const auto F_p = elasty::fem::calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2),
-                                                                               m_mesh.x.segment(2 * indices[1], 2),
-                                                                               m_mesh.x.segment(2 * indices[2], 2),
-                                                                               D_m_inv);
-                        const auto e_p = calcEnergyDensity(F_p);
-
-                        m_mesh.x = x_orig;
-
-                        m_mesh.x[2 * indices[i] + j] -= eps;
-                        const auto F_m = elasty::fem::calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2),
-                                                                               m_mesh.x.segment(2 * indices[1], 2),
-                                                                               m_mesh.x.segment(2 * indices[2], 2),
-                                                                               D_m_inv);
-                        const auto e_m = calcEnergyDensity(F_m);
-
-                        m_mesh.x = x_orig;
-
-                        diff[2 * i + j] = (e_p - e_m) / (2.0 * eps);
-                    }
-                }
-                assert(std::abs(PPsiPx.norm() - diff.norm()) < 1e-04);
-            }
         }
 
         // Apply gravity force
