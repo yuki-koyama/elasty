@@ -122,6 +122,7 @@ if(CLANG_FORMAT)
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/pbd-xpbd-comparison/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/aerodynamics/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/constraint-test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/fem-test.cpp
   )
   add_custom_target(elasty-format COMMAND ${CLANG_FORMAT} -i ${format_target_sources} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
