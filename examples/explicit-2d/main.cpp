@@ -102,9 +102,9 @@ public:
             const auto& vec_PFPx = m_mesh.vec_PFPx_array[i];
 
             // Calculate the deformation gradient $\mathbf{F}$
-            const auto F = elasty::fem::calc2dTriangleDeformGrad(m_mesh.x.segment(2 * indices[0], 2),
-                                                                 m_mesh.x.segment(2 * indices[1], 2),
-                                                                 m_mesh.x.segment(2 * indices[2], 2),
+            const auto F = elasty::fem::calc2dTriangleDeformGrad(m_mesh.x.segment<2>(2 * indices[0]),
+                                                                 m_mesh.x.segment<2>(2 * indices[1]),
+                                                                 m_mesh.x.segment<2>(2 * indices[2]),
                                                                  D_m_inv);
 
             // Calculate $\frac{\partial \Phi}{\partial \mathbf{x}}$ and related values
