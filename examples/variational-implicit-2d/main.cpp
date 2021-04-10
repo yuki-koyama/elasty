@@ -15,10 +15,12 @@ namespace
     constexpr double k_first_lame  = elasty::fem::calcFirstLame(k_youngs_modulus, k_poisson_ratio);
     constexpr double k_second_lame = elasty::fem::calcSecondLame(k_youngs_modulus, k_poisson_ratio);
 
-    constexpr unsigned k_num_substeps = 10;
+    constexpr unsigned k_num_substeps = 5;
     constexpr double   k_delta_time   = 1.0 / 60.0;
 
-    constexpr double k_damping_factor = 0.1;
+    constexpr double k_damping_factor = 0.0;
+
+    constexpr double k_spring_stiffness = 10000.0;
 
     enum class Model
     {
@@ -104,9 +106,140 @@ public:
         const double&         h = m_delta_physics_time;
         const Eigen::VectorXd y = m_mesh.x + h * m_mesh.v + h * h * W * m_mesh.f;
 
+        const auto calcInternalPotential = [&](const Eigen::VectorXd& x) {
+            double sum = 0.0;
+
+            // Elastic potential
+            for (size_t i = 0; i < m_mesh.elems.rows(); ++i)
+            {
+                const auto& indices = m_mesh.elems.row(i);
+
+                // Retrieve precomputed values
+                const auto& D_m_inv = m_mesh.rest_shape_mat_inv_array[i];
+                const auto& area    = m_mesh.area_array[i];
+
+                // Calculate the deformation gradient $\mathbf{F}$
+                const auto F = elasty::fem::calc2dTriangleDeformGrad(
+                    x.segment<2>(2 * indices[0]), x.segment<2>(2 * indices[1]), x.segment<2>(2 * indices[2]), D_m_inv);
+
+                sum += area * calcEnergyDensity(F);
+            }
+
+            // Attach-spring potential
+            for (size_t vert_index : constrained_verts)
+            {
+                const auto   p            = x.segment<2>(vert_index * 2);
+                const auto   q            = m_mesh.x_rest.segment<2>(vert_index * 2);
+                const double squared_dist = (p - q).squaredNorm();
+
+                sum += 0.5 * k_spring_stiffness * squared_dist;
+            }
+
+            return sum;
+        };
+
+        const auto calcInternalPotentialGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+            Eigen::VectorXd sum = Eigen::VectorXd::Zero(x.size());
+            for (size_t i = 0; i < m_mesh.elems.rows(); ++i)
+            {
+                const auto& indices = m_mesh.elems.row(i);
+
+                // Retrieve precomputed values
+                const auto& D_m_inv  = m_mesh.rest_shape_mat_inv_array[i];
+                const auto& area     = m_mesh.area_array[i];
+                const auto& vec_PFPx = m_mesh.vec_PFPx_array[i];
+
+                // Calculate the deformation gradient $\mathbf{F}$
+                const auto F = elasty::fem::calc2dTriangleDeformGrad(
+                    x.segment<2>(2 * indices[0]), x.segment<2>(2 * indices[1]), x.segment<2>(2 * indices[2]), D_m_inv);
+
+                // Calculate $\frac{\partial \Phi}{\partial \mathbf{x}}$ and related values
+                const auto P      = calcPiolaStress(F);
+                const auto vec_P  = Eigen::Map<const Eigen::Vector4d>(P.data(), P.size());
+                const auto PPsiPx = vec_PFPx.transpose() * vec_P;
+
+                // Calculate $\frac{\partial E}{\partial \mathbf{x}}$
+                const auto PEPx = area * PPsiPx;
+
+                sum.segment<2>(2 * indices[0]) += PEPx.segment<2>(0 * 2);
+                sum.segment<2>(2 * indices[1]) += PEPx.segment<2>(1 * 2);
+                sum.segment<2>(2 * indices[2]) += PEPx.segment<2>(2 * 2);
+            }
+
+            for (size_t vert_index : constrained_verts)
+            {
+                const auto p = x.segment<2>(vert_index * 2);
+                const auto q = m_mesh.x_rest.segment<2>(vert_index * 2);
+                const auto r = p - q;
+
+                sum.segment<2>(2 * vert_index) += k_spring_stiffness * r;
+            }
+
+            return sum;
+        };
+
+        const auto calcMomentumPotential = [&](const Eigen::VectorXd& x) {
+            return (0.5 / (h * h)) * (x - y).transpose() * m_mesh.lumped_mass.asDiagonal() * (x - y);
+        };
+
+        const auto calcMomentumPotentialGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+            return (1.0 / (h * h)) * m_mesh.lumped_mass.asDiagonal() * (x - y);
+        };
+
+        const auto calcObjective = [&](const Eigen::VectorXd& x) {
+            const double momentum_potential = calcMomentumPotential(x);
+            const double internal_potential = calcInternalPotential(x);
+
+            assert(momentum_potential >= 0.0);
+            assert(internal_potential >= 0.0);
+
+            return momentum_potential + internal_potential;
+        };
+
+        const auto calcObjectiveGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+            return calcMomentumPotentialGrad(x) + calcInternalPotentialGrad(x);
+        };
+
         // Solve the minimization problem
-        // TODO: Implement this part
-        const Eigen::VectorXd x_opt = m_mesh.x;
+        const Eigen::VectorXd x_opt = [&]() -> Eigen::VectorXd {
+            Eigen::VectorXd x = y;
+            double          f = calcObjective(x);
+
+            // Perform the very naive gradient descent method
+            for (size_t iter = 0; iter < 1000; ++iter)
+            {
+                const Eigen::VectorXd grad = calcObjectiveGrad(x);
+
+                // Perform naive line search
+                double alpha   = 1.0;
+                bool   success = false;
+                for (size_t i = 0; i < 10; ++i)
+                {
+                    const auto   x_temp = x - alpha * grad;
+                    const double f_temp = calcObjective(x_temp);
+
+                    if (f_temp < f)
+                    {
+                        x = x_temp;
+                        f = f_temp;
+
+                        success = true;
+
+                        break;
+                    }
+
+                    alpha *= 0.1;
+                }
+
+                // Terminate if line search fails or the gradient is sufficiently small
+                if (!success || grad.squaredNorm() < 1e-12)
+                {
+                    break;
+                }
+            }
+
+            return x;
+        }();
 
         // Update the internal state
         m_mesh.v = (1.0 / h) * (x_opt - m_mesh.x);
