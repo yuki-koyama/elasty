@@ -20,10 +20,10 @@ TEST(FemTest, StVenantKirchhoff2d)
         return elasty::fem::calcStVenantKirchhoffEnergyDensity(F, k_first_lame, k_second_lame);
     };
 
-    Eigen::MatrixXd x_0{2, 3};
-    x_0.col(0) = Eigen::Vector2d{0.0, 0.0};
-    x_0.col(1) = Eigen::Vector2d{1.0, 0.0};
-    x_0.col(2) = Eigen::Vector2d{0.0, 1.0};
+    Eigen::MatrixXd x_rest{2, 3};
+    x_rest.col(0) = Eigen::Vector2d{0.0, 0.0};
+    x_rest.col(1) = Eigen::Vector2d{1.0, 0.0};
+    x_rest.col(2) = Eigen::Vector2d{0.0, 1.0};
 
     Eigen::MatrixXd x{2, 3};
     x.col(0) = Eigen::Vector2d{0.0, 0.5};
@@ -31,7 +31,7 @@ TEST(FemTest, StVenantKirchhoff2d)
     x.col(2) = Eigen::Vector2d{0.0, 1.5};
 
     // Calculate $\frac{\partial \Psi}{\partial \mathbf{x}}$ analytically
-    const auto D_m      = elasty::fem::calc2dShapeMatrix(x_0.col(0), x_0.col(1), x_0.col(2));
+    const auto D_m      = elasty::fem::calc2dShapeMatrix(x_rest.col(0), x_rest.col(1), x_rest.col(2));
     const auto D_m_inv  = D_m.inverse();
     const auto F        = elasty::fem::calc2dTriangleDeformGrad(x.col(0), x.col(1), x.col(2), D_m_inv);
     const auto P        = calcPiolaStress(F);
@@ -78,10 +78,10 @@ TEST(FemTest, CoRotational2d)
         return elasty::fem::calcCoRotationalEnergyDensity(F, k_first_lame, k_second_lame);
     };
 
-    Eigen::MatrixXd x_0{2, 3};
-    x_0.col(0) = Eigen::Vector2d{0.0, 0.0};
-    x_0.col(1) = Eigen::Vector2d{1.0, 0.0};
-    x_0.col(2) = Eigen::Vector2d{0.0, 1.0};
+    Eigen::MatrixXd x_rest{2, 3};
+    x_rest.col(0) = Eigen::Vector2d{0.0, 0.0};
+    x_rest.col(1) = Eigen::Vector2d{1.0, 0.0};
+    x_rest.col(2) = Eigen::Vector2d{0.0, 1.0};
 
     Eigen::MatrixXd x{2, 3};
     x.col(0) = Eigen::Vector2d{0.0, 0.5};
@@ -89,7 +89,7 @@ TEST(FemTest, CoRotational2d)
     x.col(2) = Eigen::Vector2d{0.0, 1.5};
 
     // Calculate $\frac{\partial \Psi}{\partial \mathbf{x}}$ analytically
-    const auto D_m      = elasty::fem::calc2dShapeMatrix(x_0.col(0), x_0.col(1), x_0.col(2));
+    const auto D_m      = elasty::fem::calc2dShapeMatrix(x_rest.col(0), x_rest.col(1), x_rest.col(2));
     const auto D_m_inv  = D_m.inverse();
     const auto F        = elasty::fem::calc2dTriangleDeformGrad(x.col(0), x.col(1), x.col(2), D_m_inv);
     const auto P        = calcPiolaStress(F);
