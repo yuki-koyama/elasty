@@ -58,6 +58,12 @@ struct TriangleMesh
     std::vector<Eigen::Matrix<double, 4, 6>> vec_PFPx_array;
 };
 
+struct Constraint
+{
+    size_t                                   vert_index;
+    std::function<Eigen::Vector2d(double t)> motion;
+};
+
 template <typename Derived> typename Derived::Scalar calcEnergyDensity(const Eigen::MatrixBase<Derived>& deform_grad)
 {
     switch (k_model)
@@ -88,8 +94,7 @@ public:
 
     void proceedFrame()
     {
-        const size_t              num_verts         = m_mesh.x_rest.size() / k_num_dims;
-        const std::vector<size_t> constrained_verts = {0, 1, 2, 3, 4};
+        const size_t num_verts = m_mesh.x_rest.size() / k_num_dims;
 
         // Reset forces
         m_mesh.f = Eigen::VectorXd::Zero(2 * num_verts);
@@ -127,10 +132,11 @@ public:
             }
 
             // Attach-spring potential
-            for (size_t vert_index : constrained_verts)
+            for (const auto& constraint : m_constraints)
             {
+                const size_t vert_index   = constraint.vert_index;
                 const auto   p            = x.segment<2>(vert_index * 2);
-                const auto   q            = m_mesh.x_rest.segment<2>(vert_index * 2);
+                const auto   q            = constraint.motion(m_physics_time + m_delta_physics_time);
                 const double squared_dist = (p - q).squaredNorm();
 
                 sum += 0.5 * k_spring_stiffness * squared_dist;
@@ -167,11 +173,12 @@ public:
                 sum.segment<2>(2 * indices[2]) += PEPx.segment<2>(2 * 2);
             }
 
-            for (size_t vert_index : constrained_verts)
+            for (const auto& constraint : m_constraints)
             {
-                const auto p = x.segment<2>(vert_index * 2);
-                const auto q = m_mesh.x_rest.segment<2>(vert_index * 2);
-                const auto r = p - q;
+                const size_t vert_index = constraint.vert_index;
+                const auto   p          = x.segment<2>(vert_index * 2);
+                const auto   q          = constraint.motion(m_physics_time + m_delta_physics_time);
+                const auto   r          = p - q;
 
                 sum.segment<2>(2 * vert_index) += k_spring_stiffness * r;
             }
@@ -212,6 +219,9 @@ public:
 
         // Apply naive damping
         m_mesh.v *= std::exp(-k_damping_factor * m_delta_physics_time);
+
+        // Update time counter
+        m_physics_time += m_delta_physics_time;
     }
 
     void initializeScene()
@@ -287,6 +297,15 @@ public:
             m_mesh.x = m_mesh.x_rest;
             m_mesh.v = Eigen::VectorXd::Zero(k_num_dims * num_verts);
             m_mesh.f = Eigen::VectorXd::Zero(k_num_dims * num_verts);
+
+            // Set constraints
+            for (size_t i = 0; i < num_rows + 1; ++i)
+            {
+                const auto constraint =
+                    Constraint{i, [&, i](double) -> Eigen::Vector2d { return m_mesh.x_rest.segment<2>(i * 2); }};
+
+                m_constraints.push_back(constraint);
+            }
         }
 
         // Perform precomputation
@@ -322,6 +341,9 @@ public:
 
 private:
     double m_delta_physics_time = 1.0 / 60.0;
+    double m_physics_time       = 0.0;
+
+    std::vector<Constraint> m_constraints;
 
     TriangleMesh m_mesh;
 };
