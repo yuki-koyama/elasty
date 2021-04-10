@@ -42,10 +42,18 @@ A research-oriented elastic body simulator
 - [ ] Volume conservation constraint [Müller+14]
 - [ ] ...
 
+### Continuum Materials for FEM Simulation
+
+- [x] St. Venant Kirchhoff model
+- [x] Co-rotational model
+- [ ] Stable Neo-Hookean model [Smith+18]
+- [ ] ...
+
 ## Additional Features
 
-- Alembic export of simulated cloth meshes
+- Alembic export of triangle meshes
 - Simple aerodynamics for clothes [Wilson+14]
+- 2D FEM simulation with explicit Euler integration
 
 ## Dependencies
 
@@ -142,6 +150,7 @@ Issue reports and pull requests are highly welcomed.
 - __[Macklin+19]__ Miles Macklin, Kier Storey, Michelle Lu, Pierre Terdiman, Nuttapong Chentanez, Stefan Jeschke, and Matthias Müller. 2019. Small steps in physics simulation. In Proc. SCA '19, 2:1–2:7. DOI: https://doi.org/10.1145/3309486.3340247
 - __[Müller+05]__ Matthias Müller, Bruno Heidelberger, Matthias Teschner, and Markus Gross. 2005. Meshless deformations based on shape matching. ACM Trans. Graph. 24, 3 (2005), 471-478. DOI: https://doi.org/10.1145/1073204.1073216
 - __[Müller+07]__ Matthias Müller, Bruno Heidelberger, Marcus Hennix, and John Ratcliff. 2007. Position based dynamics. J. Vis. Comun. Image Represent. 18, 2 (2007), 109-118. DOI: https://doi.org/10.1016/j.jvcir.2007.01.005
+- __[Smith+18]__ Breannan Smith, Fernando De Goes, and Theodore Kim. 2018. Stable Neo-Hookean Flesh Simulation. ACM Trans. Graph. 37, 2, 12:1-12:15 (July 2018). DOI: https://doi.org/10.1145/3180491
 - __[Umetani+14]__ Nobuyuki Umetani, Ryan Schmidt, and Jos Stam. 2014. Position-based elastic rods. In Proc. SCA '14, 21-30. DOI: https://doi.org/10.2312/sca.20141119
 - __[Wilson+14]__ Keith Wilson, Aleka McAdams, Hubert Leo, and Maryann Simmons. 2014. Simulating wind effects on cloth and hair in Disney’s Frozen. In ACM SIGGRAPH 2014 Talks, 48:1. DOI: https://doi.org/10.1145/2614106.2614120
 - (TODO)
