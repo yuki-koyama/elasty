@@ -62,6 +62,10 @@ if(ELASTY_EXAMPLES)
   set(BIGGER_EXAMPLES OFF CACHE INTERNAL "" FORCE)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/bigger)
 
+  set(MATHTOOLBOX_BUILD_EXAMPLES OFF CACHE INTERNAL "" FORCE)
+  set(MATHTOOLBOX_PYTHON_BINDINGS OFF CACHE INTERNAL "" FORCE)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/mathtoolbox)
+
   add_executable(cloth-alembic ${CMAKE_CURRENT_SOURCE_DIR}/examples/cloth-alembic/main.cpp)
   target_link_libraries(cloth-alembic elasty timer)
 
@@ -69,7 +73,7 @@ if(ELASTY_EXAMPLES)
   target_link_libraries(explicit-2d elasty timer Alembic)
 
   add_executable(variational-implicit-2d ${CMAKE_CURRENT_SOURCE_DIR}/examples/variational-implicit-2d/main.cpp)
-  target_link_libraries(variational-implicit-2d elasty timer Alembic)
+  target_link_libraries(variational-implicit-2d elasty timer Alembic mathtoolbox)
 
   add_executable(interactive-app ${CMAKE_CURRENT_SOURCE_DIR}/examples/interactive-app/main.cpp)
   target_link_libraries(interactive-app bigger elasty)

@@ -2,6 +2,7 @@
 #include <Eigen/LU>
 #include <elasty/alembic-manager.hpp>
 #include <elasty/fem.hpp>
+#include <mathtoolbox/l-bfgs.hpp>
 #include <timer.hpp>
 #include <vector>
 
@@ -201,45 +202,9 @@ public:
         };
 
         // Solve the minimization problem
-        const Eigen::VectorXd x_opt = [&]() -> Eigen::VectorXd {
-            Eigen::VectorXd x = y;
-            double          f = calcObjective(x);
-
-            // Perform the very naive gradient descent method
-            for (size_t iter = 0; iter < 1000; ++iter)
-            {
-                const Eigen::VectorXd grad = calcObjectiveGrad(x);
-
-                // Perform naive line search
-                double alpha   = 1.0;
-                bool   success = false;
-                for (size_t i = 0; i < 10; ++i)
-                {
-                    const auto   x_temp = x - alpha * grad;
-                    const double f_temp = calcObjective(x_temp);
-
-                    if (f_temp < f)
-                    {
-                        x = x_temp;
-                        f = f_temp;
-
-                        success = true;
-
-                        break;
-                    }
-
-                    alpha *= 0.1;
-                }
-
-                // Terminate if line search fails or the gradient is sufficiently small
-                if (!success || grad.squaredNorm() < 1e-12)
-                {
-                    break;
-                }
-            }
-
-            return x;
-        }();
+        unsigned        num_iters;
+        Eigen::VectorXd x_opt;
+        mathtoolbox::optimization::RunLBfgs(y, calcObjective, calcObjectiveGrad, 1e-06, 100, x_opt, num_iters);
 
         // Update the internal state
         m_mesh.v = (1.0 / h) * (x_opt - m_mesh.x);
