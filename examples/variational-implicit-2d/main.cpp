@@ -10,8 +10,8 @@ namespace
 {
     constexpr size_t k_num_dims = 2;
 
-    constexpr double k_youngs_modulus = 800.0;
-    constexpr double k_poisson_ratio  = 0.40;
+    constexpr double k_youngs_modulus = 200.0;
+    constexpr double k_poisson_ratio  = 0.45;
 
     constexpr double k_first_lame  = elasty::fem::calcFirstLame(k_youngs_modulus, k_poisson_ratio);
     constexpr double k_second_lame = elasty::fem::calcSecondLame(k_youngs_modulus, k_poisson_ratio);
@@ -252,7 +252,7 @@ public:
             // A simple cantilever
 
             constexpr size_t num_cols  = 20;
-            constexpr size_t num_rows  = 4;
+            constexpr size_t num_rows  = 5;
             constexpr size_t num_verts = (num_cols + 1) * (num_rows + 1);
             constexpr size_t num_elems = (num_cols * num_rows) * 2;
             constexpr double size      = 1.0;
@@ -301,10 +301,26 @@ public:
             // Set constraints
             for (size_t i = 0; i < num_rows + 1; ++i)
             {
-                const auto constraint =
-                    Constraint{i, [&, i](double) -> Eigen::Vector2d { return m_mesh.x_rest.segment<2>(i * 2); }};
+                const auto motion = [&, i](double) -> Eigen::Vector2d { return m_mesh.x_rest.segment<2>(i * 2); };
 
-                m_constraints.push_back(constraint);
+                m_constraints.push_back(Constraint{i, motion});
+            }
+            for (size_t i = (num_rows + 1) * num_cols; i < (num_rows + 1) * (num_cols + 1); ++i)
+            {
+                const auto ease = [](double x) { return -(std::cos(3.14159265358979 * x) - 1.0) * 0.5; };
+
+                const auto motion = [&, i](double t) -> Eigen::Vector2d {
+                    const auto   x_init = m_mesh.x_rest.segment<2>(i * 2);
+                    const auto   dir    = Eigen::Vector2d{3.0, 0.0};
+                    const double t_0    = 0.8;
+                    const double t_1    = t_0 + 1.0;
+                    const double a      = (t < t_0) ? 0.0 : ((t < t_1) ? t - t_0 : t_1 - t_0);
+                    const double b      = ease(a);
+
+                    return x_init + b * dir;
+                };
+
+                m_constraints.push_back(Constraint{i, motion});
             }
         }
 
