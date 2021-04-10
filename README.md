@@ -80,6 +80,7 @@ A research-oriented elastic body simulator
   - string-util <https://github.com/yuki-koyama/string-util> [MIT]
   - tinyobjloader <https://github.com/syoyo/tinyobjloader> [MIT]
 - timer <https://github.com/yuki-koyama/timer> [MIT]
+- mathtoolbox <https://github.com/yuki-koyama/mathtoolbox/> [MIT]
 
 ### Tests
 
