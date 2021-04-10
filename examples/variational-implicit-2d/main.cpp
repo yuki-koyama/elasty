@@ -109,7 +109,7 @@ public:
         const Eigen::VectorXd x_opt = m_mesh.x;
 
         // Update the internal state
-        m_mesh.v = x_opt - m_mesh.x;
+        m_mesh.v = (1.0 / h) * (x_opt - m_mesh.x);
         m_mesh.x = x_opt;
 
         // Apply naive damping
