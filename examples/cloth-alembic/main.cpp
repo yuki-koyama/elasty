@@ -1,8 +1,8 @@
+#include <elasty/alembic-manager.hpp>
 #include <elasty/cloth-sim-object.hpp>
 #include <elasty/constraint.hpp>
 #include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
-#include <elasty/utils.hpp>
 #include <timer.hpp>
 
 // #define SPHERE_COLLISION
@@ -146,12 +146,12 @@ int main(int argc, char** argv)
     engine.initializeScene();
 
     auto alembic_manager =
-        elasty::createAlembicManager("./cloth.abc", engine.m_cloth_sim_object, engine.getDeltaFrameTime());
+        elasty::createClothAlembicManager("./cloth.abc", engine.m_cloth_sim_object, engine.getDeltaFrameTime());
 
     for (unsigned int frame = 0; frame < 300; ++frame)
     {
         timer::Timer t(std::to_string(frame));
-        elasty::submitCurrentStatus(alembic_manager);
+        alembic_manager->submitCurrentStatus();
 
         engine.proceedFrame();
     }

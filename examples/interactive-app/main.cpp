@@ -9,7 +9,6 @@
 #include <elasty/constraint.hpp>
 #include <elasty/engine.hpp>
 #include <elasty/particle.hpp>
-#include <elasty/utils.hpp>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -18,6 +17,10 @@
 
 // #define CAPTURE_SCREEN
 // #define EXPORT_ALEMBIC
+
+#ifdef EXPORT_ALEMBIC
+#include <elasty/alembic-manager.hpp>
+#endif
 
 namespace
 {
@@ -206,8 +209,8 @@ public:
         m_dynamic_mesh_primitive = std::make_unique<bigger::DynamicMeshPrimitive>(vertex_data, triangle_list);
 
 #ifdef EXPORT_ALEMBIC
-        m_alembic_manager = elasty::createAlembicManager("./cloth.abc", m_cloth_sim_object, 1.0 / 60.0);
-        elasty::submitCurrentStatus(m_alembic_manager);
+        m_alembic_manager = elasty::createClothAlembicManager("./cloth.abc", m_cloth_sim_object, 1.0 / 60.0);
+        m_alembic_manager->submitCurrentStatus();
 #endif
     }
 
@@ -215,7 +218,7 @@ public:
     {
 #ifdef EXPORT_ALEMBIC
         assert(m_alembic_manager != nullptr);
-        elasty::submitCurrentStatus(m_alembic_manager);
+        m_alembic_manager->submitCurrentStatus();
 #endif
     }
 

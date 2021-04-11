@@ -62,8 +62,18 @@ if(ELASTY_EXAMPLES)
   set(BIGGER_EXAMPLES OFF CACHE INTERNAL "" FORCE)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/bigger)
 
+  set(MATHTOOLBOX_BUILD_EXAMPLES OFF CACHE INTERNAL "" FORCE)
+  set(MATHTOOLBOX_PYTHON_BINDINGS OFF CACHE INTERNAL "" FORCE)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/mathtoolbox)
+
   add_executable(cloth-alembic ${CMAKE_CURRENT_SOURCE_DIR}/examples/cloth-alembic/main.cpp)
   target_link_libraries(cloth-alembic elasty timer)
+
+  add_executable(explicit-2d ${CMAKE_CURRENT_SOURCE_DIR}/examples/explicit-2d/main.cpp)
+  target_link_libraries(explicit-2d elasty timer Alembic)
+
+  add_executable(variational-implicit-2d ${CMAKE_CURRENT_SOURCE_DIR}/examples/variational-implicit-2d/main.cpp)
+  target_link_libraries(variational-implicit-2d elasty timer Alembic mathtoolbox)
 
   add_executable(interactive-app ${CMAKE_CURRENT_SOURCE_DIR}/examples/interactive-app/main.cpp)
   target_link_libraries(interactive-app bigger elasty)
@@ -97,7 +107,11 @@ if(ELASTY_TESTS)
   add_executable(constraint-test ${CMAKE_CURRENT_SOURCE_DIR}/tests/constraint-test.cpp)
   target_link_libraries(constraint-test elasty gtest_main)
 
+  add_executable(fem-test ${CMAKE_CURRENT_SOURCE_DIR}/tests/fem-test.cpp)
+  target_link_libraries(fem-test elasty gtest_main)
+
   add_test(NAME constraint-test COMMAND $<TARGET_FILE:constraint-test>)
+  add_test(NAME fem-test COMMAND $<TARGET_FILE:fem-test>)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -110,10 +124,13 @@ if(CLANG_FORMAT)
     ${headers}
     ${sources}
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/cloth-alembic/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/explicit-2d/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/variational-implicit-2d/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/interactive-app/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/pbd-xpbd-comparison/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/aerodynamics/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/constraint-test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/fem-test.cpp
   )
   add_custom_target(elasty-format COMMAND ${CLANG_FORMAT} -i ${format_target_sources} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()

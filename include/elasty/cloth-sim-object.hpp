@@ -25,7 +25,7 @@ namespace elasty
             Cross,
         };
 
-        using TriangleList = Eigen::Matrix<int32_t, Eigen::Dynamic, 3, Eigen::RowMajor>;
+        using TriangleList = Eigen::Matrix<std::int32_t, Eigen::Dynamic, 3, Eigen::RowMajor>;
         using UvList       = Eigen::Matrix<float, Eigen::Dynamic, 2 * 3, Eigen::RowMajor>;
 
         ClothSimObject(const unsigned           resolution,
