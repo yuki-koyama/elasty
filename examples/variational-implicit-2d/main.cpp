@@ -226,102 +226,76 @@ public:
 
     void initializeScene()
     {
-        if constexpr (false)
+        constexpr size_t num_cols  = 20;
+        constexpr size_t num_rows  = 5;
+        constexpr size_t num_verts = (num_cols + 1) * (num_rows + 1);
+        constexpr size_t num_elems = (num_cols * num_rows) * 2;
+        constexpr double size      = 1.0;
+
+        m_mesh.elems.resize(num_elems, 3);
+        m_mesh.x_rest.resize(num_verts * k_num_dims);
+
+        // Generate a triangle mesh
+        for (size_t col = 0; col < num_cols; ++col)
         {
-            // A simple square
-
-            constexpr size_t num_verts = 4;
-            constexpr size_t num_elems = 2;
-
-            m_mesh.elems.resize(num_elems, 3);
-            m_mesh.elems.row(0) << 0, 1, 2;
-            m_mesh.elems.row(1) << 1, 3, 2;
-
-            m_mesh.x_rest.resize(num_verts * k_num_dims);
-            m_mesh.x_rest.segment(k_num_dims * 0, k_num_dims) = Eigen::Vector2d{0.0, 0.0};
-            m_mesh.x_rest.segment(k_num_dims * 1, k_num_dims) = Eigen::Vector2d{1.0, 0.0};
-            m_mesh.x_rest.segment(k_num_dims * 2, k_num_dims) = Eigen::Vector2d{0.0, 1.0};
-            m_mesh.x_rest.segment(k_num_dims * 3, k_num_dims) = Eigen::Vector2d{1.0, 1.0};
-
-            m_mesh.x = m_mesh.x_rest;
-            m_mesh.v = Eigen::VectorXd::Random(k_num_dims * num_verts);
-            m_mesh.f = Eigen::VectorXd::Zero(k_num_dims * num_verts);
-        }
-        else
-        {
-            // A simple cantilever
-
-            constexpr size_t num_cols  = 20;
-            constexpr size_t num_rows  = 5;
-            constexpr size_t num_verts = (num_cols + 1) * (num_rows + 1);
-            constexpr size_t num_elems = (num_cols * num_rows) * 2;
-            constexpr double size      = 1.0;
-
-            m_mesh.elems.resize(num_elems, 3);
-            m_mesh.x_rest.resize(num_verts * k_num_dims);
-
-            // Generate a triangle mesh
-            for (size_t col = 0; col < num_cols; ++col)
-            {
-                for (size_t row = 0; row < num_rows; ++row)
-                {
-                    const auto base = col * (num_rows + 1) + row;
-
-                    m_mesh.elems.row(2 * num_rows * col + 2 * row + 0) << 0 + base, 1 + base, (num_rows + 1) + 1 + base;
-                    m_mesh.elems.row(2 * num_rows * col + 2 * row + 1) << 0 + base, (num_rows + 1) + 1 + base,
-                        (num_rows + 1) + base;
-
-                    m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + row), k_num_dims) =
-                        Eigen::Vector2d{col * 1.0, -1.0 * row};
-                }
-                m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + num_rows), k_num_dims) =
-                    Eigen::Vector2d{col * 1.0, -1.0 * num_rows};
-            }
             for (size_t row = 0; row < num_rows; ++row)
             {
-                m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * num_cols + row), k_num_dims) =
-                    Eigen::Vector2d{num_cols * 1.0, -1.0 * row};
+                const auto base = col * (num_rows + 1) + row;
+
+                m_mesh.elems.row(2 * num_rows * col + 2 * row + 0) << 0 + base, 1 + base, (num_rows + 1) + 1 + base;
+                m_mesh.elems.row(2 * num_rows * col + 2 * row + 1) << 0 + base, (num_rows + 1) + 1 + base,
+                    (num_rows + 1) + base;
+
+                m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + row), k_num_dims) =
+                    Eigen::Vector2d{col * 1.0, -1.0 * row};
             }
-            m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * num_cols + num_rows), k_num_dims) =
-                Eigen::Vector2d{num_cols * 1.0, -1.0 * num_rows};
+            m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + num_rows), k_num_dims) =
+                Eigen::Vector2d{col * 1.0, -1.0 * num_rows};
+        }
+        for (size_t row = 0; row < num_rows; ++row)
+        {
+            m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * num_cols + row), k_num_dims) =
+                Eigen::Vector2d{num_cols * 1.0, -1.0 * row};
+        }
+        m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * num_cols + num_rows), k_num_dims) =
+            Eigen::Vector2d{num_cols * 1.0, -1.0 * num_rows};
 
-            // Set transform
-            m_mesh.x_rest *= 1.0 / static_cast<double>(num_rows);
-            for (size_t vert = 0; vert < num_verts; ++vert)
-            {
-                m_mesh.x_rest[2 * vert + 1] += 0.5;
-            }
-            m_mesh.x_rest *= size;
+        // Set transform
+        m_mesh.x_rest *= 1.0 / static_cast<double>(num_rows);
+        for (size_t vert = 0; vert < num_verts; ++vert)
+        {
+            m_mesh.x_rest[2 * vert + 1] += 0.5;
+        }
+        m_mesh.x_rest *= size;
 
-            // Initialize other values
-            m_mesh.x = m_mesh.x_rest;
-            m_mesh.v = Eigen::VectorXd::Zero(k_num_dims * num_verts);
-            m_mesh.f = Eigen::VectorXd::Zero(k_num_dims * num_verts);
+        // Initialize other values
+        m_mesh.x = m_mesh.x_rest;
+        m_mesh.v = Eigen::VectorXd::Zero(k_num_dims * num_verts);
+        m_mesh.f = Eigen::VectorXd::Zero(k_num_dims * num_verts);
 
-            // Set constraints
-            for (size_t i = 0; i < num_rows + 1; ++i)
-            {
-                const auto motion = [&, i](double) -> Eigen::Vector2d { return m_mesh.x_rest.segment<2>(i * 2); };
+        // Set constraints
+        for (size_t i = 0; i < num_rows + 1; ++i)
+        {
+            const auto motion = [&, i](double) -> Eigen::Vector2d { return m_mesh.x_rest.segment<2>(i * 2); };
 
-                m_constraints.push_back(Constraint{i, motion});
-            }
-            for (size_t i = (num_rows + 1) * num_cols; i < (num_rows + 1) * (num_cols + 1); ++i)
-            {
-                const auto ease = [](double x) { return -(std::cos(3.14159265358979 * x) - 1.0) * 0.5; };
+            m_constraints.push_back(Constraint{i, motion});
+        }
+        for (size_t i = (num_rows + 1) * num_cols; i < (num_rows + 1) * (num_cols + 1); ++i)
+        {
+            const auto ease = [](double x) { return -(std::cos(3.14159265358979 * x) - 1.0) * 0.5; };
 
-                const auto motion = [&, i](double t) -> Eigen::Vector2d {
-                    const auto   x_init = m_mesh.x_rest.segment<2>(i * 2);
-                    const auto   dir    = Eigen::Vector2d{3.0, 0.0};
-                    const double t_0    = 0.8;
-                    const double t_1    = t_0 + 1.0;
-                    const double a      = (t < t_0) ? 0.0 : ((t < t_1) ? t - t_0 : t_1 - t_0);
-                    const double b      = ease(a);
+            const auto motion = [&, i](double t) -> Eigen::Vector2d {
+                const auto   x_init = m_mesh.x_rest.segment<2>(i * 2);
+                const auto   dir    = Eigen::Vector2d{3.0, 0.0};
+                const double t_0    = 0.8;
+                const double t_1    = t_0 + 1.0;
+                const double a      = (t < t_0) ? 0.0 : ((t < t_1) ? t - t_0 : t_1 - t_0);
+                const double b      = ease(a);
 
-                    return x_init + b * dir;
-                };
+                return x_init + b * dir;
+            };
 
-                m_constraints.push_back(Constraint{i, motion});
-            }
+            m_constraints.push_back(Constraint{i, motion});
         }
 
         // Perform precomputation
