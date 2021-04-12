@@ -83,6 +83,33 @@ namespace elasty::fem
         return shape_matrix;
     }
 
+    /// \brief Calculate either the "deformed" shape matrix (D_s) or "reference" shape matrix (D_m) of a tetrahedron.
+    ///
+    /// \param x_0 A 3D vector.
+    ///
+    /// \param x_1 A 3D vector.
+    ///
+    /// \param x_2 A 3D vector.
+    ///
+    /// \param x_3 A 3D vector.
+    ///
+    /// \details Reference: [1]
+    template <typename Derived>
+    Eigen::Matrix<typename Derived::Scalar, 3, 3> calc3dShapeMatrix(const Eigen::MatrixBase<Derived>& x_0,
+                                                                    const Eigen::MatrixBase<Derived>& x_1,
+                                                                    const Eigen::MatrixBase<Derived>& x_2,
+                                                                    const Eigen::MatrixBase<Derived>& x_3)
+    {
+        using Mat = Eigen::Matrix<typename Derived::Scalar, 3, 3>;
+
+        Mat shape_matrix;
+        shape_matrix.col(0) = x_1 - x_0;
+        shape_matrix.col(1) = x_2 - x_0;
+        shape_matrix.col(2) = x_3 - x_0;
+
+        return shape_matrix;
+    }
+
     /// \brief Calculate the area of a 2D triangle
     template <typename Derived>
     typename Derived::Scalar calc2dTriangleArea(const Eigen::MatrixBase<Derived>& x_0,
