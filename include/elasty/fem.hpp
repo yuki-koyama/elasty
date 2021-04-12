@@ -2,6 +2,7 @@
 #define ELASTY_FEM_HPP
 
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <Eigen/SVD>
 
 // References:
@@ -110,7 +111,7 @@ namespace elasty::fem
         return shape_matrix;
     }
 
-    /// \brief Calculate the area of a 2D triangle
+    /// \brief Calculate the area of a triangle in 2D
     template <typename Derived>
     typename Derived::Scalar calc2dTriangleArea(const Eigen::MatrixBase<Derived>& x_0,
                                                 const Eigen::MatrixBase<Derived>& x_1,
@@ -120,6 +121,20 @@ namespace elasty::fem
         const auto r_2 = x_2 - x_0;
 
         return 0.5 * std::abs(r_1(0) * r_2(1) - r_2(0) * r_1(1));
+    }
+
+    /// \brief Calculate the volume of a tetrahedron
+    template <typename Derived>
+    typename Derived::Scalar calcTetrahedronVolume(const Eigen::MatrixBase<Derived>& x_0,
+                                                   const Eigen::MatrixBase<Derived>& x_1,
+                                                   const Eigen::MatrixBase<Derived>& x_2,
+                                                   const Eigen::MatrixBase<Derived>& x_3)
+    {
+        const auto r_1 = x_1 - x_0;
+        const auto r_2 = x_2 - x_0;
+        const auto r_3 = x_3 - x_0;
+
+        return std::abs(r_1.dot(r_2.cross(r_3))) / 6.0;
     }
 
     /// \brief Calculate the diagonal elements of the lumped mass matrix.
