@@ -304,10 +304,10 @@ public:
         }
 
         // Perform precomputation
-        m_mesh.volume_array.resize(m_mesh.elems.cols());
-        m_mesh.rest_shape_mat_inv_array.resize(m_mesh.elems.cols());
-        m_mesh.vec_PFPx_array.resize(m_mesh.elems.cols());
-        for (std::size_t elem_index = 0; elem_index < m_mesh.elems.cols(); ++elem_index)
+        m_mesh.volume_array.resize(num_elems);
+        m_mesh.rest_shape_mat_inv_array.resize(num_elems);
+        m_mesh.vec_PFPx_array.resize(num_elems);
+        for (std::size_t elem_index = 0; elem_index < num_elems; ++elem_index)
         {
             const auto& indices = m_mesh.elems.col(elem_index);
 
