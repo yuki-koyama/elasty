@@ -271,6 +271,20 @@ namespace elasty::fem
         return F;
     }
 
+    template <typename DerivedVec, typename DerivedMat>
+    Eigen::Matrix<typename DerivedVec::Scalar, 3, 3>
+    calcTetrahedronDeformGrad(const Eigen::MatrixBase<DerivedVec>& x_0,
+                              const Eigen::MatrixBase<DerivedVec>& x_1,
+                              const Eigen::MatrixBase<DerivedVec>& x_2,
+                              const Eigen::MatrixBase<DerivedVec>& x_3,
+                              const Eigen::MatrixBase<DerivedMat>& rest_shape_mat_inv)
+    {
+        const auto D_s = elasty::fem::calc3dShapeMatrix(x_0, x_1, x_2, x_3);
+        const auto F   = D_s * rest_shape_mat_inv;
+
+        return F;
+    }
+
     /// \brief Calculate analytic partial derivatives of the deformation gradient $\mathbf{F}$ with respect to the
     /// vertex positions $\mathbf{x}$ (i.e., $\frac{\partial \mathbf{F}}{\partial \mathbf{x}}$) and return it in the
     /// "flattened" format.
