@@ -243,7 +243,7 @@ public:
                                                m_mesh.x_rest.segment(2 * indices[2], 2))
                     .inverse();
             m_mesh.vec_PFPx_array[row] =
-                elasty::fem::calcFlattenedPartDeformGradPartPos(m_mesh.rest_shape_mat_inv_array[row]);
+                elasty::fem::calcVecTrianglePartDeformGradPartPos(m_mesh.rest_shape_mat_inv_array[row]);
         }
         m_mesh.lumped_mass = elasty::fem::calcLumpedMasses(m_mesh.x_rest, m_mesh.elems, m_mesh.mass);
     }

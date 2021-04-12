@@ -294,7 +294,7 @@ namespace elasty::fem
     /// Reference: [2, Appendix D]
     template <typename Derived>
     Eigen::Matrix<typename Derived::Scalar, 4, 6>
-    calcFlattenedPartDeformGradPartPos(const Eigen::MatrixBase<Derived>& rest_shape_mat_inv)
+    calcVecTrianglePartDeformGradPartPos(const Eigen::MatrixBase<Derived>& rest_shape_mat_inv)
     {
         using Scalar = typename Derived::Scalar;
 
