@@ -8,7 +8,7 @@
 
 namespace
 {
-    constexpr size_t k_num_dims = 2;
+    constexpr std::size_t k_num_dims = 2;
 
     constexpr double k_youngs_modulus = 200.0;
     constexpr double k_poisson_ratio  = 0.45;
@@ -60,8 +60,9 @@ struct TriangleMesh
 
 struct Constraint
 {
-    size_t                                   vert_index;
+    std::size_t                              vert_index;
     std::function<Eigen::Vector2d(double t)> motion;
+    double                                   stiffness;
 };
 
 template <typename Derived> typename Derived::Scalar calcEnergyDensity(const Eigen::MatrixBase<Derived>& deform_grad)
@@ -94,13 +95,13 @@ public:
 
     void proceedFrame()
     {
-        const size_t num_verts = m_mesh.x_rest.size() / k_num_dims;
+        const std::size_t num_verts = m_mesh.x_rest.size() / k_num_dims;
 
         // Reset forces
         m_mesh.f = Eigen::VectorXd::Zero(2 * num_verts);
 
         // Apply gravity force
-        for (size_t i = 0; i < num_verts; ++i)
+        for (std::size_t i = 0; i < num_verts; ++i)
         {
             m_mesh.f[i * 2 + 1] += m_mesh.lumped_mass(i * 2 + 1) * (-9.80665);
         }
@@ -116,7 +117,7 @@ public:
             double sum = 0.0;
 
             // Elastic potential
-            for (size_t i = 0; i < m_mesh.elems.rows(); ++i)
+            for (std::size_t i = 0; i < m_mesh.elems.rows(); ++i)
             {
                 const auto& indices = m_mesh.elems.row(i);
 
@@ -134,12 +135,13 @@ public:
             // Attach-spring potential
             for (const auto& constraint : m_constraints)
             {
-                const size_t vert_index   = constraint.vert_index;
-                const auto   p            = x.segment<2>(vert_index * 2);
-                const auto   q            = constraint.motion(m_physics_time + m_delta_physics_time);
-                const double squared_dist = (p - q).squaredNorm();
+                const std::size_t vert_index   = constraint.vert_index;
+                const double&     k            = constraint.stiffness;
+                const auto        p            = x.segment<2>(vert_index * 2);
+                const auto        q            = constraint.motion(m_physics_time + m_delta_physics_time);
+                const double      squared_dist = (p - q).squaredNorm();
 
-                sum += 0.5 * k_spring_stiffness * squared_dist;
+                sum += 0.5 * k * squared_dist;
             }
 
             return sum;
@@ -147,7 +149,7 @@ public:
 
         const auto calcInternalPotentialGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
             Eigen::VectorXd sum = Eigen::VectorXd::Zero(x.size());
-            for (size_t i = 0; i < m_mesh.elems.rows(); ++i)
+            for (std::size_t i = 0; i < m_mesh.elems.rows(); ++i)
             {
                 const auto& indices = m_mesh.elems.row(i);
 
@@ -175,12 +177,13 @@ public:
 
             for (const auto& constraint : m_constraints)
             {
-                const size_t vert_index = constraint.vert_index;
-                const auto   p          = x.segment<2>(vert_index * 2);
-                const auto   q          = constraint.motion(m_physics_time + m_delta_physics_time);
-                const auto   r          = p - q;
+                const std::size_t vert_index = constraint.vert_index;
+                const double&     k          = constraint.stiffness;
+                const auto        p          = x.segment<2>(vert_index * 2);
+                const auto        q          = constraint.motion(m_physics_time + m_delta_physics_time);
+                const auto        r          = p - q;
 
-                sum.segment<2>(2 * vert_index) += k_spring_stiffness * r;
+                sum.segment<2>(2 * vert_index) += k * r;
             }
 
             return sum;
@@ -226,19 +229,19 @@ public:
 
     void initializeScene()
     {
-        constexpr size_t num_cols  = 20;
-        constexpr size_t num_rows  = 5;
-        constexpr size_t num_verts = (num_cols + 1) * (num_rows + 1);
-        constexpr size_t num_elems = (num_cols * num_rows) * 2;
-        constexpr double size      = 1.0;
+        constexpr std::size_t num_cols  = 20;
+        constexpr std::size_t num_rows  = 5;
+        constexpr std::size_t num_verts = (num_cols + 1) * (num_rows + 1);
+        constexpr std::size_t num_elems = (num_cols * num_rows) * 2;
+        constexpr double      size      = 1.0;
 
         m_mesh.elems.resize(num_elems, 3);
         m_mesh.x_rest.resize(num_verts * k_num_dims);
 
         // Generate a triangle mesh
-        for (size_t col = 0; col < num_cols; ++col)
+        for (std::size_t col = 0; col < num_cols; ++col)
         {
-            for (size_t row = 0; row < num_rows; ++row)
+            for (std::size_t row = 0; row < num_rows; ++row)
             {
                 const auto base = col * (num_rows + 1) + row;
 
@@ -252,7 +255,7 @@ public:
             m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * col + num_rows), k_num_dims) =
                 Eigen::Vector2d{col * 1.0, -1.0 * num_rows};
         }
-        for (size_t row = 0; row < num_rows; ++row)
+        for (std::size_t row = 0; row < num_rows; ++row)
         {
             m_mesh.x_rest.segment(k_num_dims * ((num_rows + 1) * num_cols + row), k_num_dims) =
                 Eigen::Vector2d{num_cols * 1.0, -1.0 * row};
@@ -262,7 +265,7 @@ public:
 
         // Set transform
         m_mesh.x_rest *= 1.0 / static_cast<double>(num_rows);
-        for (size_t vert = 0; vert < num_verts; ++vert)
+        for (std::size_t vert = 0; vert < num_verts; ++vert)
         {
             m_mesh.x_rest[2 * vert + 1] += 0.5;
         }
@@ -274,13 +277,13 @@ public:
         m_mesh.f = Eigen::VectorXd::Zero(k_num_dims * num_verts);
 
         // Set constraints
-        for (size_t i = 0; i < num_rows + 1; ++i)
+        for (std::size_t i = 0; i < num_rows + 1; ++i)
         {
             const auto motion = [&, i](double) -> Eigen::Vector2d { return m_mesh.x_rest.segment<2>(i * 2); };
 
-            m_constraints.push_back(Constraint{i, motion});
+            m_constraints.push_back(Constraint{i, motion, k_spring_stiffness});
         }
-        for (size_t i = (num_rows + 1) * num_cols; i < (num_rows + 1) * (num_cols + 1); ++i)
+        for (std::size_t i = (num_rows + 1) * num_cols; i < (num_rows + 1) * (num_cols + 1); ++i)
         {
             const auto ease = [](double x) { return -(std::cos(3.14159265358979 * x) - 1.0) * 0.5; };
 
@@ -295,24 +298,24 @@ public:
                 return x_init + b * dir;
             };
 
-            m_constraints.push_back(Constraint{i, motion});
+            m_constraints.push_back(Constraint{i, motion, k_spring_stiffness});
         }
 
         // Perform precomputation
         m_mesh.area_array.resize(m_mesh.elems.rows());
         m_mesh.rest_shape_mat_inv_array.resize(m_mesh.elems.rows());
         m_mesh.vec_PFPx_array.resize(m_mesh.elems.rows());
-        for (size_t row = 0; row < m_mesh.elems.rows(); ++row)
+        for (std::size_t row = 0; row < m_mesh.elems.rows(); ++row)
         {
             const auto& indices = m_mesh.elems.row(row);
 
-            m_mesh.area_array[row] = elasty::fem::calc2dTriangleArea(m_mesh.x_rest.segment(2 * indices[0], 2),
-                                                                     m_mesh.x_rest.segment(2 * indices[1], 2),
-                                                                     m_mesh.x_rest.segment(2 * indices[2], 2));
+            m_mesh.area_array[row] = elasty::fem::calc2dTriangleArea(m_mesh.x_rest.segment<2>(2 * indices[0]),
+                                                                     m_mesh.x_rest.segment<2>(2 * indices[1]),
+                                                                     m_mesh.x_rest.segment<2>(2 * indices[2]));
             m_mesh.rest_shape_mat_inv_array[row] =
-                elasty::fem::calc2dShapeMatrix(m_mesh.x_rest.segment(2 * indices[0], 2),
-                                               m_mesh.x_rest.segment(2 * indices[1], 2),
-                                               m_mesh.x_rest.segment(2 * indices[2], 2))
+                elasty::fem::calc2dShapeMatrix(m_mesh.x_rest.segment<2>(2 * indices[0]),
+                                               m_mesh.x_rest.segment<2>(2 * indices[1]),
+                                               m_mesh.x_rest.segment<2>(2 * indices[2]))
                     .inverse();
             m_mesh.vec_PFPx_array[row] =
                 elasty::fem::calcFlattenedPartDeformGradPartPos(m_mesh.rest_shape_mat_inv_array[row]);
