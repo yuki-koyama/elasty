@@ -109,27 +109,29 @@ namespace elasty::fem
 
         assert(verts.cols() == 1);
         assert(verts.size() % 2 == 0);
-        assert(elems.cols() == 3);
+        assert(elems.rows() == 3);
 
         const auto num_verts = verts.size() / 2;
 
         Scalar total_area = 0;
         Vec    masses     = Vec::Zero(verts.size());
 
-        for (size_t row = 0; row < elems.rows(); ++row)
+        for (std::size_t elem_index = 0; elem_index < elems.cols(); ++elem_index)
         {
-            const Scalar area = calc2dTriangleArea(verts.segment(2 * elems(row, 0), 2),
-                                                   verts.segment(2 * elems(row, 1), 2),
-                                                   verts.segment(2 * elems(row, 2), 2));
+            const auto& indices = elems.col(elem_index);
+
+            const Scalar area = calc2dTriangleArea(verts.template segment<2>(2 * indices[0]),
+                                                   verts.template segment<2>(2 * indices[1]),
+                                                   verts.template segment<2>(2 * indices[2]));
 
             const Scalar one_third_area = (1.0 / 3.0) * area;
 
-            masses(2 * elems(row, 0) + 0) += one_third_area;
-            masses(2 * elems(row, 0) + 1) += one_third_area;
-            masses(2 * elems(row, 1) + 0) += one_third_area;
-            masses(2 * elems(row, 1) + 1) += one_third_area;
-            masses(2 * elems(row, 2) + 0) += one_third_area;
-            masses(2 * elems(row, 2) + 1) += one_third_area;
+            masses(2 * indices[0] + 0) += one_third_area;
+            masses(2 * indices[0] + 1) += one_third_area;
+            masses(2 * indices[1] + 0) += one_third_area;
+            masses(2 * indices[1] + 1) += one_third_area;
+            masses(2 * indices[2] + 0) += one_third_area;
+            masses(2 * indices[2] + 1) += one_third_area;
 
             total_area += area;
         }
@@ -262,7 +264,7 @@ namespace elasty::fem
         PDsPx[5] << 0.0, 0.0, 0.0, 1.0;
 
         Eigen::Matrix<Scalar, 4, 6> vec_PFPx;
-        for (size_t i = 0; i < 6; ++i)
+        for (std::size_t i = 0; i < 6; ++i)
         {
             const Eigen::Matrix<Scalar, 2, 2> PFPx_i = PDsPx[i] * rest_shape_mat_inv;
 
