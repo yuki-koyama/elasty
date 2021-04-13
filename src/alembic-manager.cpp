@@ -62,12 +62,12 @@ public:
     TriangleMesh2dAlembicManager(const std::string&  output_file_path,
                                  const double        delta_time,
                                  const std::size_t   num_verts,
-                                 const std::size_t   num_triangles,
+                                 const std::size_t   num_elems,
                                  const double*       positions,
                                  const std::int32_t* indices)
         : AlembicManagerBase(output_file_path, delta_time, "Mesh"),
           m_num_verts(num_verts),
-          m_num_triangles(num_triangles),
+          m_num_elems(num_elems),
           m_positions(positions),
           m_indices(indices)
     {
@@ -79,14 +79,14 @@ public:
         using namespace Alembic::Abc;
         using namespace Alembic::AbcGeom;
 
-        const std::size_t               num_counts = m_num_triangles;
+        const std::size_t               num_counts = m_num_elems;
         const std::vector<std::int32_t> counts(num_counts, 3);
 
         // Ignore UV
         const OV2fGeomParam::Sample geom_param_sample = OV2fGeomParam::Sample();
 
         const OPolyMeshSchema::Sample sample(V3fArraySample((const V3f*) getAlembicPositionArray(), getNumVerts()),
-                                             Int32ArraySample(m_indices, m_num_triangles * 3),
+                                             Int32ArraySample(m_indices, m_num_elems * 3),
                                              Int32ArraySample(counts.data(), num_counts),
                                              geom_param_sample);
 
@@ -105,7 +105,7 @@ private:
     std::int32_t getNumVerts() const override { return m_num_verts; }
 
     const std::size_t m_num_verts;
-    const std::size_t m_num_triangles;
+    const std::size_t m_num_elems;
 
     const double*       m_positions;
     const std::int32_t* m_indices;
@@ -175,14 +175,13 @@ elasty::createClothAlembicManager(const std::string&                    file_pat
     return std::make_shared<ClothAlembicManager>(file_path, delta_time, cloth_sim_object);
 }
 
-std::shared_ptr<elasty::AbstractAlembicManager>
-elasty::createTriangleMesh2dAlembicManager(const std::string&  file_path,
-                                           const double        delta_time,
-                                           const std::size_t   num_verts,
-                                           const std::size_t   num_triangles,
-                                           const double*       positions,
-                                           const std::int32_t* indices)
+std::shared_ptr<elasty::AbstractAlembicManager> elasty::createTriangleMesh2dAlembicManager(const std::string& file_path,
+                                                                                           const double      delta_time,
+                                                                                           const std::size_t num_verts,
+                                                                                           const std::size_t num_elems,
+                                                                                           const double*     positions,
+                                                                                           const std::int32_t* indices)
 {
     return std::make_shared<TriangleMesh2dAlembicManager>(
-        file_path, delta_time, num_verts, num_triangles, positions, indices);
+        file_path, delta_time, num_verts, num_elems, positions, indices);
 }
