@@ -184,6 +184,52 @@ namespace elasty::fem
         return (total_mass / total_area) * masses;
     }
 
+    /// \brief Calculate the diagonal elements of the lumped mass matrix.
+    template <typename DerivedV, typename DerivedF>
+    Eigen::Matrix<typename DerivedV::Scalar, Eigen::Dynamic, 1>
+    calcTetraMeshLumpedMass(const Eigen::MatrixBase<DerivedV>& verts,
+                            const Eigen::MatrixBase<DerivedF>& elems,
+                            const typename DerivedV::Scalar    total_mass)
+    {
+        using Scalar = typename DerivedV::Scalar;
+        using Vec    = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
+
+        assert(verts.cols() == 1);
+        assert(verts.size() % 3 == 0);
+        assert(elems.rows() == 4);
+
+        const auto num_verts = verts.size() / 3;
+        const auto num_elems = elems.cols();
+
+        Scalar total_vol = 0;
+        Vec    masses    = Vec::Zero(verts.size());
+
+        for (std::size_t elem_index = 0; elem_index < num_elems; ++elem_index)
+        {
+            const auto& indices = elems.col(elem_index);
+
+            const Scalar vol = calcTetrahedronVolume(verts.template segment<3>(3 * indices[0]),
+                                                     verts.template segment<3>(3 * indices[1]),
+                                                     verts.template segment<3>(3 * indices[2]),
+                                                     verts.template segment<3>(3 * indices[3]));
+
+            const Scalar one_fourth_vol = (1.0 / 4.0) * vol;
+
+            masses.template segment<3>(3 * indices[0]) += one_fourth_vol * Eigen::Vector3d::Ones();
+            masses.template segment<3>(3 * indices[1]) += one_fourth_vol * Eigen::Vector3d::Ones();
+            masses.template segment<3>(3 * indices[2]) += one_fourth_vol * Eigen::Vector3d::Ones();
+            masses.template segment<3>(3 * indices[3]) += one_fourth_vol * Eigen::Vector3d::Ones();
+
+            total_vol += vol;
+        }
+
+        assert(total_mass > 0);
+        assert(total_vol > 0);
+        assert(masses.minCoeff() > 0.0);
+
+        return (total_mass / total_vol) * masses;
+    }
+
     /// \brief Calculate the Green strain tensor for a finite element.
     ///
     /// \param deform_grad The deformation gradient matrix, which should be either 2-by-2 (2D element in 2D), 3-by-3 (3D
