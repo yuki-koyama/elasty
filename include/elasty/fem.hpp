@@ -142,9 +142,9 @@ namespace elasty::fem
     /// \details This function takes the "barycentric" approach. See https://www.alecjacobson.com/weblog/?p=1146 .
     template <typename DerivedV, typename DerivedF>
     Eigen::Matrix<typename DerivedV::Scalar, Eigen::Dynamic, 1>
-    calcLumpedMasses(const Eigen::MatrixBase<DerivedV>& verts,
-                     const Eigen::MatrixBase<DerivedF>& elems,
-                     const typename DerivedV::Scalar    total_mass)
+    calcTriangleMeshLumpedMass(const Eigen::MatrixBase<DerivedV>& verts,
+                               const Eigen::MatrixBase<DerivedF>& elems,
+                               const typename DerivedV::Scalar    total_mass)
     {
         using Scalar = typename DerivedV::Scalar;
         using Vec    = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;

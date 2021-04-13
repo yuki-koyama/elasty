@@ -322,7 +322,7 @@ public:
             m_mesh.vec_PFPx_array[elem_index] =
                 elasty::fem::calcVecTrianglePartDeformGradPartPos(m_mesh.rest_shape_mat_inv_array[elem_index]);
         }
-        m_mesh.lumped_mass = elasty::fem::calcLumpedMasses(m_mesh.x_rest, m_mesh.elems, m_mesh.mass);
+        m_mesh.lumped_mass = elasty::fem::calcTriangleMeshLumpedMass(m_mesh.x_rest, m_mesh.elems, m_mesh.mass);
     }
 
     /// \brief Getter of the delta physics time.
