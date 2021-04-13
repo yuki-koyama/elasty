@@ -334,8 +334,7 @@ public:
                 const auto motion = [&, vert_index](double t) -> Eigen::Vector3d {
                     constexpr double pi = 3.1415926535897932;
 
-                    const auto ease = [](double x)
-                    {
+                    const auto ease = [](double x) {
                         return x < 0.5 ? 4.0 * x * x * x : 1.0 - 0.5 * std::pow(-2.0 * x + 2.0, 3.0);
                     };
 
