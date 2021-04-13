@@ -31,6 +31,13 @@ namespace elasty
                                                                                        const std::size_t   num_elems,
                                                                                        const double*       positions,
                                                                                        const std::int32_t* indices);
+
+    std::shared_ptr<elasty::AbstractAlembicManager> createTetraMeshAlembicManager(const std::string&  file_path,
+                                                                                  const double        delta_time,
+                                                                                  const std::size_t   num_verts,
+                                                                                  const std::size_t   num_elems,
+                                                                                  const double*       positions,
+                                                                                  const std::int32_t* indices);
 } // namespace elasty
 
 #endif // ELASTY_ALEMBIC_MANAGER_HPP
