@@ -292,21 +292,6 @@ public:
             }
         }
 
-        // m_mesh.elems.col(0) << 0, 4, 1, 2;
-        // m_mesh.elems.col(1) << 2, 7, 1, 3;
-        // m_mesh.elems.col(2) << 6, 2, 7, 4;
-        // m_mesh.elems.col(3) << 5, 1, 4, 7;
-        // m_mesh.elems.col(4) << 1, 2, 4, 7;
-
-        // m_mesh.x_rest.segment<3>(0 * 3) << 0.0, 0.0, 0.0;
-        // m_mesh.x_rest.segment<3>(1 * 3) << 1.0, 0.0, 0.0;
-        // m_mesh.x_rest.segment<3>(2 * 3) << 0.0, 1.0, 0.0;
-        // m_mesh.x_rest.segment<3>(3 * 3) << 1.0, 1.0, 0.0;
-        // m_mesh.x_rest.segment<3>(4 * 3) << 0.0, 0.0, 1.0;
-        // m_mesh.x_rest.segment<3>(5 * 3) << 1.0, 0.0, 1.0;
-        // m_mesh.x_rest.segment<3>(6 * 3) << 0.0, 1.0, 1.0;
-        // m_mesh.x_rest.segment<3>(7 * 3) << 1.0, 1.0, 1.0;
-
         // Set transform
         for (std::size_t vert = 0; vert < num_verts; ++vert)
         {
