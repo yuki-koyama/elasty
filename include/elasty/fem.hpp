@@ -2,6 +2,7 @@
 #define ELASTY_FEM_HPP
 
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <Eigen/SVD>
 
 // References:
@@ -83,7 +84,34 @@ namespace elasty::fem
         return shape_matrix;
     }
 
-    /// \brief Calculate the area of a 2D triangle
+    /// \brief Calculate either the "deformed" shape matrix (D_s) or "reference" shape matrix (D_m) of a tetrahedron.
+    ///
+    /// \param x_0 A 3D vector.
+    ///
+    /// \param x_1 A 3D vector.
+    ///
+    /// \param x_2 A 3D vector.
+    ///
+    /// \param x_3 A 3D vector.
+    ///
+    /// \details Reference: [1]
+    template <typename Derived>
+    Eigen::Matrix<typename Derived::Scalar, 3, 3> calc3dShapeMatrix(const Eigen::MatrixBase<Derived>& x_0,
+                                                                    const Eigen::MatrixBase<Derived>& x_1,
+                                                                    const Eigen::MatrixBase<Derived>& x_2,
+                                                                    const Eigen::MatrixBase<Derived>& x_3)
+    {
+        using Mat = Eigen::Matrix<typename Derived::Scalar, 3, 3>;
+
+        Mat shape_matrix;
+        shape_matrix.col(0) = x_1 - x_0;
+        shape_matrix.col(1) = x_2 - x_0;
+        shape_matrix.col(2) = x_3 - x_0;
+
+        return shape_matrix;
+    }
+
+    /// \brief Calculate the area of a triangle in 2D
     template <typename Derived>
     typename Derived::Scalar calc2dTriangleArea(const Eigen::MatrixBase<Derived>& x_0,
                                                 const Eigen::MatrixBase<Derived>& x_1,
@@ -95,41 +123,57 @@ namespace elasty::fem
         return 0.5 * std::abs(r_1(0) * r_2(1) - r_2(0) * r_1(1));
     }
 
+    /// \brief Calculate the volume of a tetrahedron
+    template <typename Derived>
+    typename Derived::Scalar calcTetrahedronVolume(const Eigen::MatrixBase<Derived>& x_0,
+                                                   const Eigen::MatrixBase<Derived>& x_1,
+                                                   const Eigen::MatrixBase<Derived>& x_2,
+                                                   const Eigen::MatrixBase<Derived>& x_3)
+    {
+        const auto r_1 = x_1 - x_0;
+        const auto r_2 = x_2 - x_0;
+        const auto r_3 = x_3 - x_0;
+
+        return std::abs(r_1.dot(r_2.cross(r_3))) / 6.0;
+    }
+
     /// \brief Calculate the diagonal elements of the lumped mass matrix.
     ///
     /// \details This function takes the "barycentric" approach. See https://www.alecjacobson.com/weblog/?p=1146 .
     template <typename DerivedV, typename DerivedF>
     Eigen::Matrix<typename DerivedV::Scalar, Eigen::Dynamic, 1>
-    calcLumpedMasses(const Eigen::MatrixBase<DerivedV>& verts,
-                     const Eigen::MatrixBase<DerivedF>& elems,
-                     const typename DerivedV::Scalar    total_mass)
+    calcTriangleMeshLumpedMass(const Eigen::MatrixBase<DerivedV>& verts,
+                               const Eigen::MatrixBase<DerivedF>& elems,
+                               const typename DerivedV::Scalar    total_mass)
     {
         using Scalar = typename DerivedV::Scalar;
         using Vec    = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
 
         assert(verts.cols() == 1);
         assert(verts.size() % 2 == 0);
-        assert(elems.cols() == 3);
+        assert(elems.rows() == 3);
 
         const auto num_verts = verts.size() / 2;
 
         Scalar total_area = 0;
         Vec    masses     = Vec::Zero(verts.size());
 
-        for (size_t row = 0; row < elems.rows(); ++row)
+        for (std::size_t elem_index = 0; elem_index < elems.cols(); ++elem_index)
         {
-            const Scalar area = calc2dTriangleArea(verts.segment(2 * elems(row, 0), 2),
-                                                   verts.segment(2 * elems(row, 1), 2),
-                                                   verts.segment(2 * elems(row, 2), 2));
+            const auto& indices = elems.col(elem_index);
+
+            const Scalar area = calc2dTriangleArea(verts.template segment<2>(2 * indices[0]),
+                                                   verts.template segment<2>(2 * indices[1]),
+                                                   verts.template segment<2>(2 * indices[2]));
 
             const Scalar one_third_area = (1.0 / 3.0) * area;
 
-            masses(2 * elems(row, 0) + 0) += one_third_area;
-            masses(2 * elems(row, 0) + 1) += one_third_area;
-            masses(2 * elems(row, 1) + 0) += one_third_area;
-            masses(2 * elems(row, 1) + 1) += one_third_area;
-            masses(2 * elems(row, 2) + 0) += one_third_area;
-            masses(2 * elems(row, 2) + 1) += one_third_area;
+            masses(2 * indices[0] + 0) += one_third_area;
+            masses(2 * indices[0] + 1) += one_third_area;
+            masses(2 * indices[1] + 0) += one_third_area;
+            masses(2 * indices[1] + 1) += one_third_area;
+            masses(2 * indices[2] + 0) += one_third_area;
+            masses(2 * indices[2] + 1) += one_third_area;
 
             total_area += area;
         }
@@ -138,6 +182,52 @@ namespace elasty::fem
         assert(total_area > 0);
 
         return (total_mass / total_area) * masses;
+    }
+
+    /// \brief Calculate the diagonal elements of the lumped mass matrix.
+    template <typename DerivedV, typename DerivedF>
+    Eigen::Matrix<typename DerivedV::Scalar, Eigen::Dynamic, 1>
+    calcTetraMeshLumpedMass(const Eigen::MatrixBase<DerivedV>& verts,
+                            const Eigen::MatrixBase<DerivedF>& elems,
+                            const typename DerivedV::Scalar    total_mass)
+    {
+        using Scalar = typename DerivedV::Scalar;
+        using Vec    = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
+
+        assert(verts.cols() == 1);
+        assert(verts.size() % 3 == 0);
+        assert(elems.rows() == 4);
+
+        const auto num_verts = verts.size() / 3;
+        const auto num_elems = elems.cols();
+
+        Scalar total_vol = 0;
+        Vec    masses    = Vec::Zero(verts.size());
+
+        for (std::size_t elem_index = 0; elem_index < num_elems; ++elem_index)
+        {
+            const auto& indices = elems.col(elem_index);
+
+            const Scalar vol = calcTetrahedronVolume(verts.template segment<3>(3 * indices[0]),
+                                                     verts.template segment<3>(3 * indices[1]),
+                                                     verts.template segment<3>(3 * indices[2]),
+                                                     verts.template segment<3>(3 * indices[3]));
+
+            const Scalar one_fourth_vol = (1.0 / 4.0) * vol;
+
+            masses.template segment<3>(3 * indices[0]) += one_fourth_vol * Eigen::Vector3d::Ones();
+            masses.template segment<3>(3 * indices[1]) += one_fourth_vol * Eigen::Vector3d::Ones();
+            masses.template segment<3>(3 * indices[2]) += one_fourth_vol * Eigen::Vector3d::Ones();
+            masses.template segment<3>(3 * indices[3]) += one_fourth_vol * Eigen::Vector3d::Ones();
+
+            total_vol += vol;
+        }
+
+        assert(total_mass > 0);
+        assert(total_vol > 0);
+        assert(masses.minCoeff() > 0.0);
+
+        return (total_mass / total_vol) * masses;
     }
 
     /// \brief Calculate the Green strain tensor for a finite element.
@@ -227,6 +317,20 @@ namespace elasty::fem
         return F;
     }
 
+    template <typename DerivedVec, typename DerivedMat>
+    Eigen::Matrix<typename DerivedVec::Scalar, 3, 3>
+    calcTetrahedronDeformGrad(const Eigen::MatrixBase<DerivedVec>& x_0,
+                              const Eigen::MatrixBase<DerivedVec>& x_1,
+                              const Eigen::MatrixBase<DerivedVec>& x_2,
+                              const Eigen::MatrixBase<DerivedVec>& x_3,
+                              const Eigen::MatrixBase<DerivedMat>& rest_shape_mat_inv)
+    {
+        const auto D_s = elasty::fem::calc3dShapeMatrix(x_0, x_1, x_2, x_3);
+        const auto F   = D_s * rest_shape_mat_inv;
+
+        return F;
+    }
+
     /// \brief Calculate analytic partial derivatives of the deformation gradient $\mathbf{F}$ with respect to the
     /// vertex positions $\mathbf{x}$ (i.e., $\frac{\partial \mathbf{F}}{\partial \mathbf{x}}$) and return it in the
     /// "flattened" format.
@@ -236,7 +340,7 @@ namespace elasty::fem
     /// Reference: [2, Appendix D]
     template <typename Derived>
     Eigen::Matrix<typename Derived::Scalar, 4, 6>
-    calcFlattenedPartDeformGradPartPos(const Eigen::MatrixBase<Derived>& rest_shape_mat_inv)
+    calcVecTrianglePartDeformGradPartPos(const Eigen::MatrixBase<Derived>& rest_shape_mat_inv)
     {
         using Scalar = typename Derived::Scalar;
 
@@ -262,11 +366,54 @@ namespace elasty::fem
         PDsPx[5] << 0.0, 0.0, 0.0, 1.0;
 
         Eigen::Matrix<Scalar, 4, 6> vec_PFPx;
-        for (size_t i = 0; i < 6; ++i)
+        for (std::size_t i = 0; i < 6; ++i)
         {
             const Eigen::Matrix<Scalar, 2, 2> PFPx_i = PDsPx[i] * rest_shape_mat_inv;
 
             vec_PFPx.col(i) = Eigen::Map<const Eigen::Matrix<Scalar, 4, 1>>(PFPx_i.data(), PFPx_i.size());
+        }
+
+        return vec_PFPx;
+    }
+
+    /// \brief Calculate analytic partial derivatives of the deformation gradient $\mathbf{F}$ with respect to the
+    /// vertex positions $\mathbf{x}$ (i.e., $\frac{\partial \mathbf{F}}{\partial \mathbf{x}}$) and return it in the
+    /// "flattened" format.
+    ///
+    /// \details The result is a 3-by-3-by-12 third-order tensor but flattened into a 9-by-12 matrix.
+    ///
+    /// Reference: [2, Appendix D]
+    template <typename Derived>
+    Eigen::Matrix<typename Derived::Scalar, 9, 12>
+    calcVecTetrahedronPartDeformGradPartPos(const Eigen::MatrixBase<Derived>& rest_shape_mat_inv)
+    {
+        using Scalar = typename Derived::Scalar;
+
+        // Analytics partial derivatives $\frac{\partial \mathbf{D}_\text{s}{\partial x_{i}}$
+        Eigen::Matrix<Scalar, 3, 3> PDsPx[12];
+
+        PDsPx[0] << -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+        PDsPx[1] << 0.0, 0.0, 0.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0;
+        PDsPx[2] << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, -1.0, -1.0;
+
+        PDsPx[3] << 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+        PDsPx[4] << 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+        PDsPx[5] << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0;
+
+        PDsPx[6] << 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+        PDsPx[7] << 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0;
+        PDsPx[8] << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0;
+
+        PDsPx[9] << 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+        PDsPx[10] << 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0;
+        PDsPx[11] << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0;
+
+        Eigen::Matrix<Scalar, 9, 12> vec_PFPx;
+        for (std::size_t i = 0; i < 12; ++i)
+        {
+            const Eigen::Matrix<Scalar, 3, 3> PFPx_i = PDsPx[i] * rest_shape_mat_inv;
+
+            vec_PFPx.col(i) = Eigen::Map<const Eigen::Matrix<Scalar, 9, 1>>(PFPx_i.data(), PFPx_i.size());
         }
 
         return vec_PFPx;

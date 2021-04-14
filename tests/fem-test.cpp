@@ -36,7 +36,7 @@ TEST(FemTest, StVenantKirchhoff2d)
     const auto F        = elasty::fem::calc2dTriangleDeformGrad(x.col(0), x.col(1), x.col(2), D_m_inv);
     const auto P        = calcPiolaStress(F);
     const auto vec_P    = Eigen::Map<const Eigen::Vector4d>{P.data(), P.size()};
-    const auto vec_PFPx = elasty::fem::calcFlattenedPartDeformGradPartPos(D_m_inv);
+    const auto vec_PFPx = elasty::fem::calcVecTrianglePartDeformGradPartPos(D_m_inv);
     const auto PPsiPx   = vec_PFPx.transpose() * vec_P;
 
     // Calculate $\frac{\partial \Psi}{\partial \mathbf{x}}$ numerically
@@ -94,7 +94,7 @@ TEST(FemTest, CoRotational2d)
     const auto F        = elasty::fem::calc2dTriangleDeformGrad(x.col(0), x.col(1), x.col(2), D_m_inv);
     const auto P        = calcPiolaStress(F);
     const auto vec_P    = Eigen::Map<const Eigen::Vector4d>{P.data(), P.size()};
-    const auto vec_PFPx = elasty::fem::calcFlattenedPartDeformGradPartPos(D_m_inv);
+    const auto vec_PFPx = elasty::fem::calcVecTrianglePartDeformGradPartPos(D_m_inv);
     const auto PPsiPx   = vec_PFPx.transpose() * vec_P;
 
     // Calculate $\frac{\partial \Psi}{\partial \mathbf{x}}$ numerically

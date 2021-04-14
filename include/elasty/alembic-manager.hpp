@@ -25,12 +25,19 @@ namespace elasty
                               const double                          delta_time);
 
     /// \param positions Positions of the vertices in the format: [x_{0}, y_{0}, ..., x_{n - 1}, y_{n - 1}].
-    std::shared_ptr<elasty::AbstractAlembicManager> createTriangleMesh2dAlembicManager(const std::string& file_path,
-                                                                                       const double       delta_time,
-                                                                                       const std::size_t  num_verts,
-                                                                                       const std::size_t  num_triangles,
-                                                                                       const double*      positions,
+    std::shared_ptr<elasty::AbstractAlembicManager> createTriangleMesh2dAlembicManager(const std::string&  file_path,
+                                                                                       const double        delta_time,
+                                                                                       const std::size_t   num_verts,
+                                                                                       const std::size_t   num_elems,
+                                                                                       const double*       positions,
                                                                                        const std::int32_t* indices);
+
+    std::shared_ptr<elasty::AbstractAlembicManager> createTetraMeshAlembicManager(const std::string&  file_path,
+                                                                                  const double        delta_time,
+                                                                                  const std::size_t   num_verts,
+                                                                                  const std::size_t   num_elems,
+                                                                                  const double*       positions,
+                                                                                  const std::int32_t* indices);
 } // namespace elasty
 
 #endif // ELASTY_ALEMBIC_MANAGER_HPP

@@ -75,6 +75,9 @@ if(ELASTY_EXAMPLES)
   add_executable(variational-implicit-2d ${CMAKE_CURRENT_SOURCE_DIR}/examples/variational-implicit-2d/main.cpp)
   target_link_libraries(variational-implicit-2d elasty timer Alembic mathtoolbox)
 
+  add_executable(variational-implicit-3d ${CMAKE_CURRENT_SOURCE_DIR}/examples/variational-implicit-3d/main.cpp)
+  target_link_libraries(variational-implicit-3d elasty timer Alembic mathtoolbox)
+
   add_executable(interactive-app ${CMAKE_CURRENT_SOURCE_DIR}/examples/interactive-app/main.cpp)
   target_link_libraries(interactive-app bigger elasty)
   add_custom_command(TARGET interactive-app POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${BIGGER_SHADER_OUTPUT_DIR} $<TARGET_FILE_DIR:interactive-app>/shaders)
@@ -126,6 +129,7 @@ if(CLANG_FORMAT)
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/cloth-alembic/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/explicit-2d/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/variational-implicit-2d/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/variational-implicit-3d/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/interactive-app/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/pbd-xpbd-comparison/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/aerodynamics/main.cpp
