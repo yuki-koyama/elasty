@@ -20,7 +20,8 @@ namespace
 
     constexpr double k_damping_factor = 0.0;
 
-    constexpr double k_spring_stiffness = 1000.0;
+    constexpr double k_spring_stiffness    = 1000.0;
+    constexpr double k_collision_stiffness = 100.0;
 
     enum class Model
     {
@@ -64,6 +65,40 @@ struct Constraint
     std::size_t                              vert_index;
     std::function<Eigen::Vector3d(double t)> motion;
     double                                   stiffness;
+};
+
+struct Collision
+{
+    std::size_t     vert_index;
+    Eigen::Vector3d surface_pos;
+    Eigen::Vector3d surface_normal;
+};
+
+class HalfSpaceCollider
+{
+public:
+    HalfSpaceCollider(const Eigen::Vector3d& representative_point, const Eigen::Vector3d& normal)
+        : m_representative_point(representative_point), m_normal(normal.normalized())
+    {
+        assert(!normal.isZero());
+    }
+
+    bool testCollision(const Eigen::Vector3d& point, const double tol) const
+    {
+        return (point - m_representative_point).dot(m_normal) < tol;
+    }
+
+    void retrieveCollisionInfo(const Eigen::Vector3d& point,
+                               Eigen::Vector3d&       surface_pos,
+                               Eigen::Vector3d&       surface_normal) const
+    {
+        surface_pos    = point - (point - m_representative_point).dot(m_normal) * m_normal;
+        surface_normal = m_normal;
+    }
+
+private:
+    const Eigen::Vector3d m_representative_point;
+    const Eigen::Vector3d m_normal;
 };
 
 template <typename Derived> typename Derived::Scalar calcEnergyDensity(const Eigen::MatrixBase<Derived>& deform_grad)
@@ -115,6 +150,28 @@ public:
         const double&         h = m_delta_physics_time;
         const Eigen::VectorXd y = m_mesh.x + h * m_mesh.v + h * h * W * m_mesh.f;
 
+        // Define colliders
+        // TODO: Improve the scene setup
+        const HalfSpaceCollider floor{Eigen::Vector3d{0.0, -1.0, 0.0}, Eigen::Vector3d{0.0, 1.0, 0.0}};
+
+        // Detect collisions
+        // TODO: Improve the collision detection algorithtm
+        std::vector<Collision> collisions;
+        for (std::size_t vert_index = 0; vert_index < num_verts; ++vert_index)
+        {
+            const Eigen::Vector3d predicted_pos = y.segment<3>(vert_index * 3);
+
+            if (floor.testCollision(predicted_pos, 0.0))
+            {
+                Eigen::Vector3d surface_pos;
+                Eigen::Vector3d surface_normal;
+                floor.retrieveCollisionInfo(predicted_pos, surface_pos, surface_normal);
+
+                const Collision collision{vert_index, surface_pos, surface_normal};
+                collisions.push_back(collision);
+            }
+        }
+
         const auto calcInternalPotential = [&](const Eigen::VectorXd& x) {
             double sum = 0.0;
 
@@ -147,6 +204,20 @@ public:
                 const double      squared_dist = (p - q).squaredNorm();
 
                 sum += 0.5 * k * squared_dist;
+            }
+
+            // Collision energy
+            for (const auto& collision : collisions)
+            {
+                const auto&  vert_index = collision.vert_index;
+                const auto   pos        = x.segment<3>(vert_index * 3);
+                const auto&  normal     = collision.surface_normal;
+                const double a          = (collision.surface_pos - pos).transpose() * normal;
+
+                if (a > 0.0)
+                {
+                    sum += k_collision_stiffness * a * a;
+                }
             }
 
             return sum;
@@ -193,6 +264,20 @@ public:
                 const auto        r          = p - q;
 
                 sum.segment<3>(3 * vert_index) += k * r;
+            }
+
+            // Collision energy
+            for (const auto& collision : collisions)
+            {
+                const auto&  vert_index = collision.vert_index;
+                const auto   pos        = x.segment<3>(vert_index * 3);
+                const auto&  normal     = collision.surface_normal;
+                const double a          = (collision.surface_pos - pos).transpose() * normal;
+
+                if (a > 0.0)
+                {
+                    sum.segment<3>(3 * vert_index) += 2.0 * k_collision_stiffness * a * (-normal);
+                }
             }
 
             return sum;
