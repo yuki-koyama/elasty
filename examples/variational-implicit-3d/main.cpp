@@ -314,8 +314,16 @@ public:
         m_mesh.v = (1.0 / h) * (x_opt - m_mesh.x);
         m_mesh.x = x_opt;
 
-        // Apply naive damping
+        // Apply velocity correction: a naive damping
         m_mesh.v *= std::exp(-k_damping_factor * m_delta_physics_time);
+
+        // Apply velocity correction: a naive friction
+        for (const auto& collision: collisions)
+        {
+            const auto v_i = m_mesh.v.segment<3>(collision.vert_index * 3);
+
+            m_mesh.v.segment<3>(collision.vert_index * 3) = v_i.dot(collision.surface_normal) * collision.surface_normal;
+        }
 
         // Update time counter
         m_physics_time += m_delta_physics_time;
