@@ -15,10 +15,10 @@ jobs:
     - uses: actions/checkout@v1
     - name: install-openexr-v2.3.0
       run: |
-        curl -L https://github.com/AcademySoftwareFoundation/openexr/tarball/v2.3.0 | tar -xvz
-        mkdir build-openexr
-        cd build-openexr
-        cmake ../AcademySoftwareFoundation-openexr-0ac2ea3 -DOPENEXR_BUILD_PYTHON_LIBS=OFF -DOPENEXR_BUILD_TESTS=OFF -DOPENEXR_BUILD_UTILS=OFF
+        curl -L https://github.com/AcademySoftwareFoundation/Imath/archive/refs/tags/v3.0.2.tar.gz | tar -xvz
+        mkdir build-imath
+        cd build-imath
+        cmake ../Imath-3.0.2 -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF
         make
         sudo make install
     - name: install-other-build-dependencies
