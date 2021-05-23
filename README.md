@@ -62,7 +62,7 @@ A research-oriented elastic body simulator
 ### Core Library
 
 - Alembic <https://github.com/alembic/alembic> [BSD 3-Clause]
-  - OpenEXR (2.3.0+) <https://github.com/openexr/openexr> [BSD 3-Clause]
+  - Imath (3.0.2+) <https://github.com/AcademySoftwareFoundation/Imath> [BSD 3-Clause]
 - Eigen <http://eigen.tuxfamily.org/> [MPL2]
 - tinyobjloader <https://github.com/syoyo/tinyobjloader> [MIT]
 
@@ -92,7 +92,7 @@ A research-oriented elastic body simulator
 ### macOS
 
 ```bash
-brew install eigen openexr
+brew install eigen imath
 ```
 
 ### Ubuntu 18.04
@@ -100,7 +100,7 @@ brew install eigen openexr
 ```bash
 apt install libeigen3-dev
 ```
-and manually install OpenEXR 2.3.0+.
+and manually install Imath 3.0.2+.
 
 ## Build
 
