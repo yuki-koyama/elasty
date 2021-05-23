@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: install-build-dependencies
-      run: brew install eigen openexr
+      run: brew install eigen imath
     - name: submodule
       run: git submodule update --init --recursive
     - name: cmake
