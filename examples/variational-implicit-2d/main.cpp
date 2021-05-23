@@ -115,7 +115,8 @@ public:
         const double&         h = m_delta_physics_time;
         const Eigen::VectorXd y = m_mesh.x + h * m_mesh.v + h * h * W * m_mesh.f;
 
-        const auto calcInternalPotential = [&](const Eigen::VectorXd& x) {
+        const auto calcInternalPotential = [&](const Eigen::VectorXd& x)
+        {
             double sum = 0.0;
 
             // Elastic potential
@@ -149,7 +150,8 @@ public:
             return sum;
         };
 
-        const auto calcInternalPotentialGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+        const auto calcInternalPotentialGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd
+        {
             Eigen::VectorXd sum = Eigen::VectorXd::Zero(x.size());
             for (std::size_t i = 0; i < m_mesh.elems.cols(); ++i)
             {
@@ -191,15 +193,18 @@ public:
             return sum;
         };
 
-        const auto calcMomentumPotential = [&](const Eigen::VectorXd& x) {
+        const auto calcMomentumPotential = [&](const Eigen::VectorXd& x)
+        {
             return (0.5 / (h * h)) * (x - y).transpose() * m_mesh.lumped_mass.asDiagonal() * (x - y);
         };
 
-        const auto calcMomentumPotentialGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+        const auto calcMomentumPotentialGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd
+        {
             return (1.0 / (h * h)) * m_mesh.lumped_mass.asDiagonal() * (x - y);
         };
 
-        const auto calcObjective = [&](const Eigen::VectorXd& x) {
+        const auto calcObjective = [&](const Eigen::VectorXd& x)
+        {
             const double momentum_potential = calcMomentumPotential(x);
             const double internal_potential = calcInternalPotential(x);
 
@@ -209,7 +214,8 @@ public:
             return momentum_potential + internal_potential;
         };
 
-        const auto calcObjectiveGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+        const auto calcObjectiveGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd
+        {
             return calcMomentumPotentialGrad(x) + calcInternalPotentialGrad(x);
         };
 
@@ -281,15 +287,22 @@ public:
         // Set constraints
         for (std::size_t i = 0; i < num_rows + 1; ++i)
         {
-            const auto motion = [&, i](double) -> Eigen::Vector2d { return m_mesh.x_rest.segment<2>(i * 2); };
+            const auto motion = [&, i](double) -> Eigen::Vector2d
+            {
+                return m_mesh.x_rest.segment<2>(i * 2);
+            };
 
             m_constraints.push_back(Constraint{i, motion, k_spring_stiffness});
         }
         for (std::size_t i = (num_rows + 1) * num_cols; i < (num_rows + 1) * (num_cols + 1); ++i)
         {
-            const auto ease = [](double x) { return -(std::cos(3.14159265358979 * x) - 1.0) * 0.5; };
+            const auto ease = [](double x)
+            {
+                return -(std::cos(3.14159265358979 * x) - 1.0) * 0.5;
+            };
 
-            const auto motion = [&, i](double t) -> Eigen::Vector2d {
+            const auto motion = [&, i](double t) -> Eigen::Vector2d
+            {
                 const auto   x_init = m_mesh.x_rest.segment<2>(i * 2);
                 const auto   dir    = Eigen::Vector2d{3.0, 0.0};
                 const double t_0    = 0.8;

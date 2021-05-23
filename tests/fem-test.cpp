@@ -13,10 +13,12 @@ namespace
 
 TEST(FemTest, StVenantKirchhoff2d)
 {
-    auto calcPiolaStress = [](const Eigen::Matrix2d& F) -> Eigen::Matrix2d {
+    auto calcPiolaStress = [](const Eigen::Matrix2d& F) -> Eigen::Matrix2d
+    {
         return elasty::fem::calcStVenantKirchhoffPiolaStress(F, k_first_lame, k_second_lame);
     };
-    auto calcEnergyDensity = [](const Eigen::Matrix2d& F) -> double {
+    auto calcEnergyDensity = [](const Eigen::Matrix2d& F) -> double
+    {
         return elasty::fem::calcStVenantKirchhoffEnergyDensity(F, k_first_lame, k_second_lame);
     };
 
@@ -71,10 +73,12 @@ TEST(FemTest, StVenantKirchhoff2d)
 
 TEST(FemTest, CoRotational2d)
 {
-    auto calcPiolaStress = [](const Eigen::Matrix2d& F) -> Eigen::Matrix2d {
+    auto calcPiolaStress = [](const Eigen::Matrix2d& F) -> Eigen::Matrix2d
+    {
         return elasty::fem::calcCoRotationalPiolaStress(F, k_first_lame, k_second_lame);
     };
-    auto calcEnergyDensity = [](const Eigen::Matrix2d& F) -> double {
+    auto calcEnergyDensity = [](const Eigen::Matrix2d& F) -> double
+    {
         return elasty::fem::calcCoRotationalEnergyDensity(F, k_first_lame, k_second_lame);
     };
 

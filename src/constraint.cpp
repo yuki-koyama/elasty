@@ -102,12 +102,14 @@ void elasty::BendingConstraint::calculateGrad(double* grad_C)
     const double common_coeff = -1.0 / std::sqrt(1.0 - d * d);
 
     auto calc_grad_of_normalized_cross_prod_wrt_p_a =
-        [](const Eigen::Vector3d& p_a, const Eigen::Vector3d& p_b, const Eigen::Vector3d& n) -> Eigen::Matrix3d {
+        [](const Eigen::Vector3d& p_a, const Eigen::Vector3d& p_b, const Eigen::Vector3d& n) -> Eigen::Matrix3d
+    {
         return +(1.0 / p_a.cross(p_b).norm()) * (-convertVecToCrossOp(p_b) + n * (n.cross(p_b)).transpose());
     };
 
     auto calc_grad_of_normalized_cross_prod_wrt_p_b =
-        [](const Eigen::Vector3d& p_a, const Eigen::Vector3d& p_b, const Eigen::Vector3d& n) -> Eigen::Matrix3d {
+        [](const Eigen::Vector3d& p_a, const Eigen::Vector3d& p_b, const Eigen::Vector3d& n) -> Eigen::Matrix3d
+    {
         return -(1.0 / p_a.cross(p_b).norm()) * (-convertVecToCrossOp(p_a) + n * (n.cross(p_a)).transpose());
     };
 

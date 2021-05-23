@@ -126,7 +126,8 @@ elasty::ClothSimObject::ClothSimObject(const unsigned           resolution,
         const edge_t e_02 = std::make_pair(std::min(index_0, index_2), std::max(index_0, index_2));
         const edge_t e_12 = std::make_pair(std::min(index_1, index_2), std::max(index_1, index_2));
 
-        auto register_edge = [&](const edge_t& edge) {
+        auto register_edge = [&](const edge_t& edge)
+        {
             if (edges_and_triangles.find(edge) == edges_and_triangles.end())
             {
                 edges_and_triangles[edge] = {i};
@@ -155,7 +156,8 @@ elasty::ClothSimObject::ClothSimObject(const unsigned           resolution,
             continue;
         }
 
-        auto obtain_another_vertex = [&](const triangle_t& triangle, const edge_t& edge) {
+        auto obtain_another_vertex = [&](const triangle_t& triangle, const edge_t& edge)
+        {
             const vertex_t vertex_0 = shape.mesh.indices[3 * triangle + 0].vertex_index;
             const vertex_t vertex_1 = shape.mesh.indices[3 * triangle + 1].vertex_index;
             const vertex_t vertex_2 = shape.mesh.indices[3 * triangle + 2].vertex_index;

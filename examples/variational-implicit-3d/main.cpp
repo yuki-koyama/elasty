@@ -172,7 +172,8 @@ public:
             }
         }
 
-        const auto calcInternalPotential = [&](const Eigen::VectorXd& x) {
+        const auto calcInternalPotential = [&](const Eigen::VectorXd& x)
+        {
             double sum = 0.0;
 
             // Elastic potential
@@ -223,7 +224,8 @@ public:
             return sum;
         };
 
-        const auto calcInternalPotentialGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+        const auto calcInternalPotentialGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd
+        {
             Eigen::VectorXd sum = Eigen::VectorXd::Zero(x.size());
             for (std::size_t elem_index = 0; elem_index < num_elems; ++elem_index)
             {
@@ -283,15 +285,18 @@ public:
             return sum;
         };
 
-        const auto calcMomentumPotential = [&](const Eigen::VectorXd& x) {
+        const auto calcMomentumPotential = [&](const Eigen::VectorXd& x)
+        {
             return (0.5 / (h * h)) * (x - y).transpose() * m_mesh.lumped_mass.asDiagonal() * (x - y);
         };
 
-        const auto calcMomentumPotentialGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+        const auto calcMomentumPotentialGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd
+        {
             return (1.0 / (h * h)) * m_mesh.lumped_mass.asDiagonal() * (x - y);
         };
 
-        const auto calcObjective = [&](const Eigen::VectorXd& x) {
+        const auto calcObjective = [&](const Eigen::VectorXd& x)
+        {
             const double momentum_potential = calcMomentumPotential(x);
             const double internal_potential = calcInternalPotential(x);
 
@@ -301,7 +306,8 @@ public:
             return momentum_potential + internal_potential;
         };
 
-        const auto calcObjectiveGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd {
+        const auto calcObjectiveGrad = [&](const Eigen::VectorXd& x) -> Eigen::VectorXd
+        {
             return calcMomentumPotentialGrad(x) + calcInternalPotentialGrad(x);
         };
 
@@ -409,7 +415,8 @@ public:
                 const std::size_t vert_index =
                     i_x + (num_blocks_x + 1) * i_y + (num_blocks_x + 1) * (num_blocks_y + 1) * i_z;
 
-                const auto motion = [&, vert_index](double) -> Eigen::Vector3d {
+                const auto motion = [&, vert_index](double) -> Eigen::Vector3d
+                {
                     return m_mesh.x_rest.segment<3>(vert_index * 3);
                 };
 
@@ -425,10 +432,12 @@ public:
                 const std::size_t vert_index =
                     i_x + (num_blocks_x + 1) * i_y + (num_blocks_x + 1) * (num_blocks_y + 1) * i_z;
 
-                const auto motion = [&, vert_index](double t) -> Eigen::Vector3d {
+                const auto motion = [&, vert_index](double t) -> Eigen::Vector3d
+                {
                     constexpr double pi = 3.1415926535897932;
 
-                    const auto ease = [](double x) {
+                    const auto ease = [](double x)
+                    {
                         return x < 0.5 ? 4.0 * x * x * x : 1.0 - 0.5 * std::pow(-2.0 * x + 2.0, 3.0);
                     };
 

@@ -86,7 +86,8 @@ std::string elasty::generateClothMeshObjData(const double   width,
     {
         for (unsigned h_index = 0; h_index <= horizontal_resolution; ++h_index)
         {
-            const double u = [&]() {
+            const double u = [&]()
+            {
                 if (v_index % 2 == 0 || h_index == 0)
                 {
                     return static_cast<double>(h_index) / static_cast<double>(horizontal_resolution);
