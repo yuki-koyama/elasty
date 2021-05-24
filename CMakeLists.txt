@@ -77,6 +77,7 @@ if(ELASTY_EXAMPLES)
 
   add_executable(variational-implicit-3d ${CMAKE_CURRENT_SOURCE_DIR}/examples/variational-implicit-3d/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/examples/variational-implicit-3d/mesh.hpp)
   target_link_libraries(variational-implicit-3d elasty timer Alembic mathtoolbox)
+  add_custom_command(TARGET variational-implicit-3d POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/assets $<TARGET_FILE_DIR:variational-implicit-3d>/assets)
 
   add_executable(interactive-app ${CMAKE_CURRENT_SOURCE_DIR}/examples/interactive-app/main.cpp)
   target_link_libraries(interactive-app bigger elasty)

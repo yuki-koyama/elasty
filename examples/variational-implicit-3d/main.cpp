@@ -311,6 +311,24 @@ public:
 
     void initializeScene()
     {
+#ifdef USE_EXTERNAL_TETRA_MESH
+        // Load a tetrahedral mesh
+        m_mesh = ReadTetraMesh("./assets/torus.mesh");
+
+        const std::size_t num_verts = m_mesh.x_rest.size() / 3;
+        const std::size_t num_elems = m_mesh.elems.cols();
+
+        // Set initial conditions
+        constexpr double k_pi = 3.141592653589793238;
+
+        const auto offset = Eigen::Vector3d{0.0, 1.5, 0.0};
+        const auto rotate = Eigen::AngleAxisd(0.5 * k_pi, Eigen::Vector3d::UnitX());
+
+        for (std::size_t vert_index = 0; vert_index < num_verts; ++vert_index)
+        {
+            m_mesh.x.segment<3>(vert_index * 3) = offset + rotate * m_mesh.x.segment<3>(vert_index * 3);
+        }
+#else
         constexpr std::size_t num_blocks_x = 16;
         constexpr std::size_t num_blocks_y = 4;
         constexpr std::size_t num_blocks_z = 4;
@@ -428,6 +446,7 @@ public:
                 m_constraints.push_back(Constraint{vert_index, motion, k_spring_stiffness});
             }
         }
+#endif
 
         // Perform precomputation
         m_mesh.volume_array.resize(num_elems);
