@@ -1,3 +1,4 @@
+#include "mesh.hpp"
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <Eigen/LU>
@@ -31,34 +32,6 @@ namespace
 
     constexpr Model k_model = Model::CoRotational;
 } // namespace
-
-template <int N> struct Mesh
-{
-    using ElemList = Eigen::Matrix<std::int32_t, N + 1, Eigen::Dynamic>;
-
-    ElemList elems;
-
-    Eigen::VectorXd x_rest;
-    Eigen::VectorXd x;
-    Eigen::VectorXd v;
-    Eigen::VectorXd f;
-
-    double mass = 1.0;
-
-    /// \details Should be precomputed
-    Eigen::VectorXd lumped_mass;
-
-    /// \details Should be precomputed
-    std::vector<double> volume_array;
-
-    /// \details Should be precomputed
-    std::vector<Eigen::Matrix<double, N, N>> rest_shape_mat_inv_array;
-
-    /// \details Should be precomputed
-    std::vector<Eigen::Matrix<double, N * N, N*(N + 1)>> vec_PFPx_array;
-};
-
-using TetraMesh = Mesh<3>;
 
 struct Constraint
 {
