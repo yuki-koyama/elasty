@@ -37,6 +37,7 @@ A research-oriented elastic body simulator
 - [x] Isometric bending constraint [Bergou+06; Bender+14]
 - [ ] Long range attachments constraint [Kim+12]
 - [x] Shape matching constraint [Müller+05]
+- [ ] Stable Neo-Hookean constraint [Macklin+21]
 - [ ] Tetrahedron strain constraint [Müller+14]
 - [ ] Triangle strain constraint [Müller+14]
 - [ ] Volume conservation constraint [Müller+14]
@@ -160,6 +161,7 @@ Issue reports and pull requests are highly welcomed.
 - __[Liu+17]__ Tiantian Liu, Sofien Bouaziz, and Ladislav Kavan. 2017. Quasi-Newton methods for real-time simulation of hyperelastic materials. ACM Trans. Graph. 36, 3 (2017), 23:1--23:16. DOI: https://doi.org/10.1145/2990496
 - __[Macklin+16]__ Miles Macklin, Matthias Müller, and Nuttapong Chentanez. 2016. XPBD: position-based simulation of compliant constrained dynamics. In Proc. MIG '16, 49-54. DOI: https://doi.org/10.1145/2994258.2994272
 - __[Macklin+19]__ Miles Macklin, Kier Storey, Michelle Lu, Pierre Terdiman, Nuttapong Chentanez, Stefan Jeschke, and Matthias Müller. 2019. Small steps in physics simulation. In Proc. SCA '19, 2:1–2:7. DOI: https://doi.org/10.1145/3309486.3340247
+- __[Macklin+21]__ Miles Macklin and Matthias Muller. 2021. A constraint-based formulation of stable Neo-Hookean materials. In Proc. MIG '21, 12:1–12:7. DOI: https://doi.org/10.1145/3487983.3488289
 - __[Martin+11]__ Sebastian Martin, Bernhard Thomaszewski, Eitan Grinspun, and Markus Gross. 2011. Example-based elastic materials. ACM Trans. Graph. 30, 4, 72:1--72:8 (July 2011). DOI: https://doi.org/10.1145/2010324.1964967
 - __[Müller+05]__ Matthias Müller, Bruno Heidelberger, Matthias Teschner, and Markus Gross. 2005. Meshless deformations based on shape matching. ACM Trans. Graph. 24, 3 (2005), 471-478. DOI: https://doi.org/10.1145/1073204.1073216
 - __[Müller+07]__ Matthias Müller, Bruno Heidelberger, Marcus Hennix, and John Ratcliff. 2007. Position based dynamics. J. Vis. Comun. Image Represent. 18, 2 (2007), 109-118. DOI: https://doi.org/10.1016/j.jvcir.2007.01.005
