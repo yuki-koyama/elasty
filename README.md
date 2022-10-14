@@ -103,6 +103,10 @@ apt install libeigen3-dev
 ```
 and manually install Imath 3.0.2+.
 
+### Windows
+
+(not tested yet)
+
 ## Build
 
 ```bash
