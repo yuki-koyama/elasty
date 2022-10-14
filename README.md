@@ -96,7 +96,7 @@ A research-oriented elastic body simulator
 brew install eigen imath
 ```
 
-### Ubuntu 18.04
+### Ubuntu 20.04
 
 ```bash
 apt install libeigen3-dev
