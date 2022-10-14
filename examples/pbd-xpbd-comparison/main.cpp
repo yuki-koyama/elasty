@@ -90,10 +90,7 @@ public:
 int main(int argc, char** argv)
 {
     constexpr unsigned              num_iters_conditions[] = {2, 4, 8, 16, 32, 64, 128, 256, 512};
-    constexpr elasty::AlgorithmType type_conditions[]      = {
-        elasty::AlgorithmType::Pbd,
-        elasty::AlgorithmType::Xpbd,
-    };
+    constexpr elasty::AlgorithmType type_conditions[]      = {elasty::AlgorithmType::Pbd, elasty::AlgorithmType::Xpbd};
 
     for (const auto type : type_conditions)
     {

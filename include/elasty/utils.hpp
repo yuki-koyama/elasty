@@ -12,7 +12,10 @@ namespace elasty
     class AbstractConstraint;
     class ClothSimObject;
 
-    constexpr double pi() { return 3.14159265358979323846264338327950288; }
+    constexpr double pi()
+    {
+        return 3.14159265358979323846264338327950288;
+    }
 
     /// \param particles an array of N particles
     ///

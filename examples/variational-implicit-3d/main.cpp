@@ -474,11 +474,20 @@ public:
     /// \brief Getter of the delta physics time.
     ///
     /// \details The value equals to the delta frame time devided by the number of substeps.
-    double getDeltaPhysicsTime() const { return m_delta_physics_time; }
+    double getDeltaPhysicsTime() const
+    {
+        return m_delta_physics_time;
+    }
 
-    void setDeltaPhysicsTime(const double delta_physics_time) { m_delta_physics_time = delta_physics_time; }
+    void setDeltaPhysicsTime(const double delta_physics_time)
+    {
+        m_delta_physics_time = delta_physics_time;
+    }
 
-    const TetraMesh* getMesh() const { return &m_mesh; }
+    const TetraMesh* getMesh() const
+    {
+        return &m_mesh;
+    }
 
 private:
     double m_delta_physics_time = 1.0 / 60.0;
